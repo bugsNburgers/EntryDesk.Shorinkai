@@ -2,6 +2,20 @@
 
 import { requireRole } from '@/lib/auth/require-role'
 import { redirect } from 'next/navigation'
+import { assertUserRateLimit } from '@/lib/security/action-rate-limit'
+import { type RateLimitPolicy } from '@/lib/security/rate-limit'
+
+const EVENT_DELETE_POLICY: RateLimitPolicy = {
+    name: 'action-event-delete',
+    limit: 5,
+    window: '10 m',
+}
+
+const EVENT_UPDATE_POLICY: RateLimitPolicy = {
+    name: 'action-event-update',
+    limit: 20,
+    window: '1 m',
+}
 
 export async function deleteEvent(formData: FormData) {
     const eventIdValue = formData.get('eventId')
@@ -12,6 +26,7 @@ export async function deleteEvent(formData: FormData) {
     }
 
     const { supabase, user } = await requireRole(['organizer', 'admin'], { redirectTo: '/dashboard' })
+    await assertUserRateLimit(EVENT_DELETE_POLICY, user.id, ['delete', eventId])
 
     const { data: event, error: eventError } = await supabase
         .from('events')
@@ -40,6 +55,7 @@ export async function updateEventSettings(eventId: string, data: { title?: strin
     if (!eventId) throw new Error('Missing eventId')
 
     const { supabase, user } = await requireRole(['organizer', 'admin'])
+    await assertUserRateLimit(EVENT_UPDATE_POLICY, user.id, ['update', eventId])
 
     const { data: event, error: eventError } = await supabase
         .from('events')

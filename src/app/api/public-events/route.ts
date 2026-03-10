@@ -1,8 +1,30 @@
 import { NextResponse } from 'next/server'
+import { checkRateLimit, type RateLimitPolicy } from '@/lib/security/rate-limit'
+import { getIpFromHeaders, key } from '@/lib/security/request-identity'
 import { createClient } from '@/lib/supabase/server'
 
-export async function GET() {
+const PUBLIC_EVENTS_POLICY: RateLimitPolicy = {
+    name: 'api-public-events',
+    limit: 60,
+    window: '1 m',
+}
+
+export async function GET(request: Request) {
     try {
+        const ip = getIpFromHeaders(request.headers)
+        const rateLimitResult = await checkRateLimit(PUBLIC_EVENTS_POLICY, key(['public_events', 'ip', ip]))
+        if (!rateLimitResult.success) {
+            return NextResponse.json(
+                { events: [], error: 'rate_limited' },
+                {
+                    status: 429,
+                    headers: {
+                        'Retry-After': String(rateLimitResult.retryAfterSeconds ?? 60),
+                    },
+                }
+            )
+        }
+
         const supabase = await createClient()
         const { data, error } = await supabase
             .from('events')

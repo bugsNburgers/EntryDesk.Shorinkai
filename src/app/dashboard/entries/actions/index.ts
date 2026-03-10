@@ -3,6 +3,20 @@
 import { revalidatePath } from 'next/cache'
 import { requireRole } from '@/lib/auth/require-role'
 import { isRegistrationClosed } from '@/lib/events/registration'
+import { assertUserRateLimit } from '@/lib/security/action-rate-limit'
+import { type RateLimitPolicy } from '@/lib/security/rate-limit'
+
+const ENTRY_MUTATION_POLICY: RateLimitPolicy = {
+    name: 'action-entry-mutation',
+    limit: 30,
+    window: '1 m',
+}
+
+const ENTRY_BULK_POLICY: RateLimitPolicy = {
+    name: 'action-entry-bulk',
+    limit: 10,
+    window: '1 m',
+}
 
 async function ensureRegistrationOpenForEvent(supabase: any, eventId: string) {
     const { data: event, error } = await supabase
@@ -28,6 +42,8 @@ export async function upsertEntry(formData: FormData) {
     const category_id = formData.get('category_id') as string
     const event_day_id = formData.get('event_day_id') as string
     const participation_type = formData.get('participation_type') as string
+
+    await assertUserRateLimit(ENTRY_MUTATION_POLICY, user.id, ['upsert', event_id])
 
     await ensureRegistrationOpenForEvent(supabase, event_id)
 
@@ -74,6 +90,7 @@ export async function upsertEntry(formData: FormData) {
 
 export async function submitEntries(eventId: string) {
     const { supabase, user } = await requireRole('coach')
+    await assertUserRateLimit(ENTRY_MUTATION_POLICY, user.id, ['submit', eventId])
 
     await ensureRegistrationOpenForEvent(supabase, eventId)
 
@@ -94,6 +111,7 @@ export async function submitEntries(eventId: string) {
 
 export async function bulkCreateEntries(eventId: string, entries: { student_id: string, participation_type: string, event_day_id?: string | null }[]) {
     const { supabase, user } = await requireRole('coach')
+    await assertUserRateLimit(ENTRY_BULK_POLICY, user.id, ['bulk-create', eventId])
 
     await ensureRegistrationOpenForEvent(supabase, eventId)
 
@@ -121,6 +139,7 @@ export async function bulkCreateEntries(eventId: string, entries: { student_id: 
 
 export async function bulkSubmitEntries(entryIds: string[]) {
     const { supabase, user } = await requireRole('coach')
+    await assertUserRateLimit(ENTRY_BULK_POLICY, user.id, ['bulk-submit'])
     if (entryIds.length === 0) return { success: true }
 
     const { data: scopedEntries, error: scopedEntriesError } = await supabase
@@ -187,6 +206,7 @@ export async function bulkSubmitEntries(entryIds: string[]) {
 
 export async function deleteEntry(entryId: string) {
     const { supabase, user } = await requireRole('coach')
+    await assertUserRateLimit(ENTRY_MUTATION_POLICY, user.id, ['delete', entryId])
 
     const { data: entry, error: entryError } = await supabase
         .from('entries')
@@ -215,6 +235,7 @@ export async function deleteEntry(entryId: string) {
 
 export async function bulkDeleteEntries(entryIds: string[]) {
     const { supabase, user } = await requireRole('coach')
+    await assertUserRateLimit(ENTRY_BULK_POLICY, user.id, ['bulk-delete'])
     if (entryIds.length === 0) return { success: true }
 
     const { data: scopedEntries, error: scopedEntriesError } = await supabase

@@ -93,6 +93,132 @@ This doc captures the main issues encountered while setting up/running the app l
 
 - **25th session:** Enforced registration-closed behavior for coaches end-to-end: active events remain visible, but all entry mutations/actions are locked when registration is closed (manual toggle, close-date elapsed, or past event).
 - **25th session:** Added a shared registration-lock helper and aligned coach UI state/messages (`Registration Closed`) with backend guardrails.
+- **26th session:** Implemented distributed rate limiting across edge proxy, auth flows, public API, and dashboard server actions using Upstash Redis + sliding-window policies.
+- **27th session:** Replaced Redis-based rate limiting with Supabase/Postgres atomic UPSERT RPC limiter, removing Upstash dependencies/env requirements and adding DB migration support.
+- **28th session:** Optimized Postgres limiter load by narrowing proxy-level throttling to only sensitive endpoints (`/login`, `/auth/signout`, `/api/public-events`) and relying on server-action limits for dashboard mutations.
+
+## 26th Session - Security Hardening: Distributed Rate Limiting
+
+**When**
+- Completed in this session on **2026-03-10**.
+
+**Why**
+- The app had no centralized request throttling for auth endpoints, public API reads, or server action mutations.
+- That left critical surfaces exposed to brute-force attempts (`/login`), endpoint scraping (`/api/public-events`), and action spam/double-submit abuse on dashboard mutations.
+- Goal: add layered protection without changing existing business flows/RLS behavior.
+
+**How (Rollout Strategy)**
+- Implemented a **layered** model instead of a single limiter:
+- Edge coarse limiter in `src/proxy.ts` for broad traffic shaping.
+- Route/action-specific strict limiters inside high-risk handlers.
+- Used Upstash distributed counters (`@upstash/ratelimit` + `@upstash/redis`) with sliding-window policies so limits are consistent across instances.
+- Added shared helpers for identity keys (IP/email/user-based) and reusable action-level assertions.
+
+**Where (Files Changed)**
+- Foundation / env / docs:
+- `package.json`
+- `package-lock.json`
+- `.env.example`
+- `README.md`
+- `src/lib/security/rate-limit.ts`
+- `src/lib/security/request-identity.ts`
+- `src/lib/security/action-rate-limit.ts`
+- Edge layer:
+- `src/proxy.ts`
+- Auth + public API:
+- `src/app/login/actions.ts`
+- `src/app/auth/signout/route.ts`
+- `src/app/api/public-events/route.ts`
+- Coach mutation actions:
+- `src/app/dashboard/dojos/actions.ts`
+- `src/app/dashboard/students/actions/index.ts`
+- `src/app/dashboard/entries/actions/index.ts`
+- `src/app/dashboard/events-browser/actions/index.ts`
+- Organizer/admin mutation actions:
+- `src/app/dashboard/approvals/actions/index.ts`
+- `src/app/dashboard/events/actions/index.ts`
+- `src/app/dashboard/events/[id]/actions.ts`
+- `src/app/dashboard/events/[id]/entries/actions.ts`
+- `src/app/dashboard/events/[id]/categories/actions/index.ts`
+
+**Policy Highlights**
+- Proxy matcher expanded to include `/dashboard/:path*`, `/api/:path*`, `/login`, `/auth/signout`.
+- Auth policies:
+- login attempts limited by `ip + normalized email`.
+- signup attempts limited by `ip + normalized email`.
+- Google OAuth initiation limited by `ip`.
+- Public events API (`GET /api/public-events`) now returns `429` with `Retry-After` when limited.
+- Dashboard server actions are now user-scoped (`user.id`) with stricter limits for bulk/destructive operations.
+
+**Operational Notes**
+- Initial rollout used Upstash env vars (`UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`).
+- This backend was superseded in Session 27 by a Postgres/Supabase RPC limiter.
+
+**Commit Sequence (incremental rollout)**
+- `c61cafc` - shared distributed rate limiting foundation.
+- `71ab1eb` - edge proxy rate limiting.
+- `c49d23e` - auth flows + public API limits.
+- `4d83789` - coach action limits.
+- `88495fe` - organizer/admin action limits.
+
+## 27th Session - Rate Limiter Backend Migration (Redis -> Postgres)
+
+**When**
+- Completed in this session on **2026-03-10**.
+
+**Why**
+- Team preference was to avoid additional infra complexity for this stage.
+- The project already depends on Supabase/Postgres, so a DB-backed atomic limiter keeps architecture simpler while preserving consistency across instances.
+
+**What Changed**
+- Removed Redis/Upstash packages and related env setup.
+- Replaced limiter backend internals in `src/lib/security/rate-limit.ts`.
+- Kept existing call sites and policies intact (proxy, auth, API routes, server actions) to avoid functional regressions.
+- Added a new migration containing:
+- `public.rate_limits` table
+- `public.rate_limit_check(...)` `SECURITY DEFINER` function with atomic `INSERT ... ON CONFLICT DO UPDATE`
+- execute grants for `anon` and `authenticated`
+
+**Where**
+- `src/lib/security/rate-limit.ts`
+- `supabase/migrations/20260310_postgres_rate_limit.sql`
+- `package.json`
+- `package-lock.json`
+- `.env.example`
+- `README.md`
+
+**Operational Notes**
+- Run/apply the migration before relying on rate limits in production.
+- Limiter remains fail-open if RPC/env is unavailable (request allowed, error logged).
+
+## 28th Session - Rate Limit Scope Optimization (Sensitive Endpoints Only)
+
+**When**
+- Completed in this session on **2026-03-10**.
+
+**Why**
+- After moving to Postgres-based limiting, proxy-level checks on broad dashboard traffic caused unnecessary DB writes for normal page navigation.
+- The security objective is to protect abuse-prone surfaces, not every route.
+
+**What Changed**
+- Narrowed proxy matcher scope from broad dashboard/API coverage to only:
+- `/login`
+- `/auth/signout`
+- `/api/public-events`
+- Removed default dashboard proxy rate-limit path.
+- Kept action-level limits in place for mutation-heavy dashboard operations.
+
+**Where**
+- `src/proxy.ts`
+- `README.md`
+- `CHANGELOG.md`
+
+**Result**
+- Lower write load on `public.rate_limits`.
+- Same protection for high-risk entry points.
+- Cleaner split:
+- proxy = public/auth entry throttle
+- server actions = mutation abuse protection
 
 ## 1) Supabase migration error: `must be owner of table users`
 

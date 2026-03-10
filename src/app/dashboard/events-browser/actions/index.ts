@@ -4,9 +4,18 @@ import { revalidatePath } from 'next/cache'
 import { requireRole } from '@/lib/auth/require-role'
 import { deriveFullName } from '@/lib/auth/profile'
 import { isRegistrationClosed } from '@/lib/events/registration'
+import { assertUserRateLimit } from '@/lib/security/action-rate-limit'
+import { type RateLimitPolicy } from '@/lib/security/rate-limit'
+
+const APPLY_TO_EVENT_POLICY: RateLimitPolicy = {
+  name: 'action-apply-event',
+  limit: 10,
+  window: '10 m',
+}
 
 export async function applyToEvent(eventId: string) {
   const { supabase, user } = await requireRole('coach')
+  await assertUserRateLimit(APPLY_TO_EVENT_POLICY, user.id, ['event', eventId])
 
   const { data: event, error: eventError } = await supabase
     .from('events')

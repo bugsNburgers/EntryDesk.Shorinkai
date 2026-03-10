@@ -2,9 +2,18 @@
 
 import { revalidatePath } from 'next/cache'
 import { requireRole } from '@/lib/auth/require-role'
+import { assertUserRateLimit } from '@/lib/security/action-rate-limit'
+import { type RateLimitPolicy } from '@/lib/security/rate-limit'
+
+const APPROVAL_STATUS_POLICY: RateLimitPolicy = {
+  name: 'action-approval-status',
+  limit: 40,
+  window: '1 m',
+}
 
 export async function updateApplicationStatus(applicationId: string, status: 'approved' | 'rejected') {
-  const { supabase } = await requireRole(['organizer', 'admin'])
+  const { supabase, user } = await requireRole(['organizer', 'admin'])
+  await assertUserRateLimit(APPROVAL_STATUS_POLICY, user.id, ['application', applicationId])
 
   // Security: Ensure the event belongs to this organizer
   // We can do this with a complex RLS policy (already have "Organizers manage applications")
