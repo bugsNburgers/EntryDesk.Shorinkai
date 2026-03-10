@@ -2,9 +2,30 @@
 
 import { revalidatePath } from 'next/cache'
 import { requireRole } from '@/lib/auth/require-role'
+import { assertUserRateLimit } from '@/lib/security/action-rate-limit'
+import { type RateLimitPolicy } from '@/lib/security/rate-limit'
+
+const ENTRY_STATUS_POLICY: RateLimitPolicy = {
+    name: 'action-event-entry-status',
+    limit: 40,
+    window: '1 m',
+}
+
+const ENTRY_STATUS_BULK_POLICY: RateLimitPolicy = {
+    name: 'action-event-entry-bulk-status',
+    limit: 15,
+    window: '1 m',
+}
+
+const EVENT_EXPORT_POLICY: RateLimitPolicy = {
+    name: 'action-event-export',
+    limit: 20,
+    window: '1 m',
+}
 
 export async function updateEntryStatus(entryId: string, status: 'approved' | 'rejected') {
     const { supabase, user, role } = await requireRole(['organizer', 'admin'])
+    await assertUserRateLimit(ENTRY_STATUS_POLICY, user.id, ['single', entryId])
 
     // Get entry and event to verify ownership
     const { data: entry } = await supabase
@@ -33,6 +54,7 @@ export async function updateEntryStatus(entryId: string, status: 'approved' | 'r
 
 export async function bulkUpdateEntryStatus(entryIds: string[], status: 'approved' | 'rejected') {
     const { supabase, user, role } = await requireRole(['organizer', 'admin'])
+    await assertUserRateLimit(ENTRY_STATUS_BULK_POLICY, user.id, ['bulk'])
     if (entryIds.length === 0) return { success: true }
 
     // Optimization: Check if all entries belong to events managed by this user
@@ -70,7 +92,8 @@ export async function bulkUpdateEntryStatus(entryIds: string[], status: 'approve
 }
 
 export async function exportEventEntries(eventId: string, searchParams: { q?: string, status?: string, coach?: string, day?: string }) {
-    const { supabase } = await requireRole(['organizer', 'admin'])
+    const { supabase, user } = await requireRole(['organizer', 'admin'])
+    await assertUserRateLimit(EVENT_EXPORT_POLICY, user.id, ['export', eventId])
 
     let query = supabase
         .from('organizer_entries_view')

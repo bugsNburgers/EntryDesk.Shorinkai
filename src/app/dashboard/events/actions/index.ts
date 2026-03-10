@@ -3,6 +3,14 @@
 import { revalidatePath } from 'next/cache'
 import { requireRole } from '@/lib/auth/require-role'
 import { addDays, format, subMinutes } from 'date-fns'
+import { assertUserRateLimit } from '@/lib/security/action-rate-limit'
+import { type RateLimitPolicy } from '@/lib/security/rate-limit'
+
+const EVENT_CREATE_POLICY: RateLimitPolicy = {
+  name: 'action-event-create',
+  limit: 5,
+  window: '10 m',
+}
 
 type SupabaseActionError = {
   code?: string
@@ -22,6 +30,7 @@ function isMissingRegistrationCloseDateColumnError(error: SupabaseActionError | 
 
 export async function createEvent(formData: FormData) {
   const { supabase, user } = await requireRole(['organizer', 'admin'])
+  await assertUserRateLimit(EVENT_CREATE_POLICY, user.id, ['create'])
 
   const title = (formData.get('title') as string)?.trim()
   const description = formData.get('description') as string

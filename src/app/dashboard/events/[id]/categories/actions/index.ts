@@ -2,9 +2,18 @@
 
 import { revalidatePath } from 'next/cache'
 import { requireRole } from '@/lib/auth/require-role'
+import { assertUserRateLimit } from '@/lib/security/action-rate-limit'
+import { type RateLimitPolicy } from '@/lib/security/rate-limit'
+
+const CATEGORY_MUTATION_POLICY: RateLimitPolicy = {
+  name: 'action-category-mutation',
+  limit: 20,
+  window: '1 m',
+}
 
 export async function createCategory(eventId: string, formData: FormData) {
-  const { supabase } = await requireRole(['organizer', 'admin'])
+  const { supabase, user } = await requireRole(['organizer', 'admin'])
+  await assertUserRateLimit(CATEGORY_MUTATION_POLICY, user.id, ['create', eventId])
 
   const name = formData.get('name') as string
   const gender = formData.get('gender') as string
@@ -39,7 +48,8 @@ export async function createCategory(eventId: string, formData: FormData) {
 }
 
 export async function updateCategory(categoryId: string, eventId: string, formData: FormData) {
-  const { supabase } = await requireRole(['organizer', 'admin'])
+  const { supabase, user } = await requireRole(['organizer', 'admin'])
+  await assertUserRateLimit(CATEGORY_MUTATION_POLICY, user.id, ['update', categoryId])
 
   const name = formData.get('name') as string
   const gender = formData.get('gender') as string
@@ -76,7 +86,8 @@ export async function updateCategory(categoryId: string, eventId: string, formDa
 }
 
 export async function deleteCategory(categoryId: string, eventId: string) {
-  const { supabase } = await requireRole(['organizer', 'admin'])
+  const { supabase, user } = await requireRole(['organizer', 'admin'])
+  await assertUserRateLimit(CATEGORY_MUTATION_POLICY, user.id, ['delete', categoryId])
 
   // RLS handles security
   const { error } = await supabase.from('categories').delete().eq('id', categoryId)
