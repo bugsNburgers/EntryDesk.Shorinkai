@@ -3,9 +3,24 @@
 import { revalidatePath } from 'next/cache'
 import { requireRole } from '@/lib/auth/require-role'
 import { normalizeDobToIso } from '@/lib/date'
+import { assertUserRateLimit } from '@/lib/security/action-rate-limit'
+import { type RateLimitPolicy } from '@/lib/security/rate-limit'
+
+const STUDENT_MUTATION_POLICY: RateLimitPolicy = {
+    name: 'action-student-mutation',
+    limit: 30,
+    window: '1 m',
+}
+
+const STUDENT_TOGGLE_POLICY: RateLimitPolicy = {
+    name: 'action-student-toggle',
+    limit: 60,
+    window: '1 m',
+}
 
 export async function createStudent(formData: FormData) {
     const { supabase, user } = await requireRole('coach')
+    await assertUserRateLimit(STUDENT_MUTATION_POLICY, user.id, ['create'])
 
     const name = formData.get('name') as string
     const gender = formData.get('gender') as string
@@ -49,6 +64,7 @@ export async function createStudent(formData: FormData) {
 
 export async function updateStudent(studentId: string, formData: FormData) {
     const { supabase, user } = await requireRole('coach')
+    await assertUserRateLimit(STUDENT_MUTATION_POLICY, user.id, ['update', studentId])
 
     const name = formData.get('name') as string
     const gender = formData.get('gender') as string
@@ -103,6 +119,7 @@ export async function updateStudent(studentId: string, formData: FormData) {
 
 export async function deleteStudent(studentId: string) {
     const { supabase, user } = await requireRole('coach')
+    await assertUserRateLimit(STUDENT_MUTATION_POLICY, user.id, ['delete', studentId])
 
     // RLS will ensure we can only delete students in our dojos
     const { error } = await supabase
@@ -120,7 +137,8 @@ export async function deleteStudent(studentId: string) {
 }
 
 export async function updateStudentGenericChecked(studentId: string, checked: boolean, eventId?: string) {
-    const { supabase } = await requireRole('coach')
+    const { supabase, user } = await requireRole('coach')
+    await assertUserRateLimit(STUDENT_TOGGLE_POLICY, user.id, ['toggle-generic', studentId])
 
     const { error } = await supabase
         .from('students')
