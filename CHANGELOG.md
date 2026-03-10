@@ -95,6 +95,7 @@ This doc captures the main issues encountered while setting up/running the app l
 - **25th session:** Added a shared registration-lock helper and aligned coach UI state/messages (`Registration Closed`) with backend guardrails.
 - **26th session:** Implemented distributed rate limiting across edge proxy, auth flows, public API, and dashboard server actions using Upstash Redis + sliding-window policies.
 - **27th session:** Replaced Redis-based rate limiting with Supabase/Postgres atomic UPSERT RPC limiter, removing Upstash dependencies/env requirements and adding DB migration support.
+- **28th session:** Optimized Postgres limiter load by narrowing proxy-level throttling to only sensitive endpoints (`/login`, `/auth/signout`, `/api/public-events`) and relying on server-action limits for dashboard mutations.
 
 ## 26th Session - Security Hardening: Distributed Rate Limiting
 
@@ -189,6 +190,35 @@ This doc captures the main issues encountered while setting up/running the app l
 **Operational Notes**
 - Run/apply the migration before relying on rate limits in production.
 - Limiter remains fail-open if RPC/env is unavailable (request allowed, error logged).
+
+## 28th Session - Rate Limit Scope Optimization (Sensitive Endpoints Only)
+
+**When**
+- Completed in this session on **2026-03-10**.
+
+**Why**
+- After moving to Postgres-based limiting, proxy-level checks on broad dashboard traffic caused unnecessary DB writes for normal page navigation.
+- The security objective is to protect abuse-prone surfaces, not every route.
+
+**What Changed**
+- Narrowed proxy matcher scope from broad dashboard/API coverage to only:
+- `/login`
+- `/auth/signout`
+- `/api/public-events`
+- Removed default dashboard proxy rate-limit path.
+- Kept action-level limits in place for mutation-heavy dashboard operations.
+
+**Where**
+- `src/proxy.ts`
+- `README.md`
+- `CHANGELOG.md`
+
+**Result**
+- Lower write load on `public.rate_limits`.
+- Same protection for high-risk entry points.
+- Cleaner split:
+- proxy = public/auth entry throttle
+- server actions = mutation abuse protection
 
 ## 1) Supabase migration error: `must be owner of table users`
 

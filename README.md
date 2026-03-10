@@ -54,6 +54,7 @@ Fill in the required values from your Supabase dashboard:
 
 Rate limiting now uses a Supabase/Postgres RPC (`rate_limit_check`) backed by `public.rate_limits`.
 This is created via the migration `supabase/migrations/20260310_postgres_rate_limit.sql`.
+Proxy-level limits are intentionally applied only to sensitive public/auth routes (`/login`, `/auth/signout`, `/api/public-events`), while dashboard mutations are limited within server actions.
 
 ### 4. Database Schema Setup
 This repository includes the necessary schema, RLS policies, and views in `supabase/migrations/db.sql`.
