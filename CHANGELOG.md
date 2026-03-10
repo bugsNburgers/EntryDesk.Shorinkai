@@ -94,6 +94,7 @@ This doc captures the main issues encountered while setting up/running the app l
 - **25th session:** Enforced registration-closed behavior for coaches end-to-end: active events remain visible, but all entry mutations/actions are locked when registration is closed (manual toggle, close-date elapsed, or past event).
 - **25th session:** Added a shared registration-lock helper and aligned coach UI state/messages (`Registration Closed`) with backend guardrails.
 - **26th session:** Implemented distributed rate limiting across edge proxy, auth flows, public API, and dashboard server actions using Upstash Redis + sliding-window policies.
+- **27th session:** Replaced Redis-based rate limiting with Supabase/Postgres atomic UPSERT RPC limiter, removing Upstash dependencies/env requirements and adding DB migration support.
 
 ## 26th Session - Security Hardening: Distributed Rate Limiting
 
@@ -149,10 +150,8 @@ This doc captures the main issues encountered while setting up/running the app l
 - Dashboard server actions are now user-scoped (`user.id`) with stricter limits for bulk/destructive operations.
 
 **Operational Notes**
-- New required env vars:
-- `UPSTASH_REDIS_REST_URL`
-- `UPSTASH_REDIS_REST_TOKEN`
-- Current behavior is intentionally **fail-open** if Redis env vars are missing (logs warning once), to avoid accidental production outage from misconfiguration.
+- Initial rollout used Upstash env vars (`UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`).
+- This backend was superseded in Session 27 by a Postgres/Supabase RPC limiter.
 
 **Commit Sequence (incremental rollout)**
 - `c61cafc` - shared distributed rate limiting foundation.
@@ -160,6 +159,36 @@ This doc captures the main issues encountered while setting up/running the app l
 - `c49d23e` - auth flows + public API limits.
 - `4d83789` - coach action limits.
 - `88495fe` - organizer/admin action limits.
+
+## 27th Session - Rate Limiter Backend Migration (Redis -> Postgres)
+
+**When**
+- Completed in this session on **2026-03-10**.
+
+**Why**
+- Team preference was to avoid additional infra complexity for this stage.
+- The project already depends on Supabase/Postgres, so a DB-backed atomic limiter keeps architecture simpler while preserving consistency across instances.
+
+**What Changed**
+- Removed Redis/Upstash packages and related env setup.
+- Replaced limiter backend internals in `src/lib/security/rate-limit.ts`.
+- Kept existing call sites and policies intact (proxy, auth, API routes, server actions) to avoid functional regressions.
+- Added a new migration containing:
+- `public.rate_limits` table
+- `public.rate_limit_check(...)` `SECURITY DEFINER` function with atomic `INSERT ... ON CONFLICT DO UPDATE`
+- execute grants for `anon` and `authenticated`
+
+**Where**
+- `src/lib/security/rate-limit.ts`
+- `supabase/migrations/20260310_postgres_rate_limit.sql`
+- `package.json`
+- `package-lock.json`
+- `.env.example`
+- `README.md`
+
+**Operational Notes**
+- Run/apply the migration before relying on rate limits in production.
+- Limiter remains fail-open if RPC/env is unavailable (request allowed, error logged).
 
 ## 1) Supabase migration error: `must be owner of table users`
 

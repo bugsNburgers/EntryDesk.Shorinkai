@@ -52,9 +52,8 @@ Fill in the required values from your Supabase dashboard:
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `NEXT_PUBLIC_BASE_URL` (Defaults to `http://localhost:3000` for local dev)
 
-Fill in the required values from your Upstash dashboard for API and action rate limiting:
-- `UPSTASH_REDIS_REST_URL`
-- `UPSTASH_REDIS_REST_TOKEN`
+Rate limiting now uses a Supabase/Postgres RPC (`rate_limit_check`) backed by `public.rate_limits`.
+This is created via the migration `supabase/migrations/20260310_postgres_rate_limit.sql`.
 
 ### 4. Database Schema Setup
 This repository includes the necessary schema, RLS policies, and views in `supabase/migrations/db.sql`.

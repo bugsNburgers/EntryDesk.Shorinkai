@@ -1,6 +1,3 @@
-import { Ratelimit } from '@upstash/ratelimit'
-import { Redis } from '@upstash/redis'
-
 export type TimeWindow = `${number} s` | `${number} m` | `${number} h` | `${number} d`
 
 export type RateLimitPolicy = {
@@ -19,46 +16,61 @@ export class RateLimitExceededError extends Error {
     }
 }
 
-let warnedMissingRedisEnv = false
-let redisClient: Redis | null = null
+let warnedMissingSupabaseEnv = false
 
-const limiterByPolicy = new Map<string, Ratelimit>()
+function parseWindowSeconds(window: TimeWindow) {
+    const [rawCount, rawUnit] = window.split(' ')
+    const count = Number(rawCount)
+    const unit = rawUnit as 's' | 'm' | 'h' | 'd'
 
-function getRedisClient() {
-    if (redisClient) return redisClient
+    const multipliers: Record<'s' | 'm' | 'h' | 'd', number> = {
+        s: 1,
+        m: 60,
+        h: 3600,
+        d: 86_400,
+    }
 
-    const url = process.env.UPSTASH_REDIS_REST_URL
-    const token = process.env.UPSTASH_REDIS_REST_TOKEN
+    return Math.max(1, Math.floor(count * multipliers[unit]))
+}
 
-    if (!url || !token) {
-        if (!warnedMissingRedisEnv) {
-            warnedMissingRedisEnv = true
-            console.warn('[rate-limit] Upstash Redis env vars are missing. Limiting is currently fail-open.')
+async function invokeRateLimitRpc(policy: RateLimitPolicy, identifier: string) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+        if (!warnedMissingSupabaseEnv) {
+            warnedMissingSupabaseEnv = true
+            console.warn('[rate-limit] Supabase env vars are missing. Limiting is currently fail-open.')
         }
         return null
     }
 
-    redisClient = new Redis({ url, token })
-    return redisClient
-}
-
-function getLimiter(policy: RateLimitPolicy) {
-    const key = `${policy.name}:${policy.limit}:${policy.window}`
-    const cached = limiterByPolicy.get(key)
-    if (cached) return cached
-
-    const redis = getRedisClient()
-    if (!redis) return null
-
-    const limiter = new Ratelimit({
-        redis,
-        limiter: Ratelimit.slidingWindow(policy.limit, policy.window),
-        prefix: `entrydesk:rl:${policy.name}`,
-        analytics: true,
+    const response = await fetch(`${supabaseUrl}/rest/v1/rpc/rate_limit_check`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            apikey: supabaseAnonKey,
+            Authorization: `Bearer ${supabaseAnonKey}`,
+        },
+        body: JSON.stringify({
+            p_scope: policy.name,
+            p_identifier: identifier,
+            p_limit: policy.limit,
+            p_window_seconds: parseWindowSeconds(policy.window),
+        }),
+        cache: 'no-store',
     })
 
-    limiterByPolicy.set(key, limiter)
-    return limiter
+    if (!response.ok) {
+        const responseBody = await response.text()
+        throw new Error(`rate_limit_check RPC failed: ${response.status} ${responseBody}`)
+    }
+
+    return response.json() as Promise<{
+        allowed: boolean
+        request_count: number
+        retry_after_seconds: number
+    }>
 }
 
 export type RateLimitResult = {
@@ -69,26 +81,30 @@ export type RateLimitResult = {
 }
 
 export async function checkRateLimit(policy: RateLimitPolicy, identifier: string): Promise<RateLimitResult> {
-    const limiter = getLimiter(policy)
+    try {
+        const rpcResult = await invokeRateLimitRpc(policy, identifier)
+        if (!rpcResult) {
+            return {
+                success: true,
+                remaining: policy.limit,
+                reset: Date.now() + 60_000,
+            }
+        }
 
-    if (!limiter) {
+        const retryAfterSeconds = rpcResult.allowed ? undefined : Math.max(1, rpcResult.retry_after_seconds)
+        return {
+            success: rpcResult.allowed,
+            remaining: Math.max(0, policy.limit - rpcResult.request_count),
+            reset: Date.now() + (rpcResult.retry_after_seconds * 1000),
+            retryAfterSeconds,
+        }
+    } catch (error) {
+        console.error('[rate-limit] RPC check failed, allowing request:', error)
         return {
             success: true,
             remaining: policy.limit,
             reset: Date.now() + 60_000,
         }
-    }
-
-    const result = await limiter.limit(identifier)
-    const retryAfterSeconds = result.success
-        ? undefined
-        : Math.max(1, Math.ceil((result.reset - Date.now()) / 1000))
-
-    return {
-        success: result.success,
-        remaining: result.remaining,
-        reset: result.reset,
-        retryAfterSeconds,
     }
 }
 
