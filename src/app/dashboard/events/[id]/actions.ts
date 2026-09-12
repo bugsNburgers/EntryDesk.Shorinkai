@@ -2,6 +2,7 @@
 
 import { requireRole } from '@/lib/auth/require-role'
 import { redirect } from 'next/navigation'
+import sql from '@/lib/db'
 
 export async function deleteEvent(formData: FormData) {
     const eventIdValue = formData.get('eventId')
@@ -11,54 +12,44 @@ export async function deleteEvent(formData: FormData) {
         throw new Error('Missing eventId')
     }
 
-    const { supabase, user } = await requireRole(['organizer', 'admin'], { redirectTo: '/dashboard' })
+    const { user } = await requireRole(['organizer', 'admin'], { redirectTo: '/dashboard' })
 
-    const { data: event, error: eventError } = await supabase
-        .from('events')
-        .select('id, organizer_id')
-        .eq('id', eventId)
-        .single()
+    // Strict ownership verification in SQL
+    const deleted = await sql`
+        DELETE FROM events
+        WHERE id = ${eventId} AND organizer_id = ${user.id}
+        RETURNING id
+    `
 
-    if (eventError || !event) {
-        throw new Error('Event not found')
-    }
-
-    if (event.organizer_id !== user.id) {
-        throw new Error('Not authorized to delete this event')
-    }
-
-    const { error: deleteError } = await supabase.from('events').delete().eq('id', eventId)
-
-    if (deleteError) {
-        throw new Error(deleteError.message)
+    if (deleted.length === 0) {
+        throw new Error('Unauthorized or event not found')
     }
 
     redirect('/dashboard/events')
 }
 
-export async function updateEventSettings(eventId: string, data: { title?: string; location?: string; is_registration_open?: boolean }) {
+export async function updateEventSettings(
+    eventId: string,
+    data: { title?: string; location?: string; is_registration_open?: boolean }
+) {
     if (!eventId) throw new Error('Missing eventId')
 
-    const { supabase, user } = await requireRole(['organizer', 'admin'])
+    const { user } = await requireRole(['organizer', 'admin'])
 
-    const { data: event, error: eventError } = await supabase
-        .from('events')
-        .select('id, organizer_id')
-        .eq('id', eventId)
-        .single()
+    // Strict ownership check and update in SQL
+    const updated = await sql`
+        UPDATE events
+        SET 
+            title = CASE WHEN ${data.title !== undefined} THEN ${data.title ?? null} ELSE title END,
+            location = CASE WHEN ${data.location !== undefined} THEN ${data.location ?? null} ELSE location END,
+            is_registration_open = CASE WHEN ${data.is_registration_open !== undefined} THEN ${data.is_registration_open ?? null} ELSE is_registration_open END
+        WHERE id = ${eventId} AND organizer_id = ${user.id}
+        RETURNING id
+    `
 
-    if (eventError || !event) throw new Error('Event not found')
-
-    if (event.organizer_id !== user.id) {
-        throw new Error('Not authorized to edit this event')
+    if (updated.length === 0) {
+        throw new Error('Unauthorized or event not found')
     }
-
-    const { error: updateError } = await supabase
-        .from('events')
-        .update(data)
-        .eq('id', eventId)
-
-    if (updateError) throw new Error(updateError.message)
 
     return { success: true }
 }

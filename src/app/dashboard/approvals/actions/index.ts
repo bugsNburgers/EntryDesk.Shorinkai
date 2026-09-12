@@ -2,32 +2,30 @@
 
 import { revalidatePath } from 'next/cache'
 import { requireRole } from '@/lib/auth/require-role'
+import sql from '@/lib/db'
 
 export async function updateApplicationStatus(applicationId: string, status: 'approved' | 'rejected') {
-  const { supabase } = await requireRole(['organizer', 'admin'])
+    const { user, role } = await requireRole(['organizer', 'admin'])
 
-  // Security: Ensure the event belongs to this organizer
-  // We can do this with a complex RLS policy (already have "Organizers manage applications")
-  // or by doing an explicit join check if RLS is too loose.
-  // Our RLS: "exists (select 1 from events where events.id = event_applications.event_id and events.organizer_id = auth.uid())"
-  // This protects UPDATES too.
+    // Security check: strictly enforce that application's event belongs to this organizer
+    const updated = await sql<{ event_id: string }[]>`
+        UPDATE event_applications a
+        SET status = ${status}
+        FROM events ev
+        WHERE a.id = ${applicationId}
+          AND a.event_id = ev.id
+          ${role !== 'admin' ? sql`AND ev.organizer_id = ${user.id}` : sql``}
+        RETURNING a.event_id
+    `
 
-  // Fetch event_id to revalidate the correct page
-  const { data: updated, error } = await supabase
-    .from('event_applications')
-    .update({ status })
-    .eq('id', applicationId)
-    .select('event_id')
-    .single()
+    if (updated.length === 0) {
+        throw new Error('Unauthorized: Application not found or event not managed by you')
+    }
 
-  if (error) {
-    console.error(error)
-    throw new Error('Failed to update application')
-  }
+    const eventId = updated[0].event_id
+    revalidatePath('/dashboard/approvals')
+    revalidatePath(`/dashboard/events/${eventId}/approvals`)
+    revalidatePath(`/dashboard/events/${eventId}`)
 
-  revalidatePath('/dashboard/approvals')
-  if (updated) {
-    revalidatePath(`/dashboard/events/${updated.event_id}/approvals`)
-  }
-  return { success: true }
+    return { success: true }
 }

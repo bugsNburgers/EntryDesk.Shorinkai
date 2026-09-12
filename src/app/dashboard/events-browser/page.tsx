@@ -6,42 +6,60 @@ import { DashboardPageHeader } from '@/components/dashboard/page-header'
 import { Badge } from '@/components/ui/badge'
 import { Calendar, MapPin, ArrowRight, FolderOpen, CheckCircle2, Clock, XCircle } from 'lucide-react'
 import { PaginationControls } from '@/components/ui/pagination-controls'
+import sql from '@/lib/db'
+import type { Event } from '@/types/database'
 
 export default async function EventBrowserPage({
     searchParams,
 }: {
     searchParams?: Promise<{ page?: string }>
 }) {
-    const { supabase, user } = await requireRole('coach', { redirectTo: '/dashboard' })
+    const { user } = await requireRole('coach', { redirectTo: '/dashboard' })
     const sp = await searchParams
     const page = Math.max(1, Number(sp?.page) || 1)
     const limit = 50
     const offset = (page - 1) * limit
 
-    const { data: events, count } = await supabase
-        .from('events')
-        .select('*', { count: 'exact' })
-        .eq('is_public', true)
-        .order('start_date', { ascending: true })
-        .range(offset, offset + limit - 1)
+    const [events, countResult, applications] = await Promise.all([
+        sql<Event[]>`
+            SELECT * FROM events
+            WHERE is_public = true
+            ORDER BY start_date ASC
+            LIMIT ${limit} OFFSET ${offset}
+        `,
+        sql<{ count: number }[]>`
+            SELECT count(*)::int AS count
+            FROM events
+            WHERE is_public = true
+        `,
+        sql<{ event_id: string; status: string }[]>`
+            SELECT event_id, status
+            FROM event_applications
+            WHERE coach_id = ${user.id}
+        `,
+    ])
 
-    const { data: applications } = await supabase
-        .from('event_applications')
-        .select('event_id, status')
-        .eq('coach_id', user.id)
-
-    const appMap = new Map()
-    applications?.forEach(app => {
+    const count = countResult[0]?.count ?? 0
+    const appMap = new Map<string, string>()
+    applications?.forEach((app) => {
         appMap.set(app.event_id, app.status)
     })
 
+function toIsoDate(d: string | Date | null | undefined): string {
+    if (!d) return ''
+    if (d instanceof Date) {
+        return d.toISOString().slice(0, 10)
+    }
+    return String(d).slice(0, 10)
+}
+
     const today = new Date().toISOString().slice(0, 10)
-    const upcomingEvents = (events ?? []).filter((event) => event.end_date >= today)
-    const pastEvents = (events ?? []).filter((event) => event.end_date < today)
+    const upcomingEvents = (events ?? []).filter((event) => toIsoDate(event.end_date) >= today)
+    const pastEvents = (events ?? []).filter((event) => toIsoDate(event.end_date) < today)
 
     const approvedUpcomingEvents = upcomingEvents.filter((event) => appMap.get(event.id) === 'approved')
     const activeUpcomingEvents = upcomingEvents
-    const totalPages = Math.ceil((count ?? 0) / limit)
+    const totalPages = Math.ceil(count / limit)
 
     const getStatusIcon = (status: string | undefined) => {
         if (status === 'approved') return <CheckCircle2 className="h-3 w-3 text-emerald-600 dark:text-emerald-500" />
@@ -282,7 +300,7 @@ export default async function EventBrowserPage({
                 </div>
             </div>
 
-            <PaginationControls page={page} totalPages={totalPages} totalCount={count ?? 0} />
+            <PaginationControls page={page} totalPages={totalPages} totalCount={count} />
         </div>
     )
 }

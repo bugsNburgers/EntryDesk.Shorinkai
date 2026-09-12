@@ -1,19 +1,32 @@
 import { requireRole } from '@/lib/auth/require-role'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { CategoryDialog } from '@/components/categories/category-dialog'
 import { CategoryActions } from '@/components/categories/category-actions'
+import { notFound } from 'next/navigation'
+import sql from '@/lib/db'
+import type { Category } from '@/types/database'
 
-// This component is async because it's a Server Component
-export default async function CategoriesPage({ params }: { params: { id: string } }) {
-    // Await the params to extract the 'id'
+export default async function CategoriesPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params
-    const { supabase } = await requireRole(['organizer', 'admin'], { redirectTo: '/dashboard' })
+    const { user, role } = await requireRole(['organizer', 'admin'], { redirectTo: '/dashboard' })
 
-    const { data: categories } = await supabase
-        .from('categories')
-        .select('*')
-        .eq('event_id', id)
-        .order('name')
+    // Security check: Verify event ownership
+    const events = await sql<{ id: string }[]>`
+        SELECT id FROM events
+        WHERE id = ${id}
+          ${role !== 'admin' ? sql`AND organizer_id = ${user.id}` : sql``}
+        LIMIT 1
+    `
+
+    if (events.length === 0) {
+        return notFound()
+    }
+
+    const categories = await sql<Category[]>`
+        SELECT * FROM categories
+        WHERE event_id = ${id}
+        ORDER BY name ASC
+    `
 
     return (
         <div className="space-y-6">
@@ -55,7 +68,7 @@ export default async function CategoriesPage({ params }: { params: { id: string 
                                                 {cat.min_rank && cat.max_rank ? `${cat.min_rank} - ${cat.max_rank}` : 'All Belts'}
                                             </td>
                                             <td className="p-4 align-middle text-right">
-                                                <CategoryActions category={cat} />
+                                                <CategoryActions category={{ ...cat, gender: cat.gender || 'mixed' }} />
                                             </td>
                                         </tr>
                                     ))}

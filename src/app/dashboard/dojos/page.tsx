@@ -6,28 +6,52 @@ import { DojoActions } from '@/components/dojos/dojo-actions'
 import { DashboardPageHeader } from '@/components/dashboard/page-header'
 import { PaginationControls } from '@/components/ui/pagination-controls'
 import Link from 'next/link'
+import sql from '@/lib/db'
 
 export default async function DojosPage({
     searchParams,
 }: {
     searchParams?: Promise<{ page?: string }>
 }) {
-    const { supabase, user } = await requireRole('coach', { redirectTo: '/dashboard' })
+    const { user } = await requireRole('coach', { redirectTo: '/dashboard' })
     const sp = await searchParams
     const page = Math.max(1, Number(sp?.page) || 1)
     const limit = 50
-    const from = (page - 1) * limit
-    const to = from + limit - 1
+    const offset = (page - 1) * limit
 
-    // Fetch coach's dojos with student count
-    const { data: dojos, count } = await supabase
-        .from('dojos')
-        .select('*, students(count)', { count: 'exact' })
-        .eq('coach_id', user.id)
-        .order('created_at', { ascending: false })
-        .range(from, to)
+    // Fetch coach's dojos with student count in one fast SQL query
+    const [dojos, countResult] = await Promise.all([
+        sql<
+            {
+                id: string
+                name: string
+                coach_id: string
+                created_at: string
+                student_count: number
+            }[]
+        >`
+            SELECT 
+                d.id, 
+                d.name, 
+                d.coach_id,
+                d.created_at, 
+                COUNT(s.id)::int AS student_count
+            FROM dojos d
+            LEFT JOIN students s ON d.id = s.dojo_id
+            WHERE d.coach_id = ${user.id}
+            GROUP BY d.id
+            ORDER BY d.created_at DESC
+            LIMIT ${limit} OFFSET ${offset}
+        `,
+        sql<{ count: number }[]>`
+            SELECT count(*)::int AS count
+            FROM dojos
+            WHERE coach_id = ${user.id}
+        `,
+    ])
 
-    const totalPages = Math.ceil((count ?? 0) / limit)
+    const totalCount = countResult[0]?.count ?? 0
+    const totalPages = Math.ceil(totalCount / limit)
 
     return (
         <div className="space-y-4">
@@ -65,7 +89,7 @@ export default async function DojosPage({
                                         <div className="text-sm font-medium">{dojo.name}</div>
                                         <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
                                             <Users className="h-2.5 w-2.5" />
-                                            <span>{dojo.students?.[0]?.count || 0} students</span>
+                                            <span>{dojo.student_count || 0} students</span>
                                         </div>
                                     </div>
                                 </div>
@@ -91,7 +115,7 @@ export default async function DojosPage({
                 )}
             </div>
 
-            <PaginationControls page={page} totalPages={totalPages} totalCount={count ?? 0} />
+            <PaginationControls page={page} totalPages={totalPages} totalCount={totalCount} />
         </div>
     )
 }

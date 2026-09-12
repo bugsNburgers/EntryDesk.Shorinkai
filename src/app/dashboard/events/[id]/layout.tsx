@@ -1,5 +1,7 @@
 import { requireRole } from '@/lib/auth/require-role'
 import { notFound } from 'next/navigation'
+import sql from '@/lib/db'
+import type { Event } from '@/types/database'
 
 export default async function EventLayout({
     children,
@@ -8,24 +10,21 @@ export default async function EventLayout({
     children: React.ReactNode
     params: Promise<{ id: string }>
 }) {
-    // Await params before using its properties
     const { id } = await params
-    const { supabase, user, role } = await requireRole(['organizer', 'admin'], { redirectTo: '/dashboard' })
+    const { user, role } = await requireRole(['organizer', 'admin'], { redirectTo: '/dashboard' })
 
-    let eventQuery = supabase
-        .from('events')
-        .select('*')
-        .eq('id', id)
+    const events = await sql<Event[]>`
+        SELECT * FROM events
+        WHERE id = ${id}
+          ${role !== 'admin' ? sql`AND organizer_id = ${user.id}` : sql``}
+        LIMIT 1
+    `
 
-    if (role !== 'admin') {
-        eventQuery = eventQuery.eq('organizer_id', user.id)
+    if (events.length === 0) {
+        notFound()
     }
 
-    const { data: event } = await eventQuery.single()
-
-    if (!event) notFound()
-
-    const canDelete = event.organizer_id === user.id
+    const event = events[0]
 
     return (
         <div className="space-y-6">

@@ -2,69 +2,57 @@
 
 import { revalidatePath } from 'next/cache'
 import { requireRole } from '@/lib/auth/require-role'
+import sql from '@/lib/db'
 
 export async function createDojo(formData: FormData) {
-  const { supabase, user } = await requireRole('coach')
+    const { user } = await requireRole('coach')
 
-  const nameValue = formData.get('name')
-  const name = typeof nameValue === 'string' ? nameValue.trim() : ''
+    const nameValue = formData.get('name')
+    const name = typeof nameValue === 'string' ? nameValue.trim() : ''
 
-  if (!name) {
-    throw new Error('Dojo name is required')
-  }
+    if (!name) {
+        throw new Error('Dojo name is required')
+    }
 
-  const { error } = await supabase
-    .from('dojos')
-    .insert({
-      name,
-      coach_id: user.id
-    })
+    await sql`
+        INSERT INTO dojos (name, coach_id)
+        VALUES (${name}, ${user.id})
+    `
 
-  if (error) {
-    throw new Error(error.message)
-  }
-
-  revalidatePath('/dashboard/dojos')
-  return { success: true }
+    revalidatePath('/dashboard/dojos')
+    return { success: true }
 }
 
 export async function updateDojo(dojoId: string, formData: FormData) {
-  const { supabase, user } = await requireRole('coach')
+    const { user } = await requireRole('coach')
 
-  const nameValue = formData.get('name')
-  const name = typeof nameValue === 'string' ? nameValue.trim() : ''
+    const nameValue = formData.get('name')
+    const name = typeof nameValue === 'string' ? nameValue.trim() : ''
 
-  if (!name) {
-    throw new Error('Dojo name is required')
-  }
+    if (!name) {
+        throw new Error('Dojo name is required')
+    }
 
-  const { error } = await supabase
-    .from('dojos')
-    .update({ name })
-    .eq('id', dojoId)
-    .eq('coach_id', user.id) // Security check
+    // Security check: coach_id = user.id strictly enforced in SQL
+    await sql`
+        UPDATE dojos
+        SET name = ${name}
+        WHERE id = ${dojoId} AND coach_id = ${user.id}
+    `
 
-  if (error) {
-    throw new Error(error.message)
-  }
-
-  revalidatePath('/dashboard/dojos')
-  return { success: true }
+    revalidatePath('/dashboard/dojos')
+    return { success: true }
 }
 
 export async function deleteDojo(dojoId: string) {
-  const { supabase, user } = await requireRole('coach')
+    const { user } = await requireRole('coach')
 
-  const { error } = await supabase
-    .from('dojos')
-    .delete()
-    .eq('id', dojoId)
-    .eq('coach_id', user.id) // Security check
+    // Security check: coach_id = user.id strictly enforced in SQL
+    await sql`
+        DELETE FROM dojos
+        WHERE id = ${dojoId} AND coach_id = ${user.id}
+    `
 
-  if (error) {
-    throw new Error(error.message)
-  }
-
-  revalidatePath('/dashboard/dojos')
-  return { success: true }
+    revalidatePath('/dashboard/dojos')
+    return { success: true }
 }

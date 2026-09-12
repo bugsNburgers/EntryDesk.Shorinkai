@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Calendar, ArrowRight, CheckCircle2, MapPin, ClipboardList } from 'lucide-react'
 import { DashboardPageHeader } from '@/components/dashboard/page-header'
 import { PaginationControls } from '@/components/ui/pagination-controls'
+import sql from '@/lib/db'
 
 type ApprovedEvent = {
     id: string
@@ -14,56 +15,53 @@ type ApprovedEvent = {
     description?: string | null
 }
 
-function isApprovedEvent(value: unknown): value is ApprovedEvent {
-    if (!value || typeof value !== 'object') return false
-    const event = value as Record<string, unknown>
-    return (
-        typeof event.id === 'string' &&
-        typeof event.title === 'string' &&
-        typeof event.start_date === 'string' &&
-        typeof event.end_date === 'string'
-    )
-}
-
 export default async function EntriesPage({
     searchParams,
 }: {
     searchParams?: Promise<{ page?: string }>
 }) {
-    const { supabase, user } = await requireRole('coach', { redirectTo: '/dashboard' })
+    const { user } = await requireRole('coach', { redirectTo: '/dashboard' })
     const sp = await searchParams
     const page = Math.max(1, Number(sp?.page) || 1)
     const limit = 50
     const offset = (page - 1) * limit
 
-    // Get Approved Events
-    const { data: applications, count } = await supabase
-        .from('event_applications')
-        .select(`
-        event_id, 
-        events (
-            id, 
-            title, 
-            start_date, 
-            end_date,
-            location, 
-            description
-        )
-    `, { count: 'exact' })
-        .eq('coach_id', user.id)
-        .eq('status', 'approved')
-        .range(offset, offset + limit - 1)
+    const [approvedEvents, countResult] = await Promise.all([
+        sql<ApprovedEvent[]>`
+            SELECT 
+                ev.id,
+                ev.title,
+                ev.start_date,
+                ev.end_date,
+                ev.location,
+                ev.description
+            FROM event_applications a
+            JOIN events ev ON a.event_id = ev.id
+            WHERE a.coach_id = ${user.id}
+              AND a.status = 'approved'
+            ORDER BY ev.start_date ASC
+            LIMIT ${limit} OFFSET ${offset}
+        `,
+        sql<{ count: number }[]>`
+            SELECT count(*)::int AS count
+            FROM event_applications
+            WHERE coach_id = ${user.id} AND status = 'approved'
+        `,
+    ])
 
-    const approvedEvents: ApprovedEvent[] = (applications ?? [])
-        .flatMap((application) => {
-            const eventsValue = application.events as unknown
-            return Array.isArray(eventsValue) ? eventsValue : eventsValue ? [eventsValue] : []
-        })
-        .filter(isApprovedEvent)
+function toIsoDate(d: string | Date | null | undefined): string {
+    if (!d) return ''
+    if (d instanceof Date) {
+        return d.toISOString().slice(0, 10)
+    }
+    return String(d).slice(0, 10)
+}
+
+    const totalCount = countResult[0]?.count ?? 0
     const todayIso = new Date().toISOString().slice(0, 10)
-    const activeEvents = approvedEvents.filter((event) => event.end_date >= todayIso)
-    const pastEvents = approvedEvents.filter((event) => event.end_date < todayIso)
-    const totalPages = Math.ceil((count ?? 0) / limit)
+    const activeEvents = (approvedEvents ?? []).filter((event) => toIsoDate(event.end_date) >= todayIso)
+    const pastEvents = (approvedEvents ?? []).filter((event) => toIsoDate(event.end_date) < todayIso)
+    const totalPages = Math.ceil(totalCount / limit)
 
     return (
         <div className="space-y-4">
@@ -98,7 +96,7 @@ export default async function EntriesPage({
                                                 <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
                                                     <span className="flex items-center gap-0.5">
                                                         <Calendar className="h-2.5 w-2.5" />
-                                                        {new Date(event.start_date).toLocaleDateString()}
+                                                        {new Date(event.start_date).toLocaleDateString()} – {new Date(event.end_date).toLocaleDateString()}
                                                     </span>
                                                     {event.location && (
                                                         <>
@@ -112,81 +110,67 @@ export default async function EntriesPage({
                                                 </div>
                                             </div>
                                         </div>
-                                        <Button variant="ghost" size="sm" className="h-7 text-xs opacity-0 group-hover:opacity-100 transition-opacity">
-                                            Manage
+                                        <Button size="sm" className="h-7 text-xs">
+                                            Manage Entries
                                             <ArrowRight className="ml-1 h-3 w-3" />
                                         </Button>
                                     </Link>
                                 ))}
                             </div>
                         ) : (
-                            <div className="px-4 py-6 text-center text-xs text-muted-foreground">No active events</div>
+                            <div className="p-4 text-sm text-muted-foreground">No active approved events.</div>
                         )}
                     </div>
 
-                    <div className="dashboard-surface">
-                        <div className="border-b border-black/5 px-4 py-2.5 dark:border-white/10">
-                            <h3 className="text-sm font-medium">Past Events</h3>
-                        </div>
-                        {pastEvents.length > 0 ? (
+                    {pastEvents.length > 0 && (
+                        <div className="dashboard-surface">
+                            <div className="border-b border-black/5 px-4 py-2.5 dark:border-white/10">
+                                <h3 className="text-sm font-medium">Past Events</h3>
+                            </div>
                             <div className="dashboard-list">
                                 {pastEvents.map((event) => (
                                     <Link
                                         key={event.id}
                                         href={`/dashboard/entries/${event.id}`}
-                                        className="dashboard-list-item flex items-center justify-between gap-4 p-3 opacity-85"
+                                        className="dashboard-list-item group flex items-center justify-between gap-4 p-3"
                                     >
                                         <div className="flex items-center gap-3 min-w-0">
                                             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted">
-                                                <CheckCircle2 className="h-3.5 w-3.5 text-muted-foreground" />
+                                                <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
                                             </div>
                                             <div className="min-w-0">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-sm font-medium truncate">{event.title}</span>
-                                                    <span className="text-[10px] text-muted-foreground font-medium">Closed</span>
-                                                </div>
-                                                <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                                                    <span className="flex items-center gap-0.5">
-                                                        <Calendar className="h-2.5 w-2.5" />
-                                                        {new Date(event.start_date).toLocaleDateString()}
-                                                    </span>
-                                                    {event.location && (
-                                                        <>
-                                                            <span>•</span>
-                                                            <span className="flex items-center gap-0.5">
-                                                                <MapPin className="h-2.5 w-2.5" />
-                                                                {event.location}
-                                                            </span>
-                                                        </>
-                                                    )}
+                                                <span className="text-sm font-medium truncate">{event.title}</span>
+                                                <div className="text-[10px] text-muted-foreground">
+                                                    {new Date(event.start_date).toLocaleDateString()} – {new Date(event.end_date).toLocaleDateString()}
                                                 </div>
                                             </div>
                                         </div>
-                                        <span className="text-xs font-medium text-muted-foreground">Closed</span>
+                                        <Button variant="outline" size="sm" className="h-7 text-xs">
+                                            View Entries
+                                            <ArrowRight className="ml-1 h-3 w-3" />
+                                        </Button>
                                     </Link>
                                 ))}
                             </div>
-                        ) : (
-                            <div className="px-4 py-6 text-center text-xs text-muted-foreground">No past events</div>
-                        )}
-                    </div>
+                        </div>
+                    )}
                 </div>
             ) : (
-                <div className="dashboard-surface">
-                    <div className="py-8 text-center">
-                        <ClipboardList className="mx-auto mb-2 h-6 w-6 text-muted-foreground" />
-                        <p className="text-sm font-medium">No approved events yet</p>
-                        <p className="mt-1 text-xs text-muted-foreground">Apply to a public event, then manage entries here.</p>
-                        <div className="mt-3">
-                            <Button variant="outline" size="sm" className="h-7 text-xs" asChild>
-                                <Link href="/dashboard/events-browser">Browse Events</Link>
-                            </Button>
-                        </div>
+                <div className="dashboard-surface p-8 text-center">
+                    <ClipboardList className="mx-auto mb-2 h-6 w-6 text-muted-foreground" />
+                    <p className="text-sm font-medium">No approved events yet</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                        Browse events and apply to participate. Once approved by the organizer, you can submit entries here.
+                    </p>
+                    <div className="mt-4">
+                        <Link href="/dashboard/events-browser">
+                            <Button size="sm">Browse Events</Button>
+                        </Link>
                     </div>
                 </div>
             )}
 
-            <PaginationControls page={page} totalPages={totalPages} totalCount={count ?? 0} />
+            <PaginationControls page={page} totalPages={totalPages} totalCount={totalCount} />
         </div>
     )
 }

@@ -2,94 +2,162 @@
 
 import { revalidatePath } from 'next/cache'
 import { requireRole } from '@/lib/auth/require-role'
+import sql from '@/lib/db'
+
+/**
+ * Checks if an event is currently open for registration.
+ */
+async function assertRegistrationOpen(eventId: string) {
+    const events = await sql<{ is_registration_open: boolean }[]>`
+        SELECT is_registration_open FROM events WHERE id = ${eventId} LIMIT 1
+    `
+    if (events.length === 0) {
+        throw new Error('Event not found')
+    }
+    if (!events[0].is_registration_open) {
+        throw new Error('Registration is closed for this event. No additions or modifications are allowed.')
+    }
+}
 
 export async function upsertEntry(formData: FormData) {
-    const { supabase, user } = await requireRole('coach')
+    const { user } = await requireRole('coach')
 
     const event_id = formData.get('event_id') as string
     const student_id = formData.get('student_id') as string
-    const category_id = formData.get('category_id') as string
-    const event_day_id = formData.get('event_day_id') as string
-    const participation_type = formData.get('participation_type') as string
+    const category_id = (formData.get('category_id') as string) || null
+    const event_day_id = (formData.get('event_day_id') as string) || null
+    const participation_type = (formData.get('participation_type') as string) || null
 
-    // Upsert logic: If entry exists for (event_id, student_id), update it.
-    // We need to check if one exists first or rely on unique constraint?
-    // Schema doesn't enforce one entry per student per event strictly unique index yet, but logic implies it.
-    // Let's assume one entry row per student per event.
-
-    const { data: existing } = await supabase
-        .from('entries')
-        .select('id')
-        .eq('event_id', event_id)
-        .eq('student_id', student_id)
-        .single()
-
-    const payload = {
-        event_id,
-        coach_id: user.id,
-        student_id,
-        category_id: category_id || null, // handle 'null' string from selects if any
-        event_day_id: event_day_id || null,
-        participation_type: participation_type || null,
-        status: 'draft' // Always reset to draft if edited? Or keep current status? Usually editing puts back to draft.
+    if (!event_id || !student_id) {
+        throw new Error('Event and Student are required')
     }
 
-    let error;
-    if (existing) {
-        const res = await supabase.from('entries').update(payload).eq('id', existing.id)
-        error = res.error
+    // 1. Strict Security: Verify registration is open
+    await assertRegistrationOpen(event_id)
+
+    // 2. Strict Security: Ensure student belongs to a dojo owned by this coach
+    const studentCheck = await sql<{ id: string }[]>`
+        SELECT s.id 
+        FROM students s
+        JOIN dojos d ON s.dojo_id = d.id
+        WHERE s.id = ${student_id} AND d.coach_id = ${user.id}
+        LIMIT 1
+    `
+
+    if (studentCheck.length === 0) {
+        throw new Error('Unauthorized: Student not found or does not belong to your dojos')
+    }
+
+    // Check if entry exists for (event_id, student_id)
+    const existing = await sql<{ id: string }[]>`
+        SELECT id FROM entries 
+        WHERE event_id = ${event_id} AND student_id = ${student_id} AND coach_id = ${user.id}
+        LIMIT 1
+    `
+
+    if (existing.length > 0) {
+        await sql`
+            UPDATE entries
+            SET 
+                category_id = ${category_id},
+                event_day_id = ${event_day_id},
+                participation_type = ${participation_type},
+                status = 'draft',
+                updated_at = NOW()
+            WHERE id = ${existing[0].id} AND coach_id = ${user.id}
+        `
     } else {
-        const res = await supabase.from('entries').insert(payload)
-        error = res.error
+        await sql`
+            INSERT INTO entries (
+                event_id,
+                coach_id,
+                student_id,
+                category_id,
+                event_day_id,
+                participation_type,
+                status
+            )
+            VALUES (
+                ${event_id},
+                ${user.id},
+                ${student_id},
+                ${category_id},
+                ${event_day_id},
+                ${participation_type},
+                'draft'
+            )
+        `
     }
 
-    if (error) {
-        console.error(error)
-        throw new Error('Failed to save entry')
-    }
-
-    revalidatePath(`/dashboard/entries`)
+    revalidatePath('/dashboard/entries')
     revalidatePath(`/dashboard/entries/${event_id}`)
     return { success: true }
 }
 
 export async function submitEntries(eventId: string) {
-    const { supabase, user } = await requireRole('coach')
+    const { user } = await requireRole('coach')
 
-    // Update all 'draft' entries for this event and coach to 'submitted'
-    const { error } = await supabase
-        .from('entries')
-        .update({ status: 'submitted' })
-        .eq('event_id', eventId)
-        .eq('coach_id', user.id)
-        .eq('status', 'draft')
+    // Strict Security: Registration must be open
+    await assertRegistrationOpen(eventId)
 
-    if (error) throw new Error('Failed to submit entries')
+    await sql`
+        UPDATE entries
+        SET status = 'submitted', updated_at = NOW()
+        WHERE event_id = ${eventId}
+          AND coach_id = ${user.id}
+          AND status = 'draft'
+    `
 
-    revalidatePath(`/dashboard/entries`)
+    revalidatePath('/dashboard/entries')
     revalidatePath(`/dashboard/entries/${eventId}`)
     return { success: true }
 }
 
-export async function bulkCreateEntries(eventId: string, entries: { student_id: string, participation_type: string, event_day_id?: string | null }[]) {
-    const { supabase, user } = await requireRole('coach')
-
+export async function bulkCreateEntries(
+    eventId: string,
+    entries: { student_id: string; participation_type: string; event_day_id?: string | null }[]
+) {
+    const { user } = await requireRole('coach')
     if (entries.length === 0) return { success: true }
 
-    const payload = entries.map(e => ({
-        event_id: eventId,
-        coach_id: user.id,
-        student_id: e.student_id,
-        participation_type: e.participation_type,
-        status: 'draft',
-        category_id: null,
-        event_day_id: e.event_day_id || null
-    }))
+    // Strict Security: Registration must be open
+    await assertRegistrationOpen(eventId)
 
-    const { error } = await supabase.from('entries').insert(payload)
-    if (error) {
-        console.error(error)
-        throw new Error('Failed to create entries')
+    // Security check: verify all students belong to this coach
+    const studentIds = entries.map((e) => e.student_id)
+    const validStudents = await sql<{ id: string }[]>`
+        SELECT s.id
+        FROM students s
+        JOIN dojos d ON s.dojo_id = d.id
+        WHERE s.id = ANY(${studentIds}::uuid[]) AND d.coach_id = ${user.id}
+    `
+    const validStudentSet = new Set(validStudents.map((s) => s.id))
+
+    const validEntries = entries.filter((e) => validStudentSet.has(e.student_id))
+
+    if (validEntries.length === 0) {
+        throw new Error('Unauthorized: None of the selected students belong to your dojos')
+    }
+
+    for (const entry of validEntries) {
+        await sql`
+            INSERT INTO entries (
+                event_id,
+                coach_id,
+                student_id,
+                participation_type,
+                event_day_id,
+                status
+            )
+            VALUES (
+                ${eventId},
+                ${user.id},
+                ${entry.student_id},
+                ${entry.participation_type},
+                ${entry.event_day_id || null},
+                'draft'
+            )
+        `
     }
 
     revalidatePath(`/dashboard/entries/${eventId}`)
@@ -97,83 +165,130 @@ export async function bulkCreateEntries(eventId: string, entries: { student_id: 
 }
 
 export async function bulkSubmitEntries(entryIds: string[]) {
-    const { supabase, user } = await requireRole('coach')
+    const { user } = await requireRole('coach')
     if (entryIds.length === 0) return { success: true }
 
-    // 1. Fetch entries with Student details to Validate
-    const { data: entriesToValidate } = await supabase
-        .from('entries')
-        .select('id, students(name, gender, date_of_birth, rank, weight)')
-        .in('id', entryIds)
-        .eq('coach_id', user.id)
+    // 1. Fetch entries with student details to validate complete profiles
+    const entriesToValidate = await sql<
+        {
+            entry_id: string
+            event_id: string
+            student_name: string | null
+            student_gender: string | null
+            student_dob: string | null
+            student_rank: string | null
+            student_weight: number | null
+            is_registration_open: boolean
+        }[]
+    >`
+        SELECT 
+            e.id AS entry_id,
+            e.event_id,
+            s.name AS student_name,
+            s.gender AS student_gender,
+            s.date_of_birth AS student_dob,
+            s.rank AS student_rank,
+            s.weight AS student_weight,
+            ev.is_registration_open
+        FROM entries e
+        JOIN events ev ON e.event_id = ev.id
+        JOIN students s ON e.student_id = s.id
+        WHERE e.id = ANY(${entryIds}::uuid[])
+          AND e.coach_id = ${user.id}
+          AND e.status = 'draft'
+    `
 
-    if (!entriesToValidate) return { success: false, message: 'No entries found' }
+    if (entriesToValidate.length === 0) {
+        return { success: false, message: 'No draft entries found to submit' }
+    }
 
-    // 2. Filter Valid Entries
+    // Check that registration is open for these entries' events
+    const closedEvent = entriesToValidate.find((e) => !e.is_registration_open)
+    if (closedEvent) {
+        throw new Error('Registration is closed for one or more of the selected events.')
+    }
+
     const validEntryIds: string[] = []
     const invalidEntries: any[] = []
 
-    entriesToValidate.forEach(e => {
-        // @ts-ignore
-        const s = Array.isArray(e.students) ? e.students[0] : e.students
-        // Check for missing fields. 0 is valid for weight? Maybe. But usually not. Let's assume weight > 0 or at least not null. 
-        // Supabase returns null if column is null.
-        if (s && s.name && s.gender && s.date_of_birth && s.rank && s.weight) {
-            validEntryIds.push(e.id)
+    entriesToValidate.forEach((e) => {
+        if (e.student_name && e.student_gender && e.student_dob && e.student_rank && e.student_weight) {
+            validEntryIds.push(e.entry_id)
         } else {
             invalidEntries.push(e)
         }
     })
 
     if (validEntryIds.length === 0) {
-        // All selected entries were invalid
-        console.log("No valid entries to submit. Missing profile details.")
-        return { success: false, message: 'All selected entries are missing required profile details (Weight, Rank, DOB, etc).' }
+        return {
+            success: false,
+            message: 'All selected entries are missing required profile details (Weight, Rank, DOB, etc).',
+        }
     }
 
-    // 3. Update Valid Entries Only
-    const { error } = await supabase
-        .from('entries')
-        .update({ status: 'submitted' })
-        .in('id', validEntryIds)
-        .eq('status', 'draft') // Double check we only submit drafts
-        .eq('coach_id', user.id)
+    await sql`
+        UPDATE entries
+        SET status = 'submitted', updated_at = NOW()
+        WHERE id = ANY(${validEntryIds}::uuid[])
+          AND coach_id = ${user.id}
+          AND status = 'draft'
+    `
 
-    if (error) throw new Error('Failed to submit entries')
-
-    revalidatePath(`/dashboard/entries`)
-
-    // Optional: could return details about how many were passed/failed
+    revalidatePath('/dashboard/entries')
     return { success: true, submitted: validEntryIds.length, ignored: invalidEntries.length }
 }
 
 export async function deleteEntry(entryId: string) {
-    const { supabase, user } = await requireRole('coach')
+    const { user } = await requireRole('coach')
 
-    const { error } = await supabase
-        .from('entries')
-        .delete()
-        .eq('id', entryId)
-        .eq('coach_id', user.id)
+    // Strict Security: Check if event registration is open
+    const entry = await sql<{ event_id: string; is_registration_open: boolean }[]>`
+        SELECT e.event_id, ev.is_registration_open
+        FROM entries e
+        JOIN events ev ON e.event_id = ev.id
+        WHERE e.id = ${entryId} AND e.coach_id = ${user.id}
+        LIMIT 1
+    `
 
-    if (error) throw new Error('Failed to delete entry')
+    if (entry.length === 0) {
+        throw new Error('Entry not found or unauthorized')
+    }
+
+    if (!entry[0].is_registration_open) {
+        throw new Error('Registration is closed for this event. Entries cannot be removed.')
+    }
+
+    await sql`
+        DELETE FROM entries
+        WHERE id = ${entryId} AND coach_id = ${user.id}
+    `
 
     revalidatePath('/dashboard/entries')
+    revalidatePath(`/dashboard/entries/${entry[0].event_id}`)
     return { success: true }
 }
 
 export async function bulkDeleteEntries(entryIds: string[]) {
-    const { supabase, user } = await requireRole('coach')
+    const { user } = await requireRole('coach')
     if (entryIds.length === 0) return { success: true }
 
-    const { error } = await supabase
-        .from('entries')
-        .delete()
-        .in('id', entryIds)
-        .eq('coach_id', user.id)
+    // Strict Security: Check that all entries' events have open registration
+    const entries = await sql<{ event_id: string; is_registration_open: boolean }[]>`
+        SELECT e.event_id, ev.is_registration_open
+        FROM entries e
+        JOIN events ev ON e.event_id = ev.id
+        WHERE e.id = ANY(${entryIds}::uuid[]) AND e.coach_id = ${user.id}
+    `
 
-    if (error) throw new Error('Failed to delete entries')
+    if (entries.some((e) => !e.is_registration_open)) {
+        throw new Error('Registration is closed for one or more selected events. Entries cannot be deleted.')
+    }
 
-    revalidatePath(`/dashboard/entries`)
+    await sql`
+        DELETE FROM entries
+        WHERE id = ANY(${entryIds}::uuid[]) AND coach_id = ${user.id}
+    `
+
+    revalidatePath('/dashboard/entries')
     return { success: true }
 }

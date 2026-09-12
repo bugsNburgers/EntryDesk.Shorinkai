@@ -1,81 +1,127 @@
 import { requireRole } from '@/lib/auth/require-role'
 import { CoachDashboard } from '@/components/coach/coach-dashboard'
 import { notFound } from 'next/navigation'
+import sql from '@/lib/db'
+import type { Event, EventDay, Dojo } from '@/types/database'
 
-export default async function EventEntriesPage({ params }: { params: { eventId: string } }) {
-  const { eventId } = await params
-  const { supabase, user } = await requireRole('coach', { redirectTo: '/dashboard' })
+export default async function EventEntriesPage({ params }: { params: Promise<{ eventId: string }> }) {
+    const { eventId } = await params
+    const { user } = await requireRole('coach', { redirectTo: '/dashboard' })
 
-  // Fetch Event Details
-  const { data: event } = await supabase.from('events').select('*').eq('id', eventId).single()
-  if (!event) notFound()
+    // Parallel fetch: Event, Application check, Students, Entries, EventDays, Dojos
+    const [eventRows, appRows, students, entries, eventDays, dojos] = await Promise.all([
+        sql<Event[]>`
+            SELECT * FROM events WHERE id = ${eventId} LIMIT 1
+        `,
+        sql<{ status: string }[]>`
+            SELECT status FROM event_applications
+            WHERE event_id = ${eventId} AND coach_id = ${user.id}
+            LIMIT 1
+        `,
+        sql<
+            {
+                id: string
+                name: string
+                gender: string
+                rank: string | null
+                weight: number | null
+                date_of_birth: string | null
+                dojo_id: string
+                registration_no: string | null
+                generic_checked: boolean
+                created_at: string
+                dojos: { id: string; name: string; coach_id: string }
+            }[]
+        >`
+            SELECT 
+                s.id,
+                s.name,
+                s.gender,
+                s.rank,
+                s.weight,
+                s.date_of_birth,
+                s.dojo_id,
+                s.registration_no,
+                s.generic_checked,
+                s.created_at,
+                json_build_object('id', d.id, 'name', d.name, 'coach_id', d.coach_id) AS dojos
+            FROM students s
+            JOIN dojos d ON s.dojo_id = d.id
+            WHERE d.coach_id = ${user.id}
+            ORDER BY s.name ASC
+        `,
+        sql<any[]>`
+            SELECT 
+                e.id,
+                e.event_id,
+                e.coach_id,
+                e.student_id,
+                e.category_id,
+                e.event_day_id,
+                e.participation_type,
+                e.status,
+                e.chest_no,
+                e.created_at,
+                json_build_object(
+                    'id', s.id, 
+                    'name', s.name, 
+                    'gender', s.gender, 
+                    'rank', s.rank, 
+                    'weight', s.weight, 
+                    'date_of_birth', s.date_of_birth, 
+                    'dojo_id', s.dojo_id, 
+                    'registration_no', s.registration_no
+                ) AS students,
+                CASE WHEN ed.id IS NOT NULL THEN json_build_object('name', ed.name) ELSE NULL END AS event_days
+            FROM entries e
+            JOIN students s ON e.student_id = s.id
+            LEFT JOIN event_days ed ON e.event_day_id = ed.id
+            WHERE e.event_id = ${eventId} AND e.coach_id = ${user.id}
+            ORDER BY e.created_at DESC
+        `,
+        sql<EventDay[]>`
+            SELECT * FROM event_days WHERE event_id = ${eventId} ORDER BY date ASC
+        `,
+        sql<Dojo[]>`
+            SELECT id, coach_id, name, created_at FROM dojos WHERE coach_id = ${user.id} ORDER BY name ASC
+        `,
+    ])
 
-  // Verify access
-  const { data: app } = await supabase
-    .from('event_applications')
-    .select('status')
-    .eq('event_id', eventId)
-    .eq('coach_id', user.id)
-    .single()
+    if (eventRows.length === 0) {
+        notFound()
+    }
 
-  if (!app || app.status !== 'approved') {
-    return <div className="p-8 text-center text-red-600">Access Denied. You are not approved for this event.</div>
-  }
+    const event = eventRows[0]
 
-  // Fetch ALL students for this coach (via Dojos)
-  // Logic: Users -> Profiles -> Dojos -> Students
-  const { data: students } = await supabase
-    .from('students')
-    .select('*, dojos!inner(id, name, coach_id)')
-    .eq('dojos.coach_id', user.id)
-    .order('name')
-  // Note: RLS should handle this, but the explicit inner join ensures we get students belonging to dojos owned by this coach.
+    // Verify coach is approved for this event
+    if (appRows.length === 0 || appRows[0].status !== 'approved') {
+        return (
+            <div className="p-8 text-center text-red-600 font-medium">
+                Access Denied: You are not approved to submit entries for this event.
+            </div>
+        )
+    }
 
-  // Fetch Entries
-  const { data: entries } = await supabase
-    .from('entries')
-    .select(`
-        *,
-        students(id, name, gender, rank, weight, date_of_birth, dojo_id, registration_no),
-        event_days(name)
-    `)
-    .eq('event_id', eventId)
-    .eq('coach_id', user.id)
-    .order('created_at', { ascending: false })
+    const validEntries = entries || []
+    const todayIso = new Date().toISOString().slice(0, 10)
+    const isPastEvent = event.end_date < todayIso
 
-  // Fetch Event Days for Registration
-  const { data: eventDays } = await supabase
-    .from('event_days')
-    .select('*')
-    .eq('event_id', eventId)
-    .order('date', { ascending: true })
+    const stats = {
+        total: validEntries.length,
+        draft: validEntries.filter((e) => e.status === 'draft').length,
+        submitted: validEntries.filter((e) => e.status === 'submitted').length,
+        approved: validEntries.filter((e) => e.status === 'approved').length,
+    }
 
-  // Fetch Dojos for Edit Form
-  const { data: dojos } = await supabase
-    .from('dojos')
-    .select('id, name')
-    .eq('coach_id', user.id)
-
-  // Compute Stats
-  const validEntries = entries || []
-  const todayIso = new Date().toISOString().slice(0, 10)
-  const isPastEvent = event.end_date < todayIso
-  const stats = {
-    total: validEntries.length,
-    draft: validEntries.filter(e => e.status === 'draft').length,
-    submitted: validEntries.filter(e => e.status === 'submitted').length,
-    approved: validEntries.filter(e => e.status === 'approved').length
-  }
-
-  return (
-    <CoachDashboard
-      event={event}
-      stats={stats}
-      entries={validEntries}
-      students={students || []}
-      eventDays={eventDays || []}
-      dojos={dojos || []}
-      isPastEvent={isPastEvent}
-    />
-  )
+    return (
+        <CoachDashboard
+            event={event}
+            stats={stats}
+            entries={validEntries}
+            students={students || []}
+            eventDays={eventDays || []}
+            dojos={dojos || []}
+            isPastEvent={isPastEvent}
+        />
+    )
 }
