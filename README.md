@@ -24,18 +24,19 @@ EntryDesk is a role-based event management dashboard tailored for martial arts a
 
 ## 🛠 Tech Stack
 
-- **Framework**: [Next.js](https://nextjs.org/) (App Router)
+- **Framework**: [Next.js](https://nextjs.org/) (App Router, Turbopack)
 - **UI & Styling**: [React](https://react.dev/), [Tailwind CSS v4](https://tailwindcss.com/)
-- **Backend & Database**: [Supabase](https://supabase.com/)
-  - Authentication (Email/Password + Google OAuth)
-  - PostgreSQL Database (Tables + RLS Policies)
-  - SSR helpers via `@supabase/ssr`
+- **Backend & Database**: PostgreSQL (Neon / standard PostgreSQL via `postgres.js`)
+  - Direct parameterized SQL queries with zero ORM overhead
+  - Strict server-level ownership checks & lockdown on closed event registrations
+  - Custom session management with bcrypt hashing (12 rounds) and `HttpOnly` secure cookies
+  - Google Identity Services (GIS) one-tap authentication
 
 ## 🚀 Setup & Local Development
 
 ### 1. Prerequisites
 - Node.js (v20+ recommended)
-- A Supabase project (the free tier works perfectly)
+- A PostgreSQL database (Neon, Supabase Postgres, AWS RDS, or local PostgreSQL)
 
 ### 2. Install Dependencies
 ```bash
@@ -47,44 +48,42 @@ Copy the template file to create your local environment configuration:
 ```bash
 cp .env.example .env.local
 ```
-Fill in the required values from your Supabase dashboard:
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `NEXT_PUBLIC_BASE_URL` (Defaults to `http://localhost:3000` for local dev)
+Fill in the required values:
+- `DATABASE_URL`: Your PostgreSQL connection string (e.g., from Neon Console)
+- `GOOGLE_CLIENT_ID` & `NEXT_PUBLIC_GOOGLE_CLIENT_ID`: Google OAuth 2.0 Web Client ID
+- `NEXT_PUBLIC_BASE_URL`: Defaults to `http://localhost:3000` for local dev
 
 ### 4. Database Schema Setup
-This repository includes the necessary schema, RLS policies, and views in `supabase/migrations/db.sql`.
+This repository includes the complete schema and views in `src/lib/db/schema.sql`.
 
 To apply the schema:
-1. Go to your Supabase Dashboard → **SQL Editor**
-2. Paste the contents of `supabase/migrations/db.sql` and run it.
+1. Open your PostgreSQL SQL Editor (e.g. Neon Console SQL Editor or `psql`)
+2. Run the entire contents of [`src/lib/db/schema.sql`](src/lib/db/schema.sql).
 
-*This will generate the required tables (`profiles`, `dojos`, `students`, `events`, etc.), enums, RLS policies, and the `organizer_entries_view`.*
+*This creates the `users`, `profiles`, `sessions`, `dojos`, `students`, `events`, `event_days`, `event_categories`, `entries`, `coach_event_applications`, and `organizer_entries_view`.*
 
-### 5. Authentication Configuration
-**Email/Password** works immediately out of the box after setting up your Supabase project.
+### 5. Creating Authorized Users (Zero Public Signups)
+EntryDesk enforces strict zero public signups. Only pre-authorized users can log in.
 
-**Google OAuth (Optional)**:
-1. Navigate to Supabase Dashboard → **Authentication** → **Providers** → **Google**.
-2. Enable Google and input your OAuth client credentials.
-3. Add `http://localhost:3000/auth/callback` to the allowed redirect URLs.
+To create an authorized user with email and password:
+```bash
+node scripts/create-user.mjs <email> <password> <coach|organizer|admin> [fullName]
+```
+Example:
+```bash
+node scripts/create-user.mjs admin@entrydesk.com SecurePassword123 organizer "Tournament Organizer"
+```
+
+For Google Sign-In, users attempting first login will be safely recorded in the database with `is_active = FALSE`. An administrator can approve them directly in SQL:
+```sql
+UPDATE users SET role = 'organizer', is_active = TRUE WHERE email = 'user@example.com';
+```
 
 ### 6. Start the Development Server
 ```bash
 npm run dev
 ```
 Open [http://localhost:3000](http://localhost:3000) in your browser to view the application.
-
-## 👥 Roles & Workflows
-
-### The Profiles Table
-Supabase Auth manages users in `auth.users`, while our application's role and profile data lives in `public.profiles`. Profiles are often auto-created during key flows, such as signing up or applying to an event.
-
-### Making an Organizer
-To access organizer features, a user must have a row in `public.profiles` with `role = 'organizer'`. You can set this explicitly via the Supabase SQL editor:
-```sql
-UPDATE public.profiles SET role = 'organizer' WHERE email = 'organizer@example.com';
-```
 
 ---
 

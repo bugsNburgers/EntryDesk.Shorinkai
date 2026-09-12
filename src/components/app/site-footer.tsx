@@ -79,7 +79,7 @@ export function SiteFooter() {
             <div className="border-t border-border/40 dark:border-white/[0.08]">
                 <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-5 text-xs text-muted-foreground sm:px-6 xl:max-w-[95vw] xl:px-8">
                     <span>© {new Date().getFullYear()} EntryDesk</span>
-                    <span>Next.js • Supabase • Tailwind</span>
+                    <span>Next.js • PostgreSQL • Tailwind</span>
                 </div>
             </div>
         </footer>
