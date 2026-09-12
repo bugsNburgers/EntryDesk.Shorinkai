@@ -26,8 +26,8 @@ export function ContactSubmissionsTable() {
   useEffect(() => {
     const fetchContacts = async () => {
       const result = await getContactSubmissions()
-      if (result.success) {
-        setContacts(result.data)
+      if (result.success && result.data) {
+        setContacts(result.data as unknown as Contact[])
       }
       setLoading(false)
     }
