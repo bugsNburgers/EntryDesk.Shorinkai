@@ -16,10 +16,13 @@ interface ContactFormInputs {
 }
 
 export function ContactForm() {
+  const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
+  const isTurnstileRequired = Boolean(siteKey)
+
   const [isPending, startTransition] = useTransition()
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
-  const [isTurnstileReady, setIsTurnstileReady] = useState(false)
+  const [isTurnstileReady, setIsTurnstileReady] = useState(!isTurnstileRequired)
 
   const {
     register,
@@ -35,7 +38,7 @@ export function ContactForm() {
   })
 
   const onSubmit = async (data: ContactFormInputs) => {
-    if (!turnstileToken) {
+    if (isTurnstileRequired && !turnstileToken) {
       setMessage({ type: 'error', text: 'Please complete the CAPTCHA verification' })
       return
     }
@@ -43,7 +46,7 @@ export function ContactForm() {
     startTransition(async () => {
       const result = await submitContactForm({
         ...data,
-        turnstileToken,
+        turnstileToken: turnstileToken || undefined,
       })
 
       if (result.success) {
@@ -118,26 +121,28 @@ export function ContactForm() {
           {errors.message && <span className="text-red-500 text-sm mt-1">{errors.message.message}</span>}
         </div>
 
-        <div>
-          <Turnstile
-            siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || ''}
-            onSuccess={(token) => {
-              setTurnstileToken(token)
-              setIsTurnstileReady(true)
-            }}
-            onError={() => {
-              setTurnstileToken(null)
-              setMessage({ type: 'error', text: 'CAPTCHA verification failed' })
-            }}
-            onExpire={() => {
-              setTurnstileToken(null)
-            }}
-          />
-        </div>
+        {isTurnstileRequired && (
+          <div>
+            <Turnstile
+              siteKey={siteKey!}
+              onSuccess={(token) => {
+                setTurnstileToken(token)
+                setIsTurnstileReady(true)
+              }}
+              onError={() => {
+                setTurnstileToken(null)
+                setMessage({ type: 'error', text: 'CAPTCHA verification failed' })
+              }}
+              onExpire={() => {
+                setTurnstileToken(null)
+              }}
+            />
+          </div>
+        )}
 
         <Button
           type="submit"
-          disabled={isPending || !turnstileToken || !isTurnstileReady}
+          disabled={isPending || (isTurnstileRequired && (!turnstileToken || !isTurnstileReady))}
           className="w-full"
         >
           {isPending ? 'Sending...' : 'Send Message'}
