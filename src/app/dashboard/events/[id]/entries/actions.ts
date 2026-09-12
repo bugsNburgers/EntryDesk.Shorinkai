@@ -7,14 +7,14 @@ import sql from '@/lib/db'
 export async function updateEntryStatus(entryId: string, status: 'approved' | 'rejected') {
     const { user, role } = await requireRole(['organizer', 'admin'])
 
-    // Strictly enforce that entry's event is managed by this organizer
+    // Strictly enforce that entry's event is managed by this organizer or write collaborator
     const updated = await sql<{ event_id: string }[]>`
         UPDATE entries e
         SET status = ${status}, updated_at = NOW()
         FROM events ev
         WHERE e.id = ${entryId}
           AND e.event_id = ev.id
-          ${role !== 'admin' ? sql`AND ev.organizer_id = ${user.id}` : sql``}
+          ${role !== 'admin' ? sql`AND (ev.organizer_id = ${user.id} OR EXISTS (SELECT 1 FROM event_collaborators ec WHERE ec.event_id = ev.id AND ec.user_id = ${user.id} AND ec.permission = 'write'))` : sql``}
         RETURNING e.event_id
     `
 
@@ -32,7 +32,7 @@ export async function bulkUpdateEntryStatus(entryIds: string[], status: 'approve
     const { user, role } = await requireRole(['organizer', 'admin'])
     if (!entryIds || entryIds.length === 0) return { success: true }
 
-    // Atomic bulk update strictly scoped to events managed by this organizer
+    // Atomic bulk update strictly scoped to events managed by this organizer or write collaborator
     const updated = await sql<{ event_id: string }[]>`
         UPDATE entries e
         SET status = ${status}, updated_at = NOW()
@@ -40,7 +40,7 @@ export async function bulkUpdateEntryStatus(entryIds: string[], status: 'approve
         WHERE e.id = ANY(${entryIds}::uuid[])
           AND e.event_id = ev.id
           AND e.status != 'draft'
-          ${role !== 'admin' ? sql`AND ev.organizer_id = ${user.id}` : sql``}
+          ${role !== 'admin' ? sql`AND (ev.organizer_id = ${user.id} OR EXISTS (SELECT 1 FROM event_collaborators ec WHERE ec.event_id = ev.id AND ec.user_id = ${user.id} AND ec.permission = 'write'))` : sql``}
         RETURNING DISTINCT e.event_id
     `
 
@@ -103,7 +103,7 @@ export async function exportEventEntries(
         JOIN users p ON e.coach_id = p.id
         WHERE e.event_id = ${eventId}
           AND e.status != 'draft'
-          ${role !== 'admin' ? sql`AND ev.organizer_id = ${user.id}` : sql``}
+          ${role !== 'admin' ? sql`AND (ev.organizer_id = ${user.id} OR EXISTS (SELECT 1 FROM event_collaborators ec WHERE ec.event_id = ev.id AND ec.user_id = ${user.id}))` : sql``}
           ${q ? sql`AND s.name ILIKE ${'%' + q + '%'}` : sql``}
           ${status && status !== 'all' ? sql`AND e.status = ${status}` : sql``}
           ${coach && coach !== 'all' ? sql`AND e.coach_id = ${coach}` : sql``}

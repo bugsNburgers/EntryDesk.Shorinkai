@@ -18,11 +18,11 @@ export default async function EventEntriesPage({
     const { user, role } = await requireRole(['organizer', 'admin'], { redirectTo: '/dashboard' })
     const p = await searchParams
 
-    // Security check: Verify event ownership
+    // Security check: Verify event ownership or collaborator access
     const events = await sql<{ id: string }[]>`
         SELECT id FROM events
         WHERE id = ${id}
-          ${role !== 'admin' ? sql`AND organizer_id = ${user.id}` : sql``}
+          ${role !== 'admin' ? sql`AND (organizer_id = ${user.id} OR EXISTS (SELECT 1 FROM event_collaborators WHERE event_id = ${id} AND user_id = ${user.id}))` : sql``}
         LIMIT 1
     `
 
