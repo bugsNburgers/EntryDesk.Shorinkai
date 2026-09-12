@@ -1,13 +1,15 @@
-import { createClient } from '@/lib/supabase/server'
+import { destroySession } from '@/lib/auth/session'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
-export async function POST(request: Request) {
-  const supabase = await createClient()
+export async function POST() {
+    await destroySession()
+    revalidatePath('/', 'layout')
+    redirect('/login')
+}
 
-  // Check if we have a session
-  await supabase.auth.signOut()
-
-  revalidatePath('/', 'layout')
-  redirect('/login')
+export async function GET() {
+    await destroySession()
+    revalidatePath('/', 'layout')
+    redirect('/login')
 }
