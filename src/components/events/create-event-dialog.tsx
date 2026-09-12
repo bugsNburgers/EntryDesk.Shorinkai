@@ -52,7 +52,7 @@ export function CreateEventDialog() {
             setIsSubmitting(true)
             const result = await createEvent(formData)
             if (!result?.success) {
-                alert(result?.error || 'Failed to create event')
+                alert('Failed to create event')
                 return
             }
             setOpen(false)

@@ -13,6 +13,8 @@ export async function createEvent(formData: FormData) {
     const location = (formData.get('location') as string)?.trim() || null
     const start_date = formData.get('start_date') as string // YYYY-MM-DD
     const end_date = formData.get('end_date') as string // YYYY-MM-DD
+    const registration_close_date = (formData.get('registration_close_date') as string) || null
+    const level = (formData.get('event_level') as string) || 'district'
     const is_public = formData.get('is_public') === 'on'
 
     if (!title || !start_date || !end_date || !event_type) {
@@ -42,20 +44,24 @@ export async function createEvent(formData: FormData) {
             INSERT INTO events (
                 title, 
                 description, 
-                event_type, 
+                event_type,
+                level,
                 location, 
                 start_date, 
-                end_date, 
+                end_date,
+                registration_close_date,
                 is_public, 
                 organizer_id
             )
             VALUES (
                 ${title}, 
                 ${description}, 
-                ${event_type}, 
+                ${event_type},
+                ${level},
                 ${location}, 
                 ${start_date}, 
                 ${end_date}, 
+                ${registration_close_date},
                 ${is_public}, 
                 ${user.id}
             )

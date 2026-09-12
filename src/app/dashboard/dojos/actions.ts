@@ -47,6 +47,15 @@ export async function updateDojo(dojoId: string, formData: FormData) {
 export async function deleteDojo(dojoId: string) {
     const { user } = await requireRole('coach')
 
+    // Safe deletion check: prevent deleting dojo if students exist
+    const studentCheck = await sql<{ count: string }[]>`
+        SELECT count(*) AS count FROM students WHERE dojo_id = ${dojoId}
+    `
+    const studentCount = parseInt(studentCheck[0]?.count || '0', 10)
+    if (studentCount > 0) {
+        throw new Error(`Cannot delete dojo: it contains ${studentCount} registered student(s). Reassign or remove students first.`)
+    }
+
     // Security check: coach_id = user.id strictly enforced in SQL
     await sql`
         DELETE FROM dojos

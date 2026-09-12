@@ -6,16 +6,48 @@ import sql from '@/lib/db'
 
 /**
  * Checks if an event is currently open for registration.
+ * Accounts for manual toggle, registration close date, and temporary short burst openings.
  */
 async function assertRegistrationOpen(eventId: string) {
-    const events = await sql<{ is_registration_open: boolean }[]>`
-        SELECT is_registration_open FROM events WHERE id = ${eventId} LIMIT 1
+    const events = await sql<
+        {
+            is_registration_open: boolean
+            registration_close_date: string | null
+            temporary_registration_closes_at: string | null
+            end_date: string
+        }[]
+    >`
+        SELECT 
+            is_registration_open,
+            registration_close_date,
+            temporary_registration_closes_at,
+            end_date
+        FROM events 
+        WHERE id = ${eventId} 
+        LIMIT 1
     `
     if (events.length === 0) {
         throw new Error('Event not found')
     }
-    if (!events[0].is_registration_open) {
+    const ev = events[0]
+    const now = new Date()
+
+    // Temporary burst overrides closed state
+    if (ev.temporary_registration_closes_at && new Date(ev.temporary_registration_closes_at) > now) {
+        return
+    }
+
+    const todayIso = now.toISOString().slice(0, 10)
+    if (ev.end_date < todayIso) {
+        throw new Error('This event has already concluded. Registrations are closed.')
+    }
+
+    if (!ev.is_registration_open) {
         throw new Error('Registration is closed for this event. No additions or modifications are allowed.')
+    }
+
+    if (ev.registration_close_date && ev.registration_close_date < todayIso) {
+        throw new Error('Registration deadline has passed for this event.')
     }
 }
 
@@ -115,7 +147,7 @@ export async function submitEntries(eventId: string) {
 
 export async function bulkCreateEntries(
     eventId: string,
-    entries: { student_id: string; participation_type: string; event_day_id?: string | null }[]
+    entries: { student_id: string; participation_type?: string | null; event_day_id?: string | null }[]
 ) {
     const { user } = await requireRole('coach')
     if (entries.length === 0) return { success: true }
@@ -153,7 +185,7 @@ export async function bulkCreateEntries(
                 ${eventId},
                 ${user.id},
                 ${entry.student_id},
-                ${entry.participation_type},
+                ${entry.participation_type || null},
                 ${entry.event_day_id || null},
                 'draft'
             )
@@ -290,5 +322,29 @@ export async function bulkDeleteEntries(entryIds: string[]) {
     `
 
     revalidatePath('/dashboard/entries')
+    return { success: true }
+}
+
+export async function updateEntryGenericChecked(entryId: string, checked: boolean, eventId?: string) {
+    const { user } = await requireRole('coach')
+
+    await sql`
+        UPDATE entries
+        SET generic_checked = ${checked}
+        WHERE id = ${entryId} 
+          AND (
+              coach_id = ${user.id}
+              OR EXISTS (
+                  SELECT 1 FROM students s
+                  JOIN dojos d ON s.dojo_id = d.id
+                  JOIN dojo_collaborators dc ON d.id = dc.dojo_id
+                  WHERE s.id = entries.student_id AND dc.user_id = ${user.id} AND dc.permission = 'write'
+              )
+          )
+    `
+
+    if (eventId) {
+        revalidatePath(`/dashboard/entries/${eventId}`)
+    }
     return { success: true }
 }

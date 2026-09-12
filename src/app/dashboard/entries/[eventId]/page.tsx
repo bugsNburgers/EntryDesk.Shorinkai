@@ -1,6 +1,7 @@
 import { requireRole } from '@/lib/auth/require-role'
 import { CoachDashboard } from '@/components/coach/coach-dashboard'
 import { notFound } from 'next/navigation'
+import { isRegistrationClosed } from '@/lib/events/registration'
 import sql from '@/lib/db'
 import type { Event, EventDay, Dojo } from '@/types/database'
 
@@ -28,7 +29,7 @@ export default async function EventEntriesPage({ params }: { params: Promise<{ e
                 date_of_birth: string | null
                 dojo_id: string
                 registration_no: string | null
-                generic_checked: boolean
+                is_active: boolean
                 created_at: string
                 dojos: { id: string; name: string; coach_id: string }
             }[]
@@ -42,12 +43,13 @@ export default async function EventEntriesPage({ params }: { params: Promise<{ e
                 s.date_of_birth,
                 s.dojo_id,
                 s.registration_no,
-                s.generic_checked,
+                s.is_active,
                 s.created_at,
                 json_build_object('id', d.id, 'name', d.name, 'coach_id', d.coach_id) AS dojos
             FROM students s
             JOIN dojos d ON s.dojo_id = d.id
-            WHERE d.coach_id = ${user.id}
+            LEFT JOIN dojo_collaborators dc ON d.id = dc.dojo_id AND dc.user_id = ${user.id}
+            WHERE d.coach_id = ${user.id} OR dc.user_id = ${user.id}
             ORDER BY s.name ASC
         `,
         sql<any[]>`
@@ -61,6 +63,7 @@ export default async function EventEntriesPage({ params }: { params: Promise<{ e
                 e.participation_type,
                 e.status,
                 e.chest_no,
+                e.generic_checked,
                 e.created_at,
                 json_build_object(
                     'id', s.id, 
@@ -70,7 +73,8 @@ export default async function EventEntriesPage({ params }: { params: Promise<{ e
                     'weight', s.weight, 
                     'date_of_birth', s.date_of_birth, 
                     'dojo_id', s.dojo_id, 
-                    'registration_no', s.registration_no
+                    'registration_no', s.registration_no,
+                    'is_active', s.is_active
                 ) AS students,
                 CASE WHEN ed.id IS NOT NULL THEN json_build_object('name', ed.name) ELSE NULL END AS event_days
             FROM entries e
@@ -83,7 +87,11 @@ export default async function EventEntriesPage({ params }: { params: Promise<{ e
             SELECT * FROM event_days WHERE event_id = ${eventId} ORDER BY date ASC
         `,
         sql<Dojo[]>`
-            SELECT id, coach_id, name, created_at FROM dojos WHERE coach_id = ${user.id} ORDER BY name ASC
+            SELECT DISTINCT d.id, d.coach_id, d.name, d.created_at 
+            FROM dojos d 
+            LEFT JOIN dojo_collaborators dc ON d.id = dc.dojo_id AND dc.user_id = ${user.id}
+            WHERE d.coach_id = ${user.id} OR dc.user_id = ${user.id}
+            ORDER BY d.name ASC
         `,
     ])
 
@@ -104,7 +112,8 @@ export default async function EventEntriesPage({ params }: { params: Promise<{ e
 
     const validEntries = entries || []
     const todayIso = new Date().toISOString().slice(0, 10)
-    const isPastEvent = event.end_date < todayIso
+    const isPastEvent = event.end_date ? event.end_date < todayIso : false
+    const isLocked = isRegistrationClosed(event, todayIso)
 
     const stats = {
         total: validEntries.length,
@@ -116,12 +125,14 @@ export default async function EventEntriesPage({ params }: { params: Promise<{ e
     return (
         <CoachDashboard
             event={event}
+            eventType={event.event_type}
             stats={stats}
             entries={validEntries}
             students={students || []}
             eventDays={eventDays || []}
             dojos={dojos || []}
             isPastEvent={isPastEvent}
+            isRegistrationClosed={isLocked}
         />
     )
 }
