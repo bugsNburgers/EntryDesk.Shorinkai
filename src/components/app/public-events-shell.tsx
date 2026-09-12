@@ -7,11 +7,13 @@ type PublicEvent = {
     id: string
     title: string
     event_type: string | null
+    event_level?: string | null
     start_date: string
     end_date?: string | null
     location: string | null
-    max_participants: number | null
     description: string | null
+    registration_close_date?: string | null
+    is_registration_open?: boolean | null
 }
 
 type PublicEventsResponse = {

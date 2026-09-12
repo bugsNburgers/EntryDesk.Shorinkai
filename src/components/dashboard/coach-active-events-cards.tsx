@@ -14,6 +14,9 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog'
 import { formatDateRangeStable } from '@/lib/date'
+import { RegistrationDeadline } from '@/components/events/registration-deadline'
+import { isRegistrationClosed } from '@/lib/events/registration'
+import { formatEventLevelLabel } from '@/lib/events/level'
 
 type CoachActiveEvent = {
     id: string
@@ -22,7 +25,11 @@ type CoachActiveEvent = {
     end_date: string
     location: string | null
     event_type: string | null
+    event_level?: string | null
     description?: string | null
+    registration_close_date?: string | null
+    is_registration_open?: boolean | null
+    temporary_registration_closes_at?: string | null
 }
 
 export function CoachActiveEventsCards({
@@ -39,6 +46,7 @@ export function CoachActiveEventsCards({
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {events.map((event) => {
                     const status = statusByEventId[event.id]
+                    const registrationClosed = isRegistrationClosed(event)
                     return (
                         <div key={event.id} className="group flex flex-col rounded-2xl border border-black/10 bg-gradient-to-b from-background/90 to-background/50 hover:bg-background/70 transition-colors p-5 shadow-md shadow-black/5 dark:border-white/10 dark:shadow-black/40">
                             <div className="flex items-start justify-between mb-4">
@@ -46,6 +54,11 @@ export function CoachActiveEventsCards({
                                     <Badge variant="secondary" className="bg-primary/5 text-primary border-primary/20 hover:bg-primary/10">
                                         {event.event_type}
                                     </Badge>
+                                    {event.event_level ? (
+                                        <Badge variant="outline" className="border-border/60 bg-transparent">
+                                            {formatEventLevelLabel(event.event_level)}
+                                        </Badge>
+                                    ) : null}
                                 </div>
                                 {status && (
                                     <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-background border border-border text-[10px] font-medium shadow-sm">
@@ -68,9 +81,12 @@ export function CoachActiveEventsCards({
                                         <span className="truncate max-w-[200px]">{event.location}</span>
                                     </div>
                                 )}
+                                <RegistrationDeadline
+                                    event={event}
+                                />
                             </div>
 
-                            <div className="mt-auto pt-4 flex gap-3">
+                            <div className="mt-auto pt-4 flex flex-col gap-2">
                                 <Button
                                     variant="outline"
                                     className="w-full rounded-xl border-black/10 bg-white/5 hover:bg-white/10 hover:text-foreground dark:border-white/10"
@@ -79,14 +95,14 @@ export function CoachActiveEventsCards({
                                     Details
                                 </Button>
                                 {status === 'approved' ? (
-                                    <Link href={`/dashboard/entries/${event.id}`}>
-                                        <Button className="rounded-xl">
+                                    <Link href={`/dashboard/entries/${event.id}`} className="w-full">
+                                        <Button className="w-full rounded-xl">
                                             Entries
                                             <ArrowRight className="ml-1 h-3.5 w-3.5" />
                                         </Button>
                                     </Link>
                                 ) : (
-                                    <ApplyButton eventId={event.id} status={status} />
+                                    <ApplyButton eventId={event.id} status={status} registrationClosed={registrationClosed} className="w-full rounded-xl" />
                                 )}
                             </div>
                         </div>
@@ -109,7 +125,9 @@ export function CoachActiveEventsCards({
                         <>
                             <DialogHeader>
                                 <DialogTitle className="pr-8 text-3xl font-bold tracking-tight">{selectedEvent.title}</DialogTitle>
-                                <DialogDescription className="text-sm">{formatEventTypeLabel(selectedEvent.event_type)}</DialogDescription>
+                                <DialogDescription className="text-sm">
+                                    {formatEventMeta(selectedEvent.event_type, selectedEvent.event_level)}
+                                </DialogDescription>
                             </DialogHeader>
 
                             <div className="space-y-3 border border-border/50 p-4 text-sm rounded-lg">
@@ -125,6 +143,9 @@ export function CoachActiveEventsCards({
                                     <Users className="h-4 w-4" />
                                     <span>Open registration</span>
                                 </div>
+                                <RegistrationDeadline
+                                    event={selectedEvent}
+                                />
                             </div>
 
                             <div className="space-y-2 rounded-lg border border-border/50 p-4">
@@ -167,4 +188,11 @@ function formatEventTypeLabel(eventType: string | null) {
     }
 
     return normalized.replace(/\b\w/g, (char) => char.toUpperCase())
+}
+
+function formatEventMeta(eventType: string | null, eventLevel?: string | null) {
+    const typeLabel = formatEventTypeLabel(eventType)
+    const levelLabel = formatEventLevelLabel(eventLevel)
+
+    return levelLabel ? `${typeLabel} • ${levelLabel}` : typeLabel
 }

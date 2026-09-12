@@ -1,9 +1,11 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { Calendar, MapPin, Users } from 'lucide-react'
+import { Calendar, Medal, MapPin } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { RegistrationDeadline } from '@/components/events/registration-deadline'
+import { formatEventLevelLabel } from '@/lib/events/level'
 import {
     Dialog,
     DialogContent,
@@ -16,11 +18,13 @@ type PublicEvent = {
     id: string
     title: string
     event_type: string | null
+    event_level?: string | null
     start_date: string
     end_date?: string | null
     location: string | null
-    max_participants: number | null
     description: string | null
+    registration_close_date?: string | null
+    is_registration_open?: boolean | null
 }
 
 const PREVIEW_COUNT = 3
@@ -91,6 +95,7 @@ export function PublicEventsSection({
                     onToggleViewAll={() => setShowAllUpcoming((previous) => !previous)}
                     onViewEvent={setSelectedEvent}
                     emptyMessage="No upcoming public events currently scheduled. Check back later."
+                    todayIso={todayIso}
                 />
 
                 <EventSection
@@ -103,6 +108,7 @@ export function PublicEventsSection({
                     onToggleViewAll={() => setShowAllPast((previous) => !previous)}
                     onViewEvent={setSelectedEvent}
                     emptyMessage="No past public events available yet."
+                    todayIso={todayIso}
                 />
             </div>
 
@@ -116,7 +122,7 @@ export function PublicEventsSection({
                             <DialogHeader>
                                 <DialogTitle className="pr-8 text-3xl font-bold tracking-tight">{selectedEvent.title}</DialogTitle>
                                 <DialogDescription className="text-sm">
-                                    {formatEventTypeLabel(selectedEvent.event_type)}
+                                    {formatEventMeta(selectedEvent.event_type, selectedEvent.event_level)}
                                 </DialogDescription>
                             </DialogHeader>
 
@@ -129,10 +135,13 @@ export function PublicEventsSection({
                                     <MapPin className="h-4 w-4" />
                                     <span>{selectedEvent.location || 'Location to be announced'}</span>
                                 </div>
-                                <div className="flex items-center gap-2 text-muted-foreground">
-                                    <Users className="h-4 w-4" />
-                                    <span>{selectedEvent.max_participants ? `${selectedEvent.max_participants} max participants` : 'Open registration'}</span>
-                                </div>
+                                    {selectedEvent.event_level ? (
+                                        <div className="flex items-center gap-2 text-muted-foreground">
+                                        <Medal className="h-4 w-4" />
+                                        <span>{formatEventLevelCompactLabel(selectedEvent.event_level)}</span>
+                                        </div>
+                                    ) : null}
+                                <RegistrationDeadline event={selectedEvent} todayIso={todayIso} />
                             </div>
 
                             <div className="space-y-2 rounded-lg border border-border/50 p-4">
@@ -160,6 +169,7 @@ function EventSection({
     onToggleViewAll,
     onViewEvent,
     emptyMessage,
+    todayIso,
 }: {
     sectionId?: string
     title: string
@@ -171,6 +181,7 @@ function EventSection({
     onToggleViewAll: () => void
     onViewEvent: (event: PublicEvent) => void
     emptyMessage: string
+    todayIso: string
 }) {
     return (
         <section id={sectionId} className={sectionId ? 'scroll-mt-24' : undefined}>
@@ -190,9 +201,11 @@ function EventSection({
                                 >
                                     <div className="mb-4 flex items-center justify-between gap-2">
                                         <h3 className="text-xl font-semibold leading-tight">{event.title}</h3>
-                                        <Badge className="border-0 bg-muted/30 text-foreground dark:bg-white/[0.08]">
-                                            {formatEventTypeLabel(event.event_type)}
-                                        </Badge>
+                                        <div className="flex flex-wrap justify-end gap-2">
+                                            <Badge className="border-0 bg-muted/30 text-foreground dark:bg-white/[0.08]">
+                                                {formatEventTypeLabel(event.event_type)}
+                                            </Badge>
+                                        </div>
                                     </div>
 
                                     <div className="space-y-2 text-sm">
@@ -204,10 +217,13 @@ function EventSection({
                                             <MapPin className="h-4 w-4" />
                                             <span>{event.location || 'Location to be announced'}</span>
                                         </div>
-                                        <div className="flex items-center gap-2 text-muted-foreground">
-                                            <Users className="h-4 w-4" />
-                                            <span>{event.max_participants ? `${event.max_participants} max participants` : 'Open registration'}</span>
-                                        </div>
+                                        {event.event_level ? (
+                                            <div className="flex items-center gap-2 text-muted-foreground">
+                                                <Medal className="h-4 w-4" />
+                                                <span>{formatEventLevelCompactLabel(event.event_level)} Level</span>
+                                            </div>
+                                        ) : null}
+                                        <RegistrationDeadline event={event} todayIso={todayIso} className="pt-1 text-sm" />
                                     </div>
 
                                     <Button
@@ -265,4 +281,16 @@ function formatDisplayDateRange(startIsoDate: string, endIsoDate?: string | null
     }
 
     return `${start} - ${end}`
+}
+
+function formatEventMeta(eventType: string | null, eventLevel?: string | null) {
+    const typeLabel = formatEventTypeLabel(eventType)
+    const levelLabel = formatEventLevelLabel(eventLevel)
+
+    return levelLabel ? `${typeLabel} • ${levelLabel}` : typeLabel
+}
+
+function formatEventLevelCompactLabel(level?: string | null) {
+    const label = formatEventLevelLabel(level)
+    return label?.replace(/\s+Level$/i, '') ?? ''
 }

@@ -9,66 +9,167 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { toast } from 'sonner'
-import { Loader2, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react'
+import { Loader2, AlertTriangle, Clock } from 'lucide-react'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select'
+import { EVENT_LEVEL_OPTIONS, type EventLevel } from '@/lib/events/level'
+import { isEventTypeRequiringLevel } from '@/lib/events/type'
 
 interface EventSettingsFormProps {
     event: {
         id: string
         title: string
         location: string | null
+        event_type?: string | null
+        event_level?: EventLevel | null
         is_registration_open: boolean
+        is_public: boolean
+        temporary_registration_closes_at?: string | null
     }
+    entryCount: number
 }
 
-export function EventSettingsForm({ event }: EventSettingsFormProps) {
+function getErrorMessage(error: unknown, fallback: string) {
+    return error instanceof Error ? error.message : fallback
+}
+
+export function EventSettingsForm({ event, entryCount }: EventSettingsFormProps) {
     const [title, setTitle] = useState(event.title)
     const [location, setLocation] = useState(event.location || '')
-    const [isRegistrationOpen, setIsRegistrationOpen] = useState(event.is_registration_open)
+    const [eventLevel, setEventLevel] = useState<EventLevel | ''>(event.event_level || '')
+    const [isPublic, setIsPublic] = useState(event.is_public)
     const [isSaving, setIsSaving] = useState(false)
+    const [isTogglingVisibility, setIsTogglingVisibility] = useState(false)
+    const [tempClosesAt, setTempClosesAt] = useState<string | null>(event.temporary_registration_closes_at || null)
+    const requiresEventLevel = isEventTypeRequiringLevel(event.event_type)
+    const canDeleteEvent = entryCount === 0
 
-    const handleSaveGeneral = async (e: React.FormEvent) => {
-        e.preventDefault()
+    const handleTemporaryOpen = async (minutes: number) => {
         setIsSaving(true)
         try {
-            await updateEventSettings(event.id, { title, location })
-            toast.success("Event details updated successfully")
-        } catch (error: any) {
-            toast.error(error.message || "Failed to update event details")
+            const newTime = minutes > 0 
+                ? new Date(Date.now() + minutes * 60000).toISOString()
+                : null
+            
+            await updateEventSettings(event.id, { temporary_registration_closes_at: newTime })
+            setTempClosesAt(newTime)
+            toast.success(minutes > 0 ? `Registration opened for ${minutes} minutes` : 'Temporary open closed')
+        } catch (error) {
+            toast.error(getErrorMessage(error, 'Failed to update temporary open status'))
         } finally {
             setIsSaving(false)
         }
     }
 
-    const handleRegistrationToggle = async (checked: boolean) => {
-        setIsRegistrationOpen(checked)
+    const handleSaveGeneral = async (e: React.FormEvent) => {
+        e.preventDefault()
+        setIsSaving(true)
         try {
-            await updateEventSettings(event.id, { is_registration_open: checked })
-            toast.success(`Registration ${checked ? 'opened' : 'closed'} successfully`)
-        } catch (error: any) {
-            setIsRegistrationOpen(!checked) // Revert on failure
-            toast.error(error.message || "Failed to update registration status")
+            await updateEventSettings(event.id, {
+                title,
+                location,
+                event_level: requiresEventLevel ? (eventLevel || null) : null,
+            })
+            toast.success("Event details updated successfully")
+        } catch (error) {
+            toast.error(getErrorMessage(error, 'Failed to update event details'))
+        } finally {
+            setIsSaving(false)
+        }
+    }
+
+    const handleVisibilityToggle = async (checked: boolean) => {
+        if (isTogglingVisibility || checked === isPublic) return
+
+        const message = checked
+            ? 'Make this event public? It will be visible on the home page and public listings.'
+            : 'Make this event private? It will be hidden from the home page and public listings.'
+
+        const confirmed = window.confirm(message)
+        if (!confirmed) return
+
+        setIsTogglingVisibility(true)
+        setIsPublic(checked)
+        try {
+            await updateEventSettings(event.id, { is_public: checked })
+            toast.success(`Event is now ${checked ? 'public' : 'private'}`)
+        } catch (error) {
+            setIsPublic(!checked)
+            toast.error(getErrorMessage(error, 'Failed to update event visibility'))
+        } finally {
+            setIsTogglingVisibility(false)
         }
     }
 
     return (
         <div className="space-y-6 max-w-4xl">
+            <Card className={tempClosesAt && new Date(tempClosesAt) > new Date() ? "border-emerald-500/50 shadow-sm" : ""}>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <Clock className="h-5 w-5 text-blue-500" />
+                        Temporary Open (Short Burst)
+                    </CardTitle>
+                    <CardDescription>Temporarily open registration for last-minute adjustments. It will automatically close when time expires.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="flex flex-col gap-4 rounded-lg border p-4">
+                        {tempClosesAt && new Date(tempClosesAt) > new Date() ? (
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                <div className="space-y-0.5">
+                                    <p className="font-medium text-emerald-600 dark:text-emerald-500">
+                                        Temporarily Open
+                                    </p>
+                                    <p className="text-sm text-muted-foreground">
+                                        Closes at {new Date(tempClosesAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} ({new Date(tempClosesAt).toLocaleDateString()})
+                                    </p>
+                                </div>
+                                <Button variant="outline" onClick={() => handleTemporaryOpen(0)} disabled={isSaving}>
+                                    {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                                    Close Now
+                                </Button>
+                            </div>
+                        ) : (
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                <div className="space-y-0.5">
+                                    <Label className="text-base">Open For:</Label>
+                                    <p className="text-sm text-muted-foreground">
+                                        Select a duration below to open registration immediately.
+                                    </p>
+                                </div>
+                                <div className="flex gap-2 flex-wrap">
+                                    <Button variant="secondary" onClick={() => handleTemporaryOpen(15)} disabled={isSaving}>15 mins</Button>
+                                    <Button variant="secondary" onClick={() => handleTemporaryOpen(60)} disabled={isSaving}>1 hour</Button>
+                                    <Button variant="secondary" onClick={() => handleTemporaryOpen(180)} disabled={isSaving}>3 hours</Button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </CardContent>
+            </Card>
+
             <Card>
                 <CardHeader>
-                    <CardTitle>Registration Status</CardTitle>
-                    <CardDescription>Control whether new students can register for this event.</CardDescription>
+                    <CardTitle>Visibility</CardTitle>
+                    <CardDescription>Control whether this event appears in public listings.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="flex items-center justify-between rounded-lg border p-4">
                         <div className="space-y-0.5">
-                            <Label className="text-base">Accept new entries</Label>
+                            <Label className="text-base">Public event</Label>
                             <p className="text-sm text-muted-foreground">
-                                If closed, coaches will not be able to add new students to this event.
+                                Public events appear on the home page and events browser.
                             </p>
                         </div>
                         <Switch
-                            checked={isRegistrationOpen}
-                            onCheckedChange={handleRegistrationToggle}
+                            checked={isPublic}
+                            onCheckedChange={handleVisibilityToggle}
+                            disabled={isTogglingVisibility}
                         />
                     </div>
                 </CardContent>
@@ -100,6 +201,21 @@ export function EventSettingsForm({ event }: EventSettingsFormProps) {
                                 placeholder="E.g. 123 Main St, City, ST 12345"
                             />
                         </div>
+                        {requiresEventLevel && (
+                            <div className="space-y-2">
+                                <Label htmlFor="event_level">Event Level</Label>
+                                <Select value={eventLevel || undefined} onValueChange={(value) => setEventLevel(value as EventLevel)}>
+                                    <SelectTrigger id="event_level">
+                                        <SelectValue placeholder="Select level" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {EVENT_LEVEL_OPTIONS.map((option) => (
+                                            <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
                         <Button type="submit" disabled={isSaving}>
                             {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             Save General Settings
@@ -125,7 +241,13 @@ export function EventSettingsForm({ event }: EventSettingsFormProps) {
                                 </p>
                             </div>
                             <div className="shrink-0 flex justify-end">
-                                <DeleteEventForm eventId={event.id} eventTitle={event.title} />
+                                {canDeleteEvent ? (
+                                    <DeleteEventForm eventId={event.id} eventTitle={event.title} />
+                                ) : (
+                                    <div className="max-w-sm rounded-md border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-sm text-amber-700 dark:text-amber-400">
+                                        Delete is disabled because this event already has {entryCount} registration{entryCount === 1 ? '' : 's'}.
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </AccordionContent>

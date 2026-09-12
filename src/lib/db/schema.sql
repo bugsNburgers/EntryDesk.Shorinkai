@@ -71,12 +71,13 @@ CREATE TABLE IF NOT EXISTS students (
     weight NUMERIC, -- in kg
     rank TEXT,      -- 'white', 'yellow', 'brown_3', etc.
     registration_no TEXT UNIQUE,
-    generic_checked BOOLEAN NOT NULL DEFAULT FALSE,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS idx_students_dojo ON students(dojo_id);
 CREATE INDEX IF NOT EXISTS idx_students_reg_no ON students(registration_no);
+CREATE INDEX IF NOT EXISTS idx_students_active ON students(is_active);
 
 -- Automatic Student Registration ID Generator (e.g., SK26-0001)
 CREATE OR REPLACE FUNCTION generate_student_registration_no()
@@ -107,11 +108,14 @@ CREATE TABLE IF NOT EXISTS events (
     title TEXT NOT NULL,
     description TEXT,
     event_type TEXT NOT NULL CHECK (event_type IN ('tournament', 'seminar', 'test')),
+    level TEXT NOT NULL DEFAULT 'district' CHECK (level IN ('club', 'district', 'state', 'national', 'international')),
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
     location TEXT,
     is_public BOOLEAN DEFAULT FALSE,
     is_registration_open BOOLEAN DEFAULT TRUE,
+    registration_close_date DATE,
+    temporary_registration_closes_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -179,6 +183,7 @@ CREATE TABLE IF NOT EXISTS entries (
     participation_type TEXT, -- 'kata', 'kumite', 'both'
     status TEXT DEFAULT 'draft' CHECK (status IN ('draft', 'submitted', 'approved', 'rejected')),
     chest_no INTEGER,
+    generic_checked BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -189,6 +194,7 @@ CREATE INDEX IF NOT EXISTS idx_entries_student ON entries(student_id);
 CREATE INDEX IF NOT EXISTS idx_entries_category ON entries(category_id);
 CREATE INDEX IF NOT EXISTS idx_entries_day ON entries(event_day_id);
 CREATE INDEX IF NOT EXISTS idx_entries_status ON entries(status);
+CREATE INDEX IF NOT EXISTS idx_entries_generic_checked ON entries(generic_checked);
 
 -- Sequential Chest Number Assignment on Approval
 CREATE OR REPLACE FUNCTION assign_chest_no_on_approval()
@@ -213,3 +219,134 @@ CREATE TRIGGER tr_assign_chest_no_on_approval
 BEFORE UPDATE ON entries
 FOR EACH ROW
 EXECUTE FUNCTION assign_chest_no_on_approval();
+
+-- 11. EVENT COLLABORATORS (Shared access for events)
+CREATE TABLE IF NOT EXISTS event_collaborators (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    event_id UUID NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    permission TEXT NOT NULL DEFAULT 'read' CHECK (permission IN ('read', 'write')),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE (event_id, user_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_event_collab_event ON event_collaborators(event_id);
+CREATE INDEX IF NOT EXISTS idx_event_collab_user ON event_collaborators(user_id);
+
+-- 12. DOJO COLLABORATORS (Shared access for dojos)
+CREATE TABLE IF NOT EXISTS dojo_collaborators (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    dojo_id UUID NOT NULL REFERENCES dojos(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    permission TEXT NOT NULL DEFAULT 'read' CHECK (permission IN ('read', 'write')),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE (dojo_id, user_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_dojo_collab_dojo ON dojo_collaborators(dojo_id);
+CREATE INDEX IF NOT EXISTS idx_dojo_collab_user ON dojo_collaborators(user_id);
+
+-- 13. CONTACTS (Public inquiries submitted via /contact)
+CREATE TABLE IF NOT EXISTS contacts (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT NOT NULL,
+    email TEXT NOT NULL,
+    message TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'unread' CHECK (status IN ('unread', 'read', 'archived')),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_contacts_status ON contacts(status);
+CREATE INDEX IF NOT EXISTS idx_contacts_created_at ON contacts(created_at DESC);
+
+-- 14. AUTOMATED STUDENT INACTIVITY EVALUATION
+CREATE OR REPLACE FUNCTION evaluate_dojo_students_activity(target_dojo_id UUID)
+RETURNS VOID AS $$
+DECLARE
+    recent_events_count INT;
+BEGIN
+    SELECT COUNT(*) INTO recent_events_count
+    FROM (
+        SELECT ev.id
+        FROM events ev
+        JOIN entries e ON e.event_id = ev.id
+        JOIN students s ON e.student_id = s.id
+        WHERE s.dojo_id = target_dojo_id
+        GROUP BY ev.id, ev.end_date
+        ORDER BY ev.end_date DESC
+        LIMIT 2
+    ) as subquery;
+
+    IF recent_events_count >= 2 THEN
+        UPDATE students st
+        SET is_active = (
+            CASE
+                WHEN st.created_at > (
+                    SELECT MIN(start_date)::timestamptz
+                    FROM (
+                        SELECT ev.start_date
+                        FROM events ev
+                        JOIN entries e2 ON e2.event_id = ev.id
+                        JOIN students s2 ON e2.student_id = s2.id
+                        WHERE s2.dojo_id = target_dojo_id
+                        GROUP BY ev.id, ev.end_date, ev.start_date
+                        ORDER BY ev.end_date DESC
+                        LIMIT 2
+                    ) AS recent_two
+                ) THEN true
+                ELSE
+                    EXISTS (
+                        SELECT 1
+                        FROM entries my_e
+                        WHERE my_e.student_id = st.id
+                          AND my_e.event_id IN (
+                              SELECT ev.id
+                              FROM events ev
+                              JOIN entries e2 ON e2.event_id = ev.id
+                              JOIN students s2 ON e2.student_id = s2.id
+                              WHERE s2.dojo_id = target_dojo_id
+                              GROUP BY ev.id, ev.end_date
+                              ORDER BY ev.end_date DESC
+                              LIMIT 2
+                          )
+                    )
+            END
+        )
+        WHERE st.dojo_id = target_dojo_id;
+    ELSE
+        UPDATE students
+        SET is_active = true
+        WHERE dojo_id = target_dojo_id;
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION trigger_evaluate_dojo_students_activity()
+RETURNS TRIGGER AS $$
+DECLARE
+    dojo_uuid UUID;
+BEGIN
+    IF TG_OP = 'DELETE' THEN
+        SELECT dojo_id INTO dojo_uuid FROM students WHERE id = OLD.student_id;
+    ELSE
+        SELECT dojo_id INTO dojo_uuid FROM students WHERE id = NEW.student_id;
+    END IF;
+
+    IF dojo_uuid IS NOT NULL THEN
+        PERFORM evaluate_dojo_students_activity(dojo_uuid);
+    END IF;
+    
+    IF TG_OP = 'DELETE' THEN
+        RETURN OLD;
+    ELSE
+        RETURN NEW;
+    END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS evaluate_activity_on_entry ON entries;
+CREATE TRIGGER evaluate_activity_on_entry
+AFTER INSERT OR UPDATE OR DELETE ON entries
+FOR EACH ROW
+EXECUTE FUNCTION trigger_evaluate_dojo_students_activity();
+

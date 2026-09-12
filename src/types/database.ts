@@ -42,7 +42,7 @@ export interface Student {
     weight: number | null
     rank: string | null
     registration_no: string | null
-    generic_checked: boolean
+    is_active: boolean
     created_at: string
 }
 
@@ -52,11 +52,14 @@ export interface Event {
     title: string
     description: string | null
     event_type: EventType
+    level: string
     start_date: string
     end_date: string
     location: string | null
     is_public: boolean
     is_registration_open: boolean
+    registration_close_date?: string | null
+    temporary_registration_closes_at?: string | null
     created_at: string
 }
 
@@ -98,8 +101,38 @@ export interface Entry {
     participation_type: ParticipationType | null
     status: EntryStatus
     chest_no: number | null
+    generic_checked: boolean
     created_at: string
     updated_at: string
+}
+
+export interface EventCollaborator {
+    id: string
+    event_id: string
+    user_id: string
+    permission: 'read' | 'write'
+    email?: string
+    full_name?: string | null
+    created_at: string
+}
+
+export interface DojoCollaborator {
+    id: string
+    dojo_id: string
+    user_id: string
+    permission: 'read' | 'write'
+    email?: string
+    full_name?: string | null
+    created_at: string
+}
+
+export interface Contact {
+    id: string
+    name: string
+    email: string
+    message: string
+    status: 'unread' | 'read' | 'archived'
+    created_at: string
 }
 
 export interface OrganizerEntry {
@@ -113,12 +146,14 @@ export interface OrganizerEntry {
     category_id: string | null
     student_id: string
     chest_no: number | null
+    generic_checked?: boolean
     student_name: string
     student_rank: string | null
     student_gender: string
     student_weight: number | null
     student_dob: string | null
     student_registration_no: string | null
+    student_is_active?: boolean
     dojo_name: string | null
     category_name: string | null
     event_day_name: string | null
@@ -126,4 +161,8 @@ export interface OrganizerEntry {
     coach_name: string | null
     coach_email: string
     organizer_id: string
+    event_level?: string | null
+    registration_close_date?: string | null
+    temporary_registration_closes_at?: string | null
 }
+

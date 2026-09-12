@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -21,31 +21,44 @@ import {
     TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { StudentDialog } from "@/components/students/student-dialog"
+import { isSimpleEntryEventType } from '@/lib/events/type'
+import { updateEntryGenericChecked } from "@/app/dashboard/entries/actions"
 
 interface CoachEntriesListProps {
     entries: any[]
     eventDays: any[]
     dojos: any[]
+    eventType?: string | null
     statusPreset?: string
     isReadOnly?: boolean
 }
 
 const ITEMS_PER_PAGE = 50
 
-export function CoachEntriesList({ entries, eventDays, dojos, statusPreset, isReadOnly = false }: CoachEntriesListProps) {
+export function CoachEntriesList({ entries, eventDays, dojos, eventType, statusPreset, isReadOnly = false }: CoachEntriesListProps) {
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [isDeleting, setIsDeleting] = useState(false)
     const [editingStudent, setEditingStudent] = useState<any>(null)
     const [editingEntry, setEditingEntry] = useState<any>(null)
     const [dialogOpen, setDialogOpen] = useState(false)
+    const [genericCheckedMap, setGenericCheckedMap] = useState<Record<string, boolean>>(() => {
+        const map: Record<string, boolean> = {}
+        for (const entry of entries) {
+            map[entry.id] = !!entry.generic_checked
+        }
+        return map
+    })
 
     // Filters & Pagination
     const [searchQuery, setSearchQuery] = useState('')
     const [statusFilter, setStatusFilter] = useState('all')
     const [beltFilter, setBeltFilter] = useState('all')
     const [dayFilter, setDayFilter] = useState('all')
+    const [dojoFilter, setDojoFilter] = useState('all')
+    const [paymentFilter, setPaymentFilter] = useState('all')
     const [page, setPage] = useState(1)
+    const isSimpleEntryEvent = isSimpleEntryEventType(eventType)
 
     useEffect(() => {
         if (!statusPreset) return
@@ -60,13 +73,73 @@ export function CoachEntriesList({ entries, eventDays, dojos, statusPreset, isRe
         new Set(entries.map((e) => e.students?.rank).filter(Boolean))
     ).sort()
 
+    const dojoNameById = useMemo(() => {
+        const map = new Map<string, string>()
+        dojos.forEach((dojo) => {
+            if (dojo?.id && dojo?.name) {
+                map.set(String(dojo.id), dojo.name)
+            }
+        })
+        return map
+    }, [dojos])
+
+    const getDojoName = (entry: any) => {
+        const joinedDojoName = entry.students?.dojos?.name
+        if (joinedDojoName) return String(joinedDojoName)
+
+        const dojoId = entry.students?.dojo_id
+        if (!dojoId) return ''
+
+        return dojoNameById.get(String(dojoId)) || ''
+    }
+
+    const getDojoId = (entry: any) => {
+        const joinedDojoId = entry.students?.dojos?.id
+        if (joinedDojoId) return String(joinedDojoId)
+
+        const dojoId = entry.students?.dojo_id
+        if (!dojoId) return ''
+
+        return String(dojoId)
+    }
+
+    const dojoFilterOptions = useMemo(() => {
+        const uniqueDojos = new Map<string, string>()
+
+        entries.forEach((entry) => {
+            const dojoId = getDojoId(entry)
+            const dojoName = getDojoName(entry)
+            if (dojoId && dojoName) {
+                uniqueDojos.set(dojoId, dojoName)
+            }
+        })
+
+        return Array.from(uniqueDojos.entries())
+            .map(([id, name]) => ({ id, name }))
+            .sort((a, b) => a.name.localeCompare(b.name))
+    }, [entries, dojos])
+
+    useEffect(() => {
+        if (dojoFilter === 'all') return
+        const hasSelectedDojo = dojoFilterOptions.some((dojo) => dojo.id === dojoFilter)
+        if (!hasSelectedDojo) {
+            setDojoFilter('all')
+            setPage(1)
+        }
+    }, [dojoFilter, dojoFilterOptions])
+
     // Filter Logic
     const filteredEntries = entries.filter(e => {
         const matchesSearch = (e.students?.name || '').toLowerCase().includes(searchQuery.toLowerCase())
         const matchesStatus = statusFilter === 'all' || e.status === statusFilter
         const matchesBelt = beltFilter === 'all' || e.students?.rank === beltFilter
-        const matchesDay = dayFilter === 'all' || e.event_day_id === dayFilter
-        return matchesSearch && matchesStatus && matchesBelt && matchesDay
+        const matchesDay = isSimpleEntryEvent || dayFilter === 'all' || e.event_day_id === dayFilter
+        const matchesDojo = dojoFilter === 'all' || getDojoId(e) === dojoFilter
+        
+        const isPaid = genericCheckedMap[e.id] ?? !!e.generic_checked
+        const matchesPayment = paymentFilter === 'all' || (paymentFilter === 'paid' && isPaid) || (paymentFilter === 'unpaid' && !isPaid)
+        
+        return matchesSearch && matchesStatus && matchesBelt && matchesDay && matchesDojo && matchesPayment
     })
 
     // Pagination Logic
@@ -103,10 +176,15 @@ export function CoachEntriesList({ entries, eventDays, dojos, statusPreset, isRe
         if (!confirm(`Submit ${selectedIds.size} entries?`)) return
         setIsSubmitting(true)
         try {
-            await bulkSubmitEntries(Array.from(selectedIds))
+            const result = await bulkSubmitEntries(Array.from(selectedIds))
+            if (result?.success === false && result?.message) {
+                alert(result.message)
+                return
+            }
             setSelectedIds(new Set())
         } catch (e) {
-            alert('Failed to submit')
+            const message = e instanceof Error ? e.message : 'Failed to submit'
+            alert(message)
         } finally {
             setIsSubmitting(false)
         }
@@ -119,7 +197,8 @@ export function CoachEntriesList({ entries, eventDays, dojos, statusPreset, isRe
             await bulkDeleteEntries(Array.from(selectedIds))
             setSelectedIds(new Set())
         } catch (e) {
-            alert('Failed to delete')
+            const message = e instanceof Error ? e.message : 'Failed to delete'
+            alert(message)
         } finally {
             setIsDeleting(false)
         }
@@ -128,7 +207,6 @@ export function CoachEntriesList({ entries, eventDays, dojos, statusPreset, isRe
     const getMissingFields = (student: any) => {
         if (!student) return []
         const missing = []
-        if (!student.weight) missing.push('Weight')
         if (!student.rank) missing.push('Rank')
         if (!student.date_of_birth) missing.push('DOB')
         if (!student.gender) missing.push('Gender')
@@ -141,6 +219,18 @@ export function CoachEntriesList({ entries, eventDays, dojos, statusPreset, isRe
         setDialogOpen(true)
     }
 
+    const handleToggleGeneric = async (entryId: string, checked: boolean) => {
+        const previous = genericCheckedMap[entryId] ?? false
+        setGenericCheckedMap((prev) => ({ ...prev, [entryId]: checked }))
+
+        try {
+            await updateEntryGenericChecked(entryId, checked, entries[0]?.event_id)
+        } catch (error) {
+            setGenericCheckedMap((prev) => ({ ...prev, [entryId]: previous }))
+            alert('Failed to save payment status')
+        }
+    }
+
     return (
         <div className="space-y-4">
             {!isReadOnly && (
@@ -149,6 +239,7 @@ export function CoachEntriesList({ entries, eventDays, dojos, statusPreset, isRe
                     student={editingStudent}
                     entry={editingEntry}
                     eventDays={eventDays}
+                    eventType={eventType}
                     open={dialogOpen}
                     onOpenChange={setDialogOpen}
                     showTrigger={false}
@@ -187,7 +278,7 @@ export function CoachEntriesList({ entries, eventDays, dojos, statusPreset, isRe
                             ))}
                         </SelectContent>
                     </Select>
-                    {eventDays && eventDays.length > 0 && (
+                    {!isSimpleEntryEvent && eventDays && eventDays.length > 0 && (
                         <Select value={dayFilter} onValueChange={(v) => { setDayFilter(v); setPage(1); }}>
                             <SelectTrigger className="h-11 w-[160px] rounded-full">
                                 <SelectValue placeholder="Filter Day" />
@@ -197,6 +288,30 @@ export function CoachEntriesList({ entries, eventDays, dojos, statusPreset, isRe
                                 {eventDays.map(d => (
                                     <SelectItem key={d.id} value={d.id}>{d.name || d.date}</SelectItem>
                                 ))}
+                            </SelectContent>
+                        </Select>
+                    )}
+                    <Select value={dojoFilter} onValueChange={(v) => { setDojoFilter(v); setPage(1); }}>
+                        <SelectTrigger className="h-11 w-[170px] rounded-full">
+                            <SelectValue placeholder="Filter Dojo" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Dojos</SelectItem>
+                            {dojoFilterOptions.map((dojo) => (
+                                <SelectItem key={dojo.id} value={String(dojo.id)}>{dojo.name}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                    
+                    {!isReadOnly && (
+                        <Select value={paymentFilter} onValueChange={(v) => { setPaymentFilter(v); setPage(1); }}>
+                            <SelectTrigger className="h-11 w-[140px] rounded-full">
+                                <SelectValue placeholder="Payment" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Payments</SelectItem>
+                                <SelectItem value="paid">Paid</SelectItem>
+                                <SelectItem value="unpaid">Unpaid</SelectItem>
                             </SelectContent>
                         </Select>
                     )}
@@ -238,16 +353,18 @@ export function CoachEntriesList({ entries, eventDays, dojos, statusPreset, isRe
                             </th>
                             <th className="h-12 px-4 align-middle font-medium text-muted-foreground w-[80px]">Chest</th>
                             <th className="h-12 px-4 align-middle font-medium text-muted-foreground">Student</th>
+                            <th className="h-12 px-4 align-middle font-medium text-muted-foreground">Dojo</th>
                             <th className="h-12 px-4 align-middle font-medium text-muted-foreground">Belt</th>
-                            <th className="h-12 px-4 align-middle font-medium text-muted-foreground">Day</th>
-                            <th className="h-12 px-4 align-middle font-medium text-muted-foreground">Type</th>
+                            {!isSimpleEntryEvent && <th className="h-12 px-4 align-middle font-medium text-muted-foreground">Day</th>}
+                            {!isSimpleEntryEvent && <th className="h-12 px-4 align-middle font-medium text-muted-foreground">Type</th>}
                             <th className="h-12 px-4 align-middle font-medium text-muted-foreground">Status</th>
+                            {!isReadOnly && <th className="h-12 px-4 align-middle font-medium text-muted-foreground w-[90px]">Payment</th>}
                         </tr>
                     </thead>
                     <tbody className="[&_tr:last-child]:border-0">
                         {paginatedEntries.length === 0 ? (
                             <tr>
-                                <td colSpan={7} className="h-24 text-center text-muted-foreground">
+                                <td colSpan={isSimpleEntryEvent ? 6 : 8} className="h-24 text-center text-muted-foreground">
                                     {filteredEntries.length === 0
                                         ? "No entries match your filters."
                                         : "No active entries. Go to 'Register' tab to add students."}
@@ -299,15 +416,22 @@ export function CoachEntriesList({ entries, eventDays, dojos, statusPreset, isRe
                                         </div>
                                     </td>
 
+                                    {/* Dojo */}
+                                    <td className="p-4 align-middle">{getDojoName(entry) || '-'}</td>
+
                                     {/* Belt */}
                                     <td className="p-4 align-middle capitalize">{entry.students?.rank || '-'}</td>
 
-                                    {/* Day */}
-                                    {/* @ts-ignore */}
-                                    <td className="p-4 align-middle">{entry.event_days?.name || '-'}</td>
+                                    {!isSimpleEntryEvent && (
+                                        <>
+                                            {/* Day */}
+                                            {/* @ts-ignore */}
+                                            <td className="p-4 align-middle">{entry.event_days?.name || '-'}</td>
 
-                                    {/* Type */}
-                                    <td className="p-4 align-middle capitalize">{entry.participation_type || '-'}</td>
+                                            {/* Type */}
+                                            <td className="p-4 align-middle capitalize">{entry.participation_type || '-'}</td>
+                                        </>
+                                    )}
 
                                     {/* Status */}
                                     <td className="p-4 align-middle">
@@ -321,6 +445,16 @@ export function CoachEntriesList({ entries, eventDays, dojos, statusPreset, isRe
                                             {entry.status}
                                         </span>
                                     </td>
+                                    
+                                    {/* Payment Checkbox */}
+                                    {!isReadOnly && (
+                                        <td className="p-4 align-middle">
+                                            <Checkbox
+                                                checked={!!genericCheckedMap[entry.id]}
+                                                onCheckedChange={(c) => handleToggleGeneric(entry.id, !!c)}
+                                            />
+                                        </td>
+                                    )}
                                 </tr>
                             )
                         })}

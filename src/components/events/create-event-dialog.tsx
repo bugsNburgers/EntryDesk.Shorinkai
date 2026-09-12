@@ -1,7 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
     Dialog,
@@ -21,35 +20,44 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { cn } from "@/lib/utils"
-import { format } from "date-fns"
-import { CalendarIcon } from "lucide-react"
 import { createEvent } from '@/app/dashboard/events/actions'
 import { Checkbox } from "@/components/ui/checkbox"
+import { EVENT_LEVEL_OPTIONS } from '@/lib/events/level'
+import { isEventTypeRequiringLevel } from '@/lib/events/type'
 
 export function CreateEventDialog() {
     const [open, setOpen] = useState(false)
-    const [date, setDate] = useState<{ from: Date; to: Date } | undefined>()
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const [eventType, setEventType] = useState<string>('')
+    const [eventLevel, setEventLevel] = useState<string>('')
     const submitLockRef = useRef(false)
+    const requiresEventLevel = isEventTypeRequiringLevel(eventType || null)
 
-    const router = useRouter()
+    useEffect(() => {
+        if (!requiresEventLevel) {
+            setEventLevel('')
+        }
+    }, [requiresEventLevel])
 
     const handleSubmit = async (formData: FormData) => {
         if (submitLockRef.current || isSubmitting) {
             return
         }
 
+        // Manually add dates if using a range picker
+        // Simple implementation: two separate date inputs for now to be safe with standard form data
+        // But let's use the formData directly if we use hidden inputs
         try {
             submitLockRef.current = true
             setIsSubmitting(true)
-            await createEvent(formData)
+            const result = await createEvent(formData)
+            if (!result?.success) {
+                alert(result?.error || 'Failed to create event')
+                return
+            }
             setOpen(false)
-            router.refresh()
-        } catch (error) {
-            alert((error as Error)?.message || 'Failed to create event')
+        } catch {
+            alert('Failed to create event')
         } finally {
             submitLockRef.current = false
             setIsSubmitting(false)
@@ -65,7 +73,7 @@ export function CreateEventDialog() {
                 <DialogHeader>
                     <DialogTitle>Create New Event</DialogTitle>
                     <DialogDescription>
-                        Set up a new tournament, seminar, or test.
+                        Set up a new event with dates and registration settings.
                     </DialogDescription>
                 </DialogHeader>
                 <form action={handleSubmit}>
@@ -75,10 +83,10 @@ export function CreateEventDialog() {
                             <Input id="title" name="title" className="col-span-3" required placeholder="Winter Championship 2024" />
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="type" className="text-right">Type</Label>
+                            <Label htmlFor="event_type" className="text-right">Type</Label>
                             <div className="col-span-3">
-                                <Select name="event_type" required>
-                                    <SelectTrigger>
+                                <Select name="event_type" value={eventType} onValueChange={setEventType} required>
+                                    <SelectTrigger id="event_type">
                                         <SelectValue placeholder="Select Type" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -89,6 +97,23 @@ export function CreateEventDialog() {
                                 </Select>
                             </div>
                         </div>
+                        {requiresEventLevel && (
+                            <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="event_level" className="text-right">Level</Label>
+                                <div className="col-span-3">
+                                    <Select name="event_level" value={eventLevel} onValueChange={setEventLevel} required>
+                                        <SelectTrigger id="event_level">
+                                            <SelectValue placeholder="Select Level" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {EVENT_LEVEL_OPTIONS.map((option) => (
+                                                <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+                        )}
                         <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="location" className="text-right">Location</Label>
                             <Input id="location" name="location" className="col-span-3" placeholder="City Arena" />
@@ -96,12 +121,17 @@ export function CreateEventDialog() {
 
                         <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="start_date" className="text-right">Start Date</Label>
-                            <Input type="date" name="start_date" className="col-span-3" required />
+                            <Input id="start_date" type="date" name="start_date" className="col-span-3" required />
                         </div>
 
                         <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="end_date" className="text-right">End Date</Label>
-                            <Input type="date" name="end_date" className="col-span-3" required />
+                            <Input id="end_date" type="date" name="end_date" className="col-span-3" required />
+                        </div>
+
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="registration_close_date" className="text-right">Registration Closes</Label>
+                            <Input id="registration_close_date" type="date" name="registration_close_date" className="col-span-3" required />
                         </div>
 
                         <div className="grid grid-cols-4 items-center gap-4">
@@ -120,6 +150,7 @@ export function CreateEventDialog() {
                         <div className="grid grid-cols-4 items-start gap-4">
                             <Label htmlFor="description" className="text-right pt-2">Description</Label>
                             <textarea
+                                id="description"
                                 name="description"
                                 className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 col-span-3"
                                 placeholder="Event details..."

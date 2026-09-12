@@ -12,18 +12,21 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog"
+import { RegistrationDeadline } from "@/components/events/registration-deadline"
 
 interface CoachDashboardProps {
     event: any
+    eventType?: string | null
     stats: any
     entries: any[]
     students: any[]
     eventDays: any[]
     dojos: any[]
     isPastEvent?: boolean
+    isRegistrationClosed?: boolean
 }
 
-export function CoachDashboard({ event, stats, entries, students, eventDays, dojos, isPastEvent = false }: CoachDashboardProps) {
+export function CoachDashboard({ event, eventType, stats, entries, students, eventDays, dojos, isPastEvent = false, isRegistrationClosed = false }: CoachDashboardProps) {
     const existingStudentIds = useMemo(() => new Set(entries.map(e => e.student_id)), [entries])
 
     const [statusPreset, setStatusPreset] = useState<string>('all')
@@ -45,17 +48,23 @@ export function CoachDashboard({ event, stats, entries, students, eventDays, doj
                             <h1 className="text-3xl font-bold tracking-tight">{event.title}</h1>
                             {isPastEvent && (
                                 <span className="rounded-full border border-black/10 bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground dark:border-white/10">
-                                    Closed
+                                    Event Ended
                                 </span>
                             )}
                         </div>
                         <p className="text-muted-foreground">
                             {isPastEvent
-                                ? "This event is closed. You can view entries and details, but registration/actions are disabled."
-                                : "Manage your team's participation."}
+                                ? "This event has ended. You can view entries and details."
+                                : isRegistrationClosed
+                                    ? "Registration for this event has ended. You can still view entries and details."
+                                    : "Manage your team's participation."}
                         </p>
+                        <RegistrationDeadline event={event} className="animate-pulse-gentle mt-1.5 text-sm sm:hidden" />
                     </div>
-                    {!isPastEvent && <Button onClick={() => setRegisterOpen(true)}>Register athletes</Button>}
+                    <div className="flex flex-col items-end gap-2">
+                        <RegistrationDeadline event={event} className="animate-pulse-gentle text-sm hidden sm:flex" />
+                        {!isPastEvent && !isRegistrationClosed && <Button onClick={() => setRegisterOpen(true)}>Register athletes</Button>}
+                    </div>
                 </div>
             </div>
 
@@ -78,6 +87,7 @@ export function CoachDashboard({ event, stats, entries, students, eventDays, doj
                     entries={entries}
                     eventDays={eventDays}
                     dojos={dojos}
+                    eventType={eventType}
                     statusPreset={statusPreset}
                     isReadOnly={isPastEvent}
                 />
@@ -85,7 +95,7 @@ export function CoachDashboard({ event, stats, entries, students, eventDays, doj
 
             {!isPastEvent && (
                 <Dialog open={registerOpen} onOpenChange={setRegisterOpen}>
-                    <DialogContent className="max-w-4xl w-[95vw] sm:w-[90vw] md:w-full max-h-[95vh] flex flex-col overflow-y-auto">
+                    <DialogContent className="sm:max-w-4xl w-[95vw] sm:w-[90vw] md:w-full max-h-[95vh] flex flex-col overflow-y-auto">
                         <DialogHeader>
                             <DialogTitle>Register athletes</DialogTitle>
                             <DialogDescription>
@@ -98,6 +108,7 @@ export function CoachDashboard({ event, stats, entries, students, eventDays, doj
                             existingStudentIds={existingStudentIds}
                             eventId={event.id}
                             eventDays={eventDays}
+                            eventType={eventType}
                             dojos={dojos}
                         />
                     </DialogContent>
