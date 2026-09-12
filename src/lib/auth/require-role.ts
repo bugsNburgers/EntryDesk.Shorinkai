@@ -1,103 +1,54 @@
-import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { cache } from 'react'
-import { deriveFullName, looksLikeRoleName } from '@/lib/auth/profile'
+import { getCurrentSession } from '@/lib/auth/session'
+import type { UserRole, Profile } from '@/types/database'
 
-export type UserRole = 'organizer' | 'coach' | 'admin'
+export type { UserRole }
 
 export const getUserProfile = cache(async () => {
-    const supabase = await createClient()
-    const {
-        data: { user },
-    } = await supabase.auth.getUser()
+    const sessionData = await getCurrentSession()
 
-    if (!user) {
+    if (!sessionData) {
         redirect('/login')
     }
 
-    // Ensure we have a profile row for FK + RLS checks.
-    // Supabase Auth does not auto-create rows in public.profiles.
-    const { data: existingProfile, error: profileError } = await supabase
-        .from('profiles')
-        .select('id, role, full_name, email')
-        .eq('id', user.id)
-        .maybeSingle()
-
-    if (profileError) {
-        throw new Error(profileError.message)
+    const { user } = sessionData
+    const profile: Profile = {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        full_name: user.full_name,
+        avatar_url: user.avatar_url,
+        created_at: new Date().toISOString(),
     }
 
-    let profile = existingProfile
-
-    if (!profile) {
-        const email = user.email
-        if (!email) {
-            throw new Error('Missing email on user; cannot create profile')
-        }
-
-        const fullName = deriveFullName(user)
-
-        const { error: createProfileError } = await supabase
-            .from('profiles')
-            .insert({ id: user.id, email, role: 'coach', full_name: fullName })
-
-        if (createProfileError) {
-            throw new Error(createProfileError.message)
-        }
-
-        const { data: createdProfile, error: createdProfileError } = await supabase
-            .from('profiles')
-            .select('id, role, full_name, email')
-            .eq('id', user.id)
-            .single()
-
-        if (createdProfileError) {
-            throw new Error(createdProfileError.message)
-        }
-
-        profile = createdProfile
-    } else {
-        // If the profile was auto-created earlier with a placeholder name, sync it
-        // from Google identity / user_metadata when available.
-        const desiredFullName = deriveFullName(user)
-        const emailLocalPart = user.email ? user.email.split('@')[0] : null
-        const currentFullName = profile.full_name
-
-        const currentLooksAuto =
-            !currentFullName ||
-            looksLikeRoleName(currentFullName) ||
-            (emailLocalPart ? currentFullName === emailLocalPart : false)
-
-        if (currentLooksAuto && desiredFullName && desiredFullName !== currentFullName) {
-            const { error: updateError } = await supabase
-                .from('profiles')
-                .update({ full_name: desiredFullName })
-                .eq('id', user.id)
-
-            if (!updateError) {
-                profile = { ...profile, full_name: desiredFullName }
-            }
-        }
+    return {
+        user: {
+            id: user.id,
+            email: user.email,
+            user_metadata: {
+                full_name: user.full_name,
+                avatar_url: user.avatar_url,
+            },
+        },
+        profile,
+        role: user.role,
     }
-
-    const role = (profile?.role as UserRole) || 'coach'
-
-    return { supabase, user, profile, role }
 })
 
 export async function requireRole(
     allowed: UserRole | UserRole[],
     options?: { redirectTo?: string }
 ) {
-    const { supabase, user, profile, role } = await getUserProfile()
+    const { user, profile, role } = await getUserProfile()
     const allowedRoles = Array.isArray(allowed) ? allowed : [allowed]
 
     if (!allowedRoles.includes(role)) {
         if (options?.redirectTo) {
             redirect(options.redirectTo)
         }
-        throw new Error('Unauthorized')
+        throw new Error('Unauthorized: Insufficient permissions for this action')
     }
 
-    return { supabase, user, profile, role }
+    return { user, profile, role }
 }

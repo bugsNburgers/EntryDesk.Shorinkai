@@ -1,4 +1,12 @@
-import type { User } from '@supabase/supabase-js'
+interface UserLike {
+    email?: string | null
+    full_name?: string | null
+    user_metadata?: {
+        full_name?: string
+        name?: string
+        display_name?: string
+    }
+}
 
 const ROLE_LIKE_NAMES = new Set(['coach', 'organizer', 'admin'])
 
@@ -17,32 +25,22 @@ function normalizeCandidate(value: unknown): string | null {
 
 /**
  * Best-effort human display name.
- * For Google OAuth, Supabase may store the name in either user_metadata or identities[].identity_data.
  */
-export function deriveFullName(user: User): string {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const meta = (user as any)?.user_metadata as any
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const identityData = (user as any)?.identities?.[0]?.identity_data as any
+export function deriveFullName(user: UserLike): string {
+    const meta = user?.user_metadata
 
     const candidates: Array<string | null> = [
+        normalizeCandidate(user?.full_name),
         normalizeCandidate(meta?.full_name),
         normalizeCandidate(meta?.name),
         normalizeCandidate(meta?.display_name),
-        normalizeCandidate(identityData?.full_name),
-        normalizeCandidate(identityData?.name),
-        normalizeCandidate(
-            typeof identityData?.given_name === 'string' || typeof identityData?.family_name === 'string'
-                ? `${identityData?.given_name ?? ''} ${identityData?.family_name ?? ''}`
-                : null
-        ),
     ]
 
     for (const candidate of candidates) {
         if (candidate) return candidate
     }
 
-    const email = user.email
+    const email = user?.email
     if (email) {
         return email.split('@')[0]
     }
