@@ -6,7 +6,6 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { AppNavLink } from '@/components/app/nav-link'
 import { ThemeSwitch } from '@/components/app/theme-toggle'
-import { createClient } from '@/lib/supabase/client'
 
 export function LandingHeader() {
     const [hasScrolled, setHasScrolled] = useState(false)
@@ -26,13 +25,16 @@ export function LandingHeader() {
         let isMounted = true
 
         const resolveSession = async () => {
-            const supabase = createClient()
-            const {
-                data: { session },
-            } = await supabase.auth.getSession()
-
-            if (isMounted) {
-                setIsLoggedIn(!!session?.user)
+            try {
+                const res = await fetch('/api/auth/session')
+                if (res.ok) {
+                    const data = await res.json()
+                    if (isMounted) {
+                        setIsLoggedIn(Boolean(data.authenticated))
+                    }
+                }
+            } catch {
+                if (isMounted) setIsLoggedIn(false)
             }
         }
 
@@ -91,7 +93,7 @@ export function LandingHeader() {
                     ) : (
                         <AppNavLink href="/login">
                             <Button size="sm" className="transition-all duration-200 hover:bg-primary/85 hover:text-primary-foreground active:scale-95 active:bg-primary/75">
-                                Login / Signup
+                                Sign In
                             </Button>
                         </AppNavLink>
                     )}

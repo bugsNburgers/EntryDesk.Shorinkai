@@ -1,29 +1,25 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import sql from '@/lib/db'
 
 export async function GET() {
     try {
-        const supabase = await createClient()
-        const { data, error } = await supabase
-            .from('events')
-            .select('id,title,event_type,start_date,end_date,location,description')
-            .eq('is_public', true)
-            .order('start_date', { ascending: true })
-
-        if (error) {
-            console.error('public-events query failed', error)
-            return NextResponse.json({ events: [] }, { status: 500 })
-        }
+        const events = await sql`
+            SELECT id, title, event_type, start_date, end_date, location, description
+            FROM events
+            WHERE is_public = true
+            ORDER BY start_date ASC
+        `
 
         return NextResponse.json(
-            { events: data ?? [] },
+            { events: events ?? [] },
             {
                 headers: {
                     'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=300',
                 },
             }
         )
-    } catch {
+    } catch (err) {
+        console.error('public-events query failed', err)
         return NextResponse.json({ events: [] }, { status: 500 })
     }
 }

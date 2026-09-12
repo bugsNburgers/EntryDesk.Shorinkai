@@ -6,11 +6,21 @@ import { ChevronLeft } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { useAppNavigation } from '@/components/app/navigation-provider'
-import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 
 type HistoryBackCommonProps = {
     fallbackHref?: string
+}
+
+async function checkIsAuthenticated(): Promise<boolean> {
+    try {
+        const res = await fetch('/api/auth/session')
+        if (!res.ok) return false
+        const data = await res.json()
+        return Boolean(data.authenticated)
+    } catch {
+        return false
+    }
 }
 
 export function HistoryBackIconButton({
@@ -28,18 +38,8 @@ export function HistoryBackIconButton({
             beginNavigation()
 
             // If logged out, never go back into potentially protected history.
-            try {
-                const supabase = createClient()
-                const {
-                    data: { session },
-                } = await supabase.auth.getSession()
-
-                if (!session) {
-                    router.push('/')
-                    return
-                }
-            } catch {
-                // Fail closed: if we can't read session state, treat as logged out.
+            const isAuthed = await checkIsAuthenticated()
+            if (!isAuthed) {
                 router.push('/')
                 return
             }
@@ -84,19 +84,8 @@ export function HistoryBackTextButton({
 
             beginNavigation()
 
-            // If logged out, never go back into potentially protected history.
-            try {
-                const supabase = createClient()
-                const {
-                    data: { session },
-                } = await supabase.auth.getSession()
-
-                if (!session) {
-                    router.push('/')
-                    return
-                }
-            } catch {
-                // Fail closed: if we can't read session state, treat as logged out.
+            const isAuthed = await checkIsAuthenticated()
+            if (!isAuthed) {
                 router.push('/')
                 return
             }
