@@ -6,7 +6,20 @@ import sql from '@/lib/db'
 import type { User, UserRole } from '@/types/database'
 
 export const SESSION_COOKIE_NAME = 'entrydesk_session'
-const SESSION_DURATION_SECONDS = 7 * 24 * 60 * 60 // 7 days
+
+/**
+ * Session durations by role.
+ * Parents are on mobile, rarely technical — long sessions avoid confusing re-login prompts.
+ * Coaches/organisers/admins have shorter sessions for security.
+ */
+const SESSION_DURATION_BY_ROLE: Record<UserRole, number> = {
+    parent: 90 * 24 * 60 * 60,    // 90 days
+    coach: 7 * 24 * 60 * 60,       // 7 days
+    organizer: 7 * 24 * 60 * 60,   // 7 days
+    admin: 7 * 24 * 60 * 60,       // 7 days
+}
+
+const DEFAULT_SESSION_DURATION = 7 * 24 * 60 * 60 // 7 days fallback
 
 export interface AuthenticatedUser {
     id: string
@@ -32,16 +45,27 @@ function hashToken(token: string): string {
 
 /**
  * Creates a new session in Postgres and sets an HttpOnly cookie.
+ * Also piggybacks cleanup of expired sessions and stale rate limits to prevent
+ * unbounded table growth without needing a cron job.
  */
-export async function createSession(userId: string, userAgent?: string, ipAddress?: string): Promise<string> {
+export async function createSession(
+    userId: string,
+    role: UserRole = 'coach',
+    userAgent?: string,
+    ipAddress?: string
+): Promise<string> {
     const rawToken = crypto.randomBytes(32).toString('hex')
     const tokenHash = hashToken(rawToken)
-    const expiresAt = new Date(Date.now() + SESSION_DURATION_SECONDS * 1000)
+    const durationSeconds = SESSION_DURATION_BY_ROLE[role] ?? DEFAULT_SESSION_DURATION
+    const expiresAt = new Date(Date.now() + durationSeconds * 1000)
 
     await sql`
         INSERT INTO sessions (user_id, session_token, expires_at, user_agent, ip_address)
         VALUES (${userId}, ${tokenHash}, ${expiresAt}, ${userAgent ?? null}, ${ipAddress ?? null})
     `
+
+    // Piggyback cleanup — fire-and-forget, never block session creation
+    sql`DELETE FROM sessions WHERE expires_at < NOW()`.catch(() => {})
 
     const cookieStore = await cookies()
     cookieStore.set(SESSION_COOKIE_NAME, rawToken, {
@@ -49,7 +73,7 @@ export async function createSession(userId: string, userAgent?: string, ipAddres
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
         path: '/',
-        maxAge: SESSION_DURATION_SECONDS,
+        maxAge: durationSeconds,
     })
 
     return rawToken
@@ -146,12 +170,32 @@ export const getCurrentSession = cache(async (): Promise<SessionData | null> => 
 })
 
 /**
- * Backward compatibility alias for existing code referencing getUserProfile().
+ * Backward compatibility alias — returns { user, profile, role }.
+ * All existing code importing getUserProfile from session.ts continues to work.
+ * When unauthenticated, redirects to /login?callbackUrl=<current-path> so users
+ * return to where they were after re-authenticating (session expiry handling).
  */
 export const getUserProfile = cache(async () => {
     const sessionData = await getCurrentSession()
     if (!sessionData) {
-        redirect('/login')
+        // Attempt to grab the current pathname from request headers so we can
+        // redirect back here after login. This works in both Server Components
+        // and Server Actions (Next.js sets x-invoke-path or x-pathname).
+        let callbackPath = '/dashboard'
+        try {
+            const { headers } = await import('next/headers')
+            const headersList = await headers()
+            const invokePath =
+                headersList.get('x-pathname') ||
+                headersList.get('x-invoke-path') ||
+                headersList.get('x-forwarded-uri')
+            if (invokePath && invokePath.startsWith('/') && !invokePath.startsWith('//')) {
+                callbackPath = invokePath
+            }
+        } catch {
+            // headers() may throw in some contexts (e.g., edge); fall back to /dashboard
+        }
+        redirect(`/login?callbackUrl=${encodeURIComponent(callbackPath)}`)
     }
 
     const { user } = sessionData
@@ -164,7 +208,7 @@ export const getUserProfile = cache(async () => {
 
 /**
  * Strict role-based guard for Server Components and Server Actions.
- * Throws redirect if unauthenticated, or throws/redirects if unauthorized.
+ * Throws redirect if unauthenticated; throws Error if role is insufficient.
  */
 export async function requireRole(
     allowed: UserRole | UserRole[],

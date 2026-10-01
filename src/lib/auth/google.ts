@@ -17,6 +17,13 @@ export type GoogleAuthResult =
     | { success: true; user: VerifiedGoogleUser }
     | { success: false; error: 'INVALID_TOKEN' | 'ACCESS_DENIED' | 'CONFIGURATION_ERROR' | 'ACCOUNT_DISABLED' }
 
+export interface GoogleAuthOptions {
+    /** When true, auto-creates the user as a parent with is_active=TRUE.
+     *  Used ONLY for the /join/[slug] parent self-registration flow.
+     *  Default: false (whitelist-only for coaches/organisers). */
+    allowNewParent?: boolean
+}
+
 /**
  * Sanitizes input string to remove harmful characters and control codes.
  */
@@ -30,7 +37,11 @@ function sanitizeString(input?: string | null): string {
  * Checks signature, audience (aud), issuer (iss), and expiry (exp).
  * Strictly enforces that only pre-authorized users can log in (No public signup).
  */
-export async function verifyGoogleIdToken(idToken: string): Promise<GoogleAuthResult> {
+export async function verifyGoogleIdToken(
+    idToken: string,
+    options: GoogleAuthOptions = {}
+): Promise<GoogleAuthResult> {
+    const { allowNewParent = false } = options
     if (!googleClientId) {
         console.error('[AUTH_SECURITY] GOOGLE_CLIENT_ID is not configured in environment variables.')
         return { success: false, error: 'CONFIGURATION_ERROR' }
@@ -85,10 +96,34 @@ export async function verifyGoogleIdToken(idToken: string): Promise<GoogleAuthRe
     `
 
     if (users.length === 0) {
-        // Record user as inactive (pending approval) so admin sees them in Neon DB
+        if (allowNewParent) {
+            // Parent self-registration via dojo join link — auto-create active account without gmail avatar
+            const newRows = await sql<{ id: string; role: UserRole }[]>`
+                INSERT INTO users (email, full_name, avatar_url, google_id, role, is_active)
+                VALUES (${email}, ${name}, NULL, ${googleId}, 'parent', TRUE)
+                ON CONFLICT (email) DO UPDATE
+                    SET google_id = COALESCE(users.google_id, ${googleId}),
+                        full_name = COALESCE(users.full_name, ${name}),
+                        updated_at = NOW()
+                RETURNING id, role
+            `
+            const newUser = newRows[0]
+            return {
+                success: true,
+                user: {
+                    id: newUser.id,
+                    email,
+                    fullName: name,
+                    avatarUrl: null,
+                    role: newUser.role,
+                },
+            }
+        }
+
+        // Default: Record user as inactive (pending approval) so admin sees them in Neon DB
         await sql`
             INSERT INTO users (email, full_name, avatar_url, google_id, role, is_active)
-            VALUES (${email}, ${name}, ${picture}, ${googleId}, 'coach', FALSE)
+            VALUES (${email}, ${name}, NULL, ${googleId}, 'coach', FALSE)
             ON CONFLICT (email) DO NOTHING
         `
         console.warn(`[AUTH_SECURITY] New Google user registered (pending approval): ${email}`)
@@ -102,12 +137,11 @@ export async function verifyGoogleIdToken(idToken: string): Promise<GoogleAuthRe
         return { success: false, error: 'ACCOUNT_DISABLED' }
     }
 
-    // Update google_id and avatar_url if needed
+    // Update google_id and full_name (never overwrite avatar_url with Google picture)
     await sql`
         UPDATE users
         SET 
             google_id = COALESCE(google_id, ${googleId}),
-            avatar_url = COALESCE(avatar_url, ${picture}),
             full_name = COALESCE(full_name, ${name}),
             updated_at = NOW()
         WHERE id = ${existingUser.id}
@@ -119,7 +153,7 @@ export async function verifyGoogleIdToken(idToken: string): Promise<GoogleAuthRe
             id: existingUser.id,
             email: existingUser.email,
             fullName: existingUser.full_name || name,
-            avatarUrl: existingUser.avatar_url || picture,
+            avatarUrl: existingUser.avatar_url,
             role: existingUser.role,
         },
     }
