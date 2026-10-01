@@ -26,7 +26,8 @@ html {
   --secondary-foreground: hsl(222.2, 47.4%, 11.2%);
 
   --muted: hsl(210, 40%, 96.1%);
-  --muted-foreground: hsl(215.4, 16.3%, 46.9%);
+  /* Improved contrast ratio for WCAG AA — was 46.9% lightness, now 38% */
+  --muted-foreground: hsl(215.4, 16.3%, 38%);
 
   --accent: hsl(210, 40%, 96.1%);
   --accent-foreground: hsl(222.2, 47.4%, 11.2%);
@@ -46,6 +47,20 @@ html {
   --foreground: oklch(0.129 0.042 264.695);
   /* Slate 900-ish */
 
+  /* Semantic Status Tokens */
+  --status-pending: hsl(38, 92%, 50%);
+  --status-pending-bg: hsl(48, 96%, 95%);
+  --status-pending-fg: hsl(32, 95%, 30%);
+  --status-approved: hsl(158, 64%, 42%);
+  --status-approved-bg: hsl(152, 76%, 94%);
+  --status-approved-fg: hsl(158, 64%, 28%);
+  --status-rejected: hsl(0, 84%, 60%);
+  --status-rejected-bg: hsl(0, 86%, 97%);
+  --status-rejected-fg: hsl(0, 72%, 40%);
+  --status-draft: hsl(215, 16%, 47%);
+  --status-draft-bg: hsl(210, 40%, 96%);
+  --status-draft-fg: hsl(215, 16%, 35%);
+
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -63,15 +78,12 @@ html {
 }
 
 .dark {
-  /* Dark Mode Background: Slate 950 (#020617) */
+  /* Dark Mode Background */
   --background: #071222;
-  /* Approx #020617 */
 
   --foreground: oklch(0.985 0 0);
 
-  /* Glassmorphic Card Bases */
   --card: oklch(0.13 0.028 261.692);
-  /* Same as bg, relying on border/glass utility */
   --card-foreground: oklch(0.985 0 0);
 
   --popover: oklch(0.13 0.028 261.692);
@@ -79,14 +91,14 @@ html {
 
   /* Emerald Primary */
   --primary: oklch(0.696 0.17 162.48);
-  /* emerald-500 */
   --primary-foreground: oklch(0 0 0);
 
   --secondary: hsl(217.2, 32.6%, 17.5%);
   --secondary-foreground: hsl(210, 40%, 98%);
 
   --muted: hsl(217.2, 32.6%, 17.5%);
-  --muted-foreground: hsl(215, 20.2%, 65.1%);
+  /* Improved dark mode contrast */
+  --muted-foreground: hsl(215, 20.2%, 72%);
 
   --accent: hsl(217.2, 32.6%, 17.5%);
   --accent-foreground: hsl(210, 40%, 98%);
@@ -97,6 +109,20 @@ html {
   --border: hsl(217.2, 32.6%, 17.5%);
   --input: hsl(217.2, 32.6%, 17.5%);
   --ring: hsl(212.7, 26.8%, 83.9%);
+
+  /* Dark mode status tokens */
+  --status-pending: hsl(38, 92%, 60%);
+  --status-pending-bg: hsl(32, 60%, 18%);
+  --status-pending-fg: hsl(38, 92%, 70%);
+  --status-approved: hsl(158, 64%, 52%);
+  --status-approved-bg: hsl(152, 40%, 14%);
+  --status-approved-fg: hsl(152, 68%, 68%);
+  --status-rejected: hsl(0, 84%, 65%);
+  --status-rejected-bg: hsl(0, 40%, 18%);
+  --status-rejected-fg: hsl(0, 84%, 75%);
+  --status-draft: hsl(215, 20%, 60%);
+  --status-draft-bg: hsl(217, 32%, 20%);
+  --status-draft-fg: hsl(215, 20%, 75%);
 
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
@@ -133,6 +159,11 @@ html {
 
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-geist-sans), system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    font-feature-settings: "cv11", "ss01";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
 
   /* Hardware acceleration for smooth transitions */
@@ -141,7 +172,7 @@ html {
   input,
   select,
   textarea {
-    @apply transition-all duration-300 ease-in-out;
+    @apply transition-all duration-200 ease-in-out;
   }
 }
 
@@ -178,43 +209,26 @@ html {
   --radius: var(--radius);
 
   --color-sidebar-ring: var(--sidebar-ring);
-
   --color-sidebar-border: var(--sidebar-border);
-
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-
   --color-sidebar-accent: var(--sidebar-accent);
-
   --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-
   --color-sidebar-primary: var(--sidebar-primary);
-
   --color-sidebar-foreground: var(--sidebar-foreground);
-
   --color-sidebar: var(--sidebar);
 
   --color-chart-5: var(--chart-5);
-
   --color-chart-4: var(--chart-4);
-
   --color-chart-3: var(--chart-3);
-
   --color-chart-2: var(--chart-2);
-
   --color-chart-1: var(--chart-1);
 
   --radius-sm: calc(var(--radius) - 4px);
-
   --radius-md: calc(var(--radius) - 2px);
-
   --radius-lg: var(--radius);
-
   --radius-xl: calc(var(--radius) + 4px);
-
   --radius-2xl: calc(var(--radius) + 8px);
-
   --radius-3xl: calc(var(--radius) + 12px);
-
   --radius-4xl: calc(var(--radius) + 16px);
 }
 
@@ -259,9 +273,7 @@ body {
   border-radius: 8px;
   background-color: white;
   width: 85.6mm;
-  /* Standard ID-1 card width */
   height: 53.98mm;
-  /* Standard ID-1 card height */
   overflow: hidden;
   position: relative;
 }
@@ -334,11 +346,11 @@ body {
     }
   }
 
-  .dashboard-shell .dashboard-list>*+* {
+  .dashboard-shell .dashboard-list > * + * {
     border-top: 1px solid color-mix(in oklab, var(--color-border) 70%, transparent);
   }
 
-  .dark .dashboard-shell .dashboard-list>*+* {
+  .dark .dashboard-shell .dashboard-list > * + * {
     border-top-color: rgb(255 255 255 / 0.04);
   }
 
@@ -364,5 +376,85 @@ body {
   .dashboard-shell a:active,
   .dashboard-shell button:active {
     transform: scale(0.985);
+  }
+
+  /* Semantic status badge utilities */
+  .status-badge-pending {
+    background-color: var(--status-pending-bg);
+    color: var(--status-pending-fg);
+    border: 1px solid color-mix(in oklab, var(--status-pending) 30%, transparent);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    padding: 0.15rem 0.55rem;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    white-space: nowrap;
+  }
+  .status-badge-approved {
+    background-color: var(--status-approved-bg);
+    color: var(--status-approved-fg);
+    border: 1px solid color-mix(in oklab, var(--status-approved) 30%, transparent);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    padding: 0.15rem 0.55rem;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    white-space: nowrap;
+  }
+  .status-badge-rejected {
+    background-color: var(--status-rejected-bg);
+    color: var(--status-rejected-fg);
+    border: 1px solid color-mix(in oklab, var(--status-rejected) 30%, transparent);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    padding: 0.15rem 0.55rem;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    white-space: nowrap;
+  }
+  .status-badge-draft {
+    background-color: var(--status-draft-bg);
+    color: var(--status-draft-fg);
+    border: 1px solid color-mix(in oklab, var(--status-draft) 30%, transparent);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    padding: 0.15rem 0.55rem;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    white-space: nowrap;
+  }
+
+  /* Attention/alert banner (used for pending approvals warning) */
+  .attention-banner {
+    border-radius: var(--radius-xl);
+    border: 1px solid color-mix(in oklab, var(--status-pending) 35%, transparent);
+    background: color-mix(in oklab, var(--status-pending-bg) 70%, transparent);
+    padding: 0.875rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  /* Live pulse dot for active events */
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(0.85); }
+  }
+  .live-dot {
+    animation: pulse-dot 2s ease-in-out infinite;
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background-color: var(--status-approved);
+    flex-shrink: 0;
   }
 }
