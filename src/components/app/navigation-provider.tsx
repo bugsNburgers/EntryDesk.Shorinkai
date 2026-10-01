@@ -180,11 +180,6 @@ export function AppNavigationProvider({ children }: { children: React.ReactNode 
     return (
         <NavigationContext.Provider value={value}>
             {children}
-            {isNavigating ? (
-                <div className="fixed inset-0 z-50 bg-background/70 backdrop-blur-sm">
-                    <KarateLoader title={message.title} subtitle={message.subtitle} progress={progress} />
-                </div>
-            ) : null}
         </NavigationContext.Provider>
     )
 }

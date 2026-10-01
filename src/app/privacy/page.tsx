@@ -12,7 +12,7 @@ export default function PrivacyPage() {
         <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 xl:px-8">
           <h1 className="text-4xl font-bold tracking-tight">Privacy Policy</h1>
           <p className="mt-2 text-muted-foreground">Effective Date: May 8, 2026</p>
-          <p className="text-muted-foreground">Last Updated: May 8, 2026</p>
+          <p className="text-muted-foreground">Last Updated: October 1, 2026 — Updated to include Parent Portal, children&apos;s data processing, and DPDPA (India) compliance details.</p>
         </div>
       </div>
 
@@ -33,12 +33,16 @@ export default function PrivacyPage() {
 
           <section>
             <h2 className="text-2xl font-semibold mb-4">2. Who This Policy Applies To</h2>
-            <p className="text-muted-foreground mb-2">This policy applies to three types of users:</p>
+            <p className="text-muted-foreground mb-2">This policy applies to four types of users:</p>
             <ul className="list-disc list-inside space-y-1 text-muted-foreground pl-2">
               <li><strong>Organizers</strong> &mdash; individuals or organizations who create and manage tournaments on EntryDesk.</li>
               <li><strong>Coaches</strong> &mdash; individuals who manage dojos, students, and event registrations.</li>
-              <li><strong>Athletes/Students</strong> &mdash; individuals whose data is entered into the platform by coaches on their behalf.</li>
+              <li><strong>Parents / Legal Guardians</strong> &mdash; individuals who register their children for tournaments via the EntryDesk Parent Portal.</li>
+              <li><strong>Athletes/Students</strong> &mdash; individuals whose data is entered into the platform by coaches or parents on their behalf.</li>
             </ul>
+            <p className="text-muted-foreground mt-2">
+              If you are a parent registering a child, you are confirming that you are the child&apos;s parent or lawful guardian and that you consent to EntryDesk processing your child&apos;s data for the purpose of tournament registration.
+            </p>
             <p className="text-muted-foreground mt-2">
               If you are a coach entering data about athletes, <strong>you are responsible</strong> for having appropriate consent from those individuals (or their guardians if they are minors) to submit their information to EntryDesk.
             </p>
@@ -171,15 +175,38 @@ export default function PrivacyPage() {
 
           <section>
             <h2 className="text-2xl font-semibold mb-4">8. Children and Minors</h2>
-            <p className="text-muted-foreground mb-4">EntryDesk is intended for use by adults (coaches and organizers). However, coaches may submit roster data that includes athletes who are minors.</p>
-            
-            <p className="text-muted-foreground font-medium mb-2">If you are a coach submitting data for minors:</p>
+            <p className="text-muted-foreground mb-4">EntryDesk is intended for use by adults (coaches, organizers, and parents). Athletes/students registered for tournaments may be minors.</p>
+
+            <h3 className="text-xl font-medium mb-2">8a. If You Are a Coach Entering Minor Data</h3>
             <ul className="list-disc list-inside space-y-1 text-muted-foreground pl-2 mb-4">
               <li>You must have appropriate consent from the minor&apos;s parent or legal guardian.</li>
               <li>You should not submit sensitive health or biometric data about minors.</li>
               <li>You are responsible for compliance with applicable child protection laws in your jurisdiction (e.g., COPPA in the US, GDPR Article 8 in the EU).</li>
             </ul>
-            <p className="text-muted-foreground">We do not knowingly allow minors under 13 to create accounts directly on the Service.</p>
+
+            <h3 className="text-xl font-medium mb-2">8b. If You Are a Parent Registering via the Parent Portal</h3>
+            <p className="text-muted-foreground mb-2">When you register your child via the Parent Portal:</p>
+            <ul className="list-disc list-inside space-y-1 text-muted-foreground pl-2 mb-4">
+              <li>You provide explicit consent during registration by checking the consent checkbox. This is recorded with a timestamp and version number.</li>
+              <li>Data collected includes: child&apos;s name, date of birth, gender, belt rank, approximate weight, photograph, and school/city.</li>
+              <li>This data is used only for: tournament registration, ID card generation, QR-based venue verification, and coach review.</li>
+              <li>The data is shared only with the tournament organizer and the coach of your child&apos;s dojo — never with third parties.</li>
+              <li>You may withdraw consent at any time by contacting us. Upon withdrawal, your child&apos;s data will be removed from active systems within 30 days.</li>
+            </ul>
+
+            <h3 className="text-xl font-medium mb-2">8c. DPDPA (India) Compliance</h3>
+            <p className="text-muted-foreground mb-4">
+              Under India&apos;s <strong>Digital Personal Data Protection Act 2023 (DPDPA)</strong>, we treat children&apos;s data with extra care:
+            </p>
+            <ul className="list-disc list-inside space-y-1 text-muted-foreground pl-2 mb-4">
+              <li>We collect only the minimum data necessary for tournament registration.</li>
+              <li>Parental consent is obtained and recorded before any child&apos;s data is processed.</li>
+              <li>We do not use children&apos;s data for profiling, advertising, or any purpose other than tournament operations.</li>
+              <li>We do not share children&apos;s data with data brokers, advertisers, or unrelated third parties.</li>
+              <li>As a parent, you have the right to access, correct, and delete your child&apos;s data. See Section 7 for how to exercise these rights.</li>
+            </ul>
+
+            <p className="text-muted-foreground">We do not knowingly allow minors under 13 to create accounts directly on the Service. Parents creating accounts are expected to be adults (18+).</p>
           </section>
 
           <section>
@@ -230,7 +257,58 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold mb-4">14. Contact Us</h2>
+            <h2 className="text-2xl font-semibold mb-4">14. Parent Portal — Specific Data Practices</h2>
+            <p className="text-muted-foreground mb-4">
+              The EntryDesk Parent Portal allows parents to directly register their children for martial arts tournaments. This section details specific data practices for the Parent Portal:
+            </p>
+
+            <h3 className="text-xl font-medium mb-2">14a. Data Collected from Parents</h3>
+            <ul className="list-disc list-inside space-y-1 text-muted-foreground pl-2 mb-4">
+              <li><strong>Account data:</strong> Email address and name (via Google Sign-In or email OTP).</li>
+              <li><strong>Child profile data:</strong> Name, date of birth, gender, belt/rank, approximate weight, photograph, and school or city.</li>
+              <li><strong>Registration data:</strong> Selected tournaments, declared weight category, participation type (kata/kumite/both).</li>
+              <li><strong>Consent record:</strong> Timestamp, IP address, and consent version at the time of registration.</li>
+            </ul>
+
+            <h3 className="text-xl font-medium mb-2">14b. QR Codes and ID Cards</h3>
+            <ul className="list-disc list-inside space-y-1 text-muted-foreground pl-2 mb-4">
+              <li>When an entry is approved, a unique QR code token is generated and embedded in the ID card.</li>
+              <li>The QR code encodes only a random token URL — no personal data is embedded in the QR image itself.</li>
+              <li>Scanning the QR code at the venue shows only: name, dojo, events, and valid/invalid status.</li>
+              <li>If an entry is withdrawn after approval, the QR token is permanently revoked and will show &ldquo;Not Valid&rdquo;.</li>
+            </ul>
+
+            <h3 className="text-xl font-medium mb-2">14c. Photographs</h3>
+            <ul className="list-disc list-inside space-y-1 text-muted-foreground pl-2 mb-4">
+              <li>Photos are compressed client-side before upload (max ~150 KB).</li>
+              <li>Photos are stored in Vercel Blob with private signed URLs — they are not publicly accessible by URL alone.</li>
+              <li>Photos appear on ID cards and in the coach&apos;s student roster. They are never shared with unrelated parties.</li>
+              <li>You may request deletion of your child&apos;s photo at any time by contacting us.</li>
+            </ul>
+
+            <h3 className="text-xl font-medium mb-2">14d. Data Minimisation and Retention</h3>
+            <ul className="list-disc list-inside space-y-1 text-muted-foreground pl-2 mb-4">
+              <li>We collect only the data necessary for tournament registration. Weight and school/city are optional.</li>
+              <li>Tournament entry records are retained for the lifetime of your account to support ID card re-downloads and status history.</li>
+              <li>Upon requesting account deletion, all personal data (including child profiles, entry records, and photos) will be removed within 30 days.</li>
+            </ul>
+
+            <h3 className="text-xl font-medium mb-2">14e. Your Rights as a Parent</h3>
+            <p className="text-muted-foreground mb-2">As the parent or guardian of a registered child, you have the right to:</p>
+            <ul className="list-disc list-inside space-y-1 text-muted-foreground pl-2 mb-4">
+              <li><strong>Access:</strong> Request a copy of all data stored about your child.</li>
+              <li><strong>Correction:</strong> Edit your child&apos;s profile directly via the Parent Portal, or request corrections via email.</li>
+              <li><strong>Deletion:</strong> Request deletion of your child&apos;s data at any time. Deletion removes entry history, photo, and profile data.</li>
+              <li><strong>Withdraw consent:</strong> Withdraw your consent for processing at any time. This will result in your child&apos;s data being removed.</li>
+              <li><strong>Portability:</strong> Request a data export in JSON or CSV format.</li>
+            </ul>
+            <p className="text-muted-foreground">
+              To exercise any of these rights, email <strong>hello@ull0sm.in</strong> or <strong>hello@suprateekyawagal.in</strong> with &ldquo;Parent Data Request&rdquo; in the subject line.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-semibold mb-4">15. Contact Us</h2>
             <p className="text-muted-foreground mb-4">For privacy-related questions, requests, or concerns, contact:</p>
             <div className="space-y-1 text-muted-foreground">
               <p><strong>EntryDesk Maintainers</strong></p>

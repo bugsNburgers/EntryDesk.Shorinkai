@@ -18,7 +18,7 @@ export async function submitContactForm(data: ContactFormData) {
     const clientIp = headersList.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
 
     // Rate limit: maximum 5 messages per 10 minutes per IP
-    const rateCheck = checkRateLimit(`contact:${clientIp}`, 5, 10 * 60 * 1000)
+    const rateCheck = await checkRateLimit(`contact:${clientIp}`, 5, 10)
 
     if (!rateCheck.allowed) {
       return {

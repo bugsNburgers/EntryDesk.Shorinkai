@@ -50,10 +50,10 @@ export function LandingHeader() {
         : 'fixed inset-x-0 top-0 z-50 border-b border-white/15 bg-sky-950/6 backdrop-blur-[1px] transition-colors duration-300'
 
     const navLinkClassName = hasScrolled
-        ? 'hidden rounded-md px-3 py-2 text-sm text-muted-foreground transition-all duration-200 hover:bg-muted/35 hover:text-foreground active:scale-95 sm:inline-flex'
-        : 'hidden rounded-md px-3 py-2 text-sm text-white/90 transition-all duration-200 hover:bg-white/10 hover:text-white active:scale-95 sm:inline-flex'
+        ? 'hidden rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-all duration-200 hover:bg-muted/35 hover:text-foreground active:scale-95 sm:inline-flex'
+        : 'hidden rounded-md px-3 py-2 text-sm font-medium text-white/85 transition-all duration-200 hover:bg-white/12 hover:text-white active:scale-95 sm:inline-flex'
 
-    const brandTextClassName = hasScrolled ? 'text-sm font-semibold' : 'text-sm font-semibold text-white/95'
+    const brandTextClassName = hasScrolled ? 'text-sm font-bold tracking-tight' : 'text-sm font-bold tracking-tight text-white/95'
 
     return (
         <header className={headerClassName}>
@@ -86,13 +86,13 @@ export function LandingHeader() {
                     <ThemeSwitch />
                     {isLoggedIn ? (
                         <AppNavLink href="/dashboard">
-                            <Button size="sm" className="transition-all duration-200 hover:bg-primary/85 hover:text-primary-foreground active:scale-95 active:bg-primary/75">
-                                Dashboard
+                            <Button size="sm" className="h-9 px-4 transition-all duration-200 hover:bg-primary/85 active:scale-95">
+                                Go to Dashboard
                             </Button>
                         </AppNavLink>
                     ) : (
                         <AppNavLink href="/login">
-                            <Button size="sm" className="transition-all duration-200 hover:bg-primary/85 hover:text-primary-foreground active:scale-95 active:bg-primary/75">
+                            <Button size="sm" className="h-9 px-4 transition-all duration-200 hover:bg-primary/85 active:scale-95">
                                 Sign In
                             </Button>
                         </AppNavLink>

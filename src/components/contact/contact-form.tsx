@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { submitContactForm } from '@/app/contact/actions'
 import { useState } from 'react'
+import { Mail, Clock, MessageSquare } from 'lucide-react'
 
 interface ContactFormInputs {
   name: string
@@ -60,94 +61,148 @@ export function ContactForm() {
   }
 
   return (
-    <div className="max-w-md mx-auto">
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-        {message && (
-          <div
-            className={`p-3 rounded-lg text-sm ${
-              message.type === 'success'
-                ? 'bg-green-500/10 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800'
-                : 'bg-red-500/10 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800'
-            }`}
-          >
-            {message.text}
+    <div className="grid gap-12 lg:grid-cols-2 lg:gap-16 items-start">
+      {/* ─── Left: trust signals ─── */}
+      <div className="space-y-8">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">Get in touch</h2>
+          <p className="mt-3 text-base text-muted-foreground leading-relaxed">
+            Have a question about EntryDesk, or need help getting set up? Send us a message and we&apos;ll get back to you quickly.
+          </p>
+        </div>
+
+        <div className="space-y-5">
+          <div className="flex items-start gap-4">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <Clock className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold">Quick response</p>
+              <p className="text-sm text-muted-foreground mt-0.5">We aim to reply within 24 hours on weekdays.</p>
+            </div>
           </div>
-        )}
 
-        <div>
-          <label htmlFor="name" className="block text-sm font-medium mb-2">
-            Name
-          </label>
-          <Input
-            {...register('name', { required: 'Name is required' })}
-            placeholder="Your name"
-            disabled={isPending}
-            id="name"
-          />
-          {errors.name && <span className="text-red-500 text-sm mt-1">{errors.name.message}</span>}
+          <div className="flex items-start gap-4">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <Mail className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold">Direct line</p>
+              <p className="text-sm text-muted-foreground mt-0.5">Your message goes directly to the EntryDesk team — no bots, no ticket queues.</p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-4">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <MessageSquare className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold">We&apos;re here to help</p>
+              <p className="text-sm text-muted-foreground mt-0.5">Whether it&apos;s a setup question, a feature request, or a bug — reach out anytime.</p>
+            </div>
+          </div>
         </div>
+      </div>
 
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium mb-2">
-            Email
-          </label>
-          <Input
-            {...register('email', {
-              required: 'Email is required',
-              pattern: {
-                value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                message: 'Please enter a valid email',
-              },
-            })}
-            type="email"
-            placeholder="your.email@example.com"
-            disabled={isPending}
-            id="email"
-          />
-          {errors.email && <span className="text-red-500 text-sm mt-1">{errors.email.message}</span>}
-        </div>
+      {/* ─── Right: form ─── */}
+      <div className="rounded-2xl border border-border/50 bg-card p-6 shadow-sm dark:border-white/[0.06] sm:p-8">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+          {message && (
+            <div
+              className={`rounded-lg border p-3.5 text-sm ${
+                message.type === 'success'
+                  ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400'
+                  : 'border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950/40 dark:text-red-400'
+              }`}
+            >
+              {message.text}
+            </div>
+          )}
 
-        <div>
-          <label htmlFor="message" className="block text-sm font-medium mb-2">
-            Message
-          </label>
-          <Textarea
-            {...register('message', { required: 'Message is required' })}
-            placeholder="Your message here..."
-            disabled={isPending}
-            rows={5}
-            id="message"
-          />
-          {errors.message && <span className="text-red-500 text-sm mt-1">{errors.message.message}</span>}
-        </div>
-
-        {isTurnstileRequired && (
-          <div>
-            <Turnstile
-              siteKey={siteKey!}
-              onSuccess={(token) => {
-                setTurnstileToken(token)
-                setIsTurnstileReady(true)
-              }}
-              onError={() => {
-                setTurnstileToken(null)
-                setMessage({ type: 'error', text: 'CAPTCHA verification failed' })
-              }}
-              onExpire={() => {
-                setTurnstileToken(null)
-              }}
+          <div className="space-y-1.5">
+            <label htmlFor="contact-name" className="block text-sm font-medium">
+              Name <span className="text-red-500">*</span>
+            </label>
+            <Input
+              {...register('name', { required: 'Name is required' })}
+              placeholder="Your name"
+              disabled={isPending}
+              id="contact-name"
+              className={errors.name ? 'border-red-400' : ''}
             />
+            {errors.name && (
+              <span className="text-xs text-red-500 block">{errors.name.message}</span>
+            )}
           </div>
-        )}
 
-        <Button
-          type="submit"
-          disabled={isPending || (isTurnstileRequired && (!turnstileToken || !isTurnstileReady))}
-          className="w-full"
-        >
-          {isPending ? 'Sending...' : 'Send Message'}
-        </Button>
-      </form>
+          <div className="space-y-1.5">
+            <label htmlFor="contact-email" className="block text-sm font-medium">
+              Email <span className="text-red-500">*</span>
+            </label>
+            <Input
+              {...register('email', {
+                required: 'Email is required',
+                pattern: {
+                  value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                  message: 'Please enter a valid email address',
+                },
+              })}
+              type="email"
+              placeholder="your.email@example.com"
+              disabled={isPending}
+              id="contact-email"
+              className={errors.email ? 'border-red-400' : ''}
+            />
+            {errors.email && (
+              <span className="text-xs text-red-500 block">{errors.email.message}</span>
+            )}
+          </div>
+
+          <div className="space-y-1.5">
+            <label htmlFor="contact-message" className="block text-sm font-medium">
+              Message <span className="text-red-500">*</span>
+            </label>
+            <Textarea
+              {...register('message', { required: 'Message is required' })}
+              placeholder="Tell us how we can help..."
+              disabled={isPending}
+              rows={5}
+              id="contact-message"
+              className={errors.message ? 'border-red-400' : ''}
+            />
+            {errors.message && (
+              <span className="text-xs text-red-500 block">{errors.message.message}</span>
+            )}
+          </div>
+
+          {isTurnstileRequired && (
+            <div>
+              <Turnstile
+                siteKey={siteKey!}
+                onSuccess={(token) => {
+                  setTurnstileToken(token)
+                  setIsTurnstileReady(true)
+                }}
+                onError={() => {
+                  setTurnstileToken(null)
+                  setMessage({ type: 'error', text: 'CAPTCHA verification failed. Please try again.' })
+                }}
+                onExpire={() => {
+                  setTurnstileToken(null)
+                }}
+              />
+            </div>
+          )}
+
+          <Button
+            type="submit"
+            disabled={isPending || (isTurnstileRequired && (!turnstileToken || !isTurnstileReady))}
+            className="h-10 w-full"
+          >
+            {isPending ? 'Sending...' : 'Send Message'}
+          </Button>
+        </form>
+      </div>
     </div>
   )
 }

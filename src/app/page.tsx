@@ -2,7 +2,7 @@ import Image from 'next/image'
 import dynamic from 'next/dynamic'
 import { Button } from '@/components/ui/button'
 import { AppNavLink } from '@/components/app/nav-link'
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, ChevronDown } from 'lucide-react'
 import { LandingHeader } from '@/components/app/landing-header'
 
 const LandingUiPreview = dynamic(
@@ -31,6 +31,7 @@ export default function LandingPage() {
         <div className="min-h-screen bg-background">
             <LandingHeader />
 
+            {/* Hero */}
             <section className="relative min-h-[88vh] overflow-hidden px-6 pb-20 pt-32 md:flex md:min-h-[92vh] md:items-center md:px-8 md:pb-24 md:pt-24 lg:min-h-screen lg:px-10 lg:pt-32 xl:px-12">
                 <Image
                     src="/hero-image-v2.webp"
@@ -41,33 +42,38 @@ export default function LandingPage() {
                     className="object-cover object-center"
                     sizes="100vw"
                 />
-                <div className="absolute inset-0 bg-black/32" />
-                <div className="absolute inset-0 bg-gradient-to-b from-sky-950/22 via-transparent to-background/38" />
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_35%,rgba(2,6,23,0.30)_100%)]" />
+                {/* Layered overlays for depth */}
+                <div className="absolute inset-0 bg-black/38" />
+                <div className="absolute inset-0 bg-gradient-to-b from-sky-950/20 via-transparent to-background/80" />
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_35%,rgba(2,6,23,0.32)_100%)]" />
 
                 <div className="relative z-10 mx-auto max-w-4xl pt-12 text-center md:max-w-5xl md:pt-0 xl:max-w-6xl">
-                    <h1 className="text-6xl font-bold tracking-tight text-white md:text-7xl lg:text-8xl">
-                        Event operations
+                    {/* Pill badge */}
+                    <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-sm text-white/85 backdrop-blur-sm mb-6">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                        Built for karate tournaments
+                    </div>
+
+                    <h1 className="text-5xl font-bold tracking-tight text-white sm:text-6xl md:text-7xl lg:text-8xl leading-[1.05]">
+                        Run your tournament.
                         <br />
-                        without the chaos
+                        <span className="text-white/90">Without the chaos.</span>
                     </h1>
-                    <p className="mx-auto mt-6 max-w-2xl text-xl text-white/85 md:max-w-3xl">
-                        Submit entries. Review approvals. Export results.
-                        <br className="hidden sm:block" />
-                        Everything you need for event day.
+                    <p className="mx-auto mt-6 max-w-2xl text-lg text-white/80 md:text-xl md:max-w-3xl leading-relaxed">
+                        Coach registrations, entry submissions, approvals, and exports —
+                        all in one place. Built for the karate community.
                     </p>
                     <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
                         <AppNavLink href="/login">
-                            <Button className="h-11 gap-2 rounded-md px-6 text-base">
-                                Login / Signup
+                            <Button className="h-12 gap-2 rounded-lg px-7 text-base font-semibold shadow-lg shadow-black/20">
+                                Get Started
                                 <ArrowRight className="h-4 w-4" />
                             </Button>
                         </AppNavLink>
-                        <Button asChild variant="outline" className="h-11 rounded-md border-white/30 bg-white/10 px-6 text-base text-white hover:bg-white/20">
-                            <a href="#upcoming-events">
-                                Browse Events
-                            </a>
-                        </Button>
+                        <a href="#upcoming-events" className="inline-flex items-center gap-1.5 rounded-lg px-5 py-3 text-sm font-medium text-white/80 hover:text-white transition-colors">
+                            Browse Events
+                            <ChevronDown className="h-3.5 w-3.5" />
+                        </a>
                     </div>
                 </div>
             </section>

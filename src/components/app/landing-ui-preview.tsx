@@ -118,33 +118,39 @@ export function LandingUiPreview() {
     return (
         <section id="features" className="mx-auto max-w-7xl scroll-mt-24 px-6 py-20 md:px-8 xl:max-w-[95vw] xl:px-8">
             <div className="text-center">
-                <h2 className="text-4xl font-bold tracking-tight">Mock Dashboards<span className="align-super text-base text-muted-foreground">*</span></h2>
-                <p className="mx-auto mt-3 max-w-4xl text-center text-xl text-muted-foreground">This is how it would look once you get started!!</p>
+                <div className="inline-flex items-center gap-2 rounded-full border border-border/50 bg-muted/40 px-3.5 py-1 text-xs font-medium text-muted-foreground mb-4">
+                    Dashboard preview
+                </div>
+                <h2 className="text-4xl font-bold tracking-tight">Built for every role in your tournament</h2>
+                <p className="mx-auto mt-3 max-w-4xl text-center text-xl text-muted-foreground">
+                    Whether you&apos;re a coach managing athletes or an organizer running the event — EntryDesk has a workflow built for you.
+                </p>
             </div>
 
-            <div className="mx-auto mt-2 flex max-w-6xl justify-end">
-                <span className="text-sm text-muted-foreground/80">*This is sample data</span>
-            </div>
-
-            <div className="mt-7 flex items-center justify-center gap-2">
-                <button
-                    onClick={() => scrollToView('coach')}
-                    className={`rounded-md px-5 py-2.5 text-sm transition-colors ${activeView === 'coach'
-                        ? 'bg-white/10 text-foreground dark:bg-white/10'
-                        : 'text-muted-foreground hover:text-foreground'
+            {/* Tab pills — clearly interactive */}
+            <div className="mt-8 flex items-center justify-center">
+                <div className="flex rounded-xl border border-border/50 bg-muted/30 p-1 gap-1">
+                    <button
+                        onClick={() => scrollToView('coach')}
+                        className={`rounded-lg px-5 py-2 text-sm font-medium transition-all ${
+                            activeView === 'coach'
+                                ? 'bg-background text-foreground shadow-sm border border-border/40 dark:bg-white/[0.08]'
+                                : 'text-muted-foreground hover:text-foreground'
                         }`}
-                >
-                    Coach
-                </button>
-                <button
-                    onClick={() => scrollToView('organizer')}
-                    className={`rounded-md px-5 py-2.5 text-sm transition-colors ${activeView === 'organizer'
-                        ? 'bg-white/10 text-foreground dark:bg-white/10'
-                        : 'text-muted-foreground hover:text-foreground'
+                    >
+                        Coach View
+                    </button>
+                    <button
+                        onClick={() => scrollToView('organizer')}
+                        className={`rounded-lg px-5 py-2 text-sm font-medium transition-all ${
+                            activeView === 'organizer'
+                                ? 'bg-background text-foreground shadow-sm border border-border/40 dark:bg-white/[0.08]'
+                                : 'text-muted-foreground hover:text-foreground'
                         }`}
-                >
-                    Organizer
-                </button>
+                    >
+                        Organizer View
+                    </button>
+                </div>
             </div>
 
             <div
