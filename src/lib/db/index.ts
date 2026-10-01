@@ -13,7 +13,7 @@ const isConfigured = Boolean(connectionString && !connectionString.includes('YOU
 export const sql: postgres.Sql =
     globalForDb.sql ??
     postgres(isConfigured ? connectionString : 'postgresql://placeholder:placeholder@localhost:5432/placeholder', {
-        max: 10, // Neon connection pool size
+        max: 1, // Single connection per serverless container — Neon pooler (PgBouncer) handles multiplexing
         idle_timeout: 20, // close idle connections after 20 seconds
         connect_timeout: 10, // 10s connection timeout
         ssl: isConfigured && connectionString.includes('sslmode=require') ? 'require' : isConfigured && !connectionString.includes('localhost') ? 'prefer' : false,
