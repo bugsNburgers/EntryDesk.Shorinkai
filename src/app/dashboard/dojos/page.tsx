@@ -27,6 +27,10 @@ export default async function DojosPage({
                 name: string
                 coach_id: string
                 created_at: string
+                slug: string | null
+                join_code: string | null
+                join_link_enabled: boolean
+                city: string | null
                 student_count: number
                 my_permission: string
             }[]
@@ -36,6 +40,10 @@ export default async function DojosPage({
                 d.name, 
                 d.coach_id,
                 d.created_at, 
+                d.slug,
+                d.join_code,
+                COALESCE(d.join_link_enabled, TRUE) AS join_link_enabled,
+                d.city,
                 COUNT(DISTINCT s.id)::int AS student_count,
                 CASE 
                     WHEN d.coach_id = ${user.id} THEN 'owner'
@@ -45,7 +53,7 @@ export default async function DojosPage({
             LEFT JOIN students s ON d.id = s.dojo_id
             LEFT JOIN dojo_collaborators dc ON d.id = dc.dojo_id AND dc.user_id = ${user.id}
             WHERE d.coach_id = ${user.id} OR dc.user_id = ${user.id}
-            GROUP BY d.id, d.name, d.coach_id, d.created_at, dc.permission
+            GROUP BY d.id, d.name, d.coach_id, d.created_at, d.slug, d.join_code, d.join_link_enabled, d.city, dc.permission
             ORDER BY d.created_at DESC
             LIMIT ${limit} OFFSET ${offset}
         `,
@@ -98,7 +106,7 @@ export default async function DojosPage({
         <div className="space-y-4">
             <DashboardPageHeader
                 title="Dojos"
-                description="Manage your schools and training locations."
+                description="Manage your schools, training locations, and athlete/parent registration links."
                 actions={
                     <DojoDialog>
                         <Button size="sm">
@@ -117,7 +125,7 @@ export default async function DojosPage({
                         return (
                             <div
                                 key={dojo.id}
-                                className="dashboard-surface dashboard-list-item group relative p-3"
+                                className="dashboard-surface dashboard-list-item group relative p-3.5 flex flex-col justify-between"
                             >
                                 <Link
                                     href={{ pathname: '/dashboard/students', query: { dojo: dojo.name } }}
@@ -125,35 +133,57 @@ export default async function DojosPage({
                                 >
                                     <span className="sr-only">View students for {dojo.name}</span>
                                 </Link>
-                                <div className="flex items-start justify-between gap-2">
-                                    <div className="pointer-events-none relative z-20 flex items-center gap-2">
-                                        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-muted">
-                                            <LayoutGrid className="h-3.5 w-3.5 text-muted-foreground" />
-                                        </div>
-                                        <div>
-                                            <div className="flex items-center gap-1.5">
-                                                <span className="text-sm font-medium">{dojo.name}</span>
-                                                {!isOwner && (
-                                                    <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground font-normal">
-                                                        Shared ({dojo.my_permission})
-                                                    </span>
-                                                )}
+                                <div>
+                                    <div className="flex items-start justify-between gap-2">
+                                        <div className="pointer-events-none relative z-20 flex items-center gap-2">
+                                            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-muted">
+                                                <LayoutGrid className="h-4 w-4 text-muted-foreground" />
                                             </div>
-                                            <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                                                <Users className="h-2.5 w-2.5" />
-                                                <span>{dojo.student_count || 0} students</span>
+                                            <div>
+                                                <div className="flex items-center gap-1.5">
+                                                    <span className="text-sm font-semibold">{dojo.name}</span>
+                                                    {!isOwner && (
+                                                        <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground font-normal">
+                                                            Shared ({dojo.my_permission})
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <div className="flex items-center gap-2 text-[11px] text-muted-foreground mt-0.5">
+                                                    <div className="flex items-center gap-1">
+                                                        <Users className="h-3 w-3" />
+                                                        <span>{dojo.student_count || 0} students</span>
+                                                    </div>
+                                                    {dojo.city && (
+                                                        <span>• {dojo.city}</span>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                    <div className="relative z-20">
-                                        <DojoActions 
-                                            dojo={dojo} 
-                                            studentCount={dojo.student_count}
-                                            isOwner={isOwner}
-                                            collaborators={collaborators}
-                                        />
+                                        <div className="relative z-20">
+                                            <DojoActions 
+                                                dojo={dojo} 
+                                                studentCount={dojo.student_count}
+                                                isOwner={isOwner}
+                                                collaborators={collaborators}
+                                            />
+                                        </div>
                                     </div>
                                 </div>
+
+                                {dojo.slug && (
+                                    <div className="relative z-20 mt-3 pt-2.5 border-t border-border/50 flex items-center justify-between text-[11px]">
+                                        <span className="text-muted-foreground font-mono truncate max-w-[170px]">
+                                            /join/{dojo.slug}
+                                        </span>
+                                        <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                                            dojo.join_link_enabled
+                                                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                                                : 'bg-muted text-muted-foreground'
+                                        }`}>
+                                            {dojo.join_link_enabled ? 'Link Active' : 'Disabled'}
+                                        </span>
+                                    </div>
+                                )}
                             </div>
                         )
                     })

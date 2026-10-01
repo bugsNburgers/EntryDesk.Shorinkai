@@ -1,6 +1,6 @@
 'use client'
 
-import { MoreHorizontal, Pencil, Trash, Share2 } from "lucide-react"
+import { MoreHorizontal, Pencil, Trash, Share2, Link2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { DojoDialog } from "./dojo-dialog"
 import { DojoSharingDialog } from "./dojo-sharing-dialog"
+import { DojoShareDialog } from "@/components/dashboard/dojo-share-dialog"
 import { useState } from "react"
 import { deleteDojo } from "@/app/dashboard/dojos/actions"
 
@@ -21,13 +22,20 @@ export function DojoActions({
   isOwner,
   collaborators 
 }: { 
-  dojo: { id: string, name: string }
+  dojo: { 
+    id: string
+    name: string
+    slug?: string | null
+    join_code?: string | null
+    join_link_enabled?: boolean
+  }
   studentCount: number
   isOwner: boolean
   collaborators: any[]
 }) {
     const [isEditOpen, setIsEditOpen] = useState(false)
-    const [isShareOpen, setIsShareOpen] = useState(false)
+    const [isCollabOpen, setIsCollabOpen] = useState(false)
+    const [isParentShareOpen, setIsParentShareOpen] = useState(false)
     const canDelete = studentCount === 0
 
     const handleDelete = async () => {
@@ -47,14 +55,19 @@ export function DojoActions({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            
+            <DropdownMenuItem onClick={() => setIsParentShareOpen(true)}>
+                <Link2 className="mr-2 h-4 w-4 text-primary" /> Share Registration Link
+            </DropdownMenuItem>
+
             <DropdownMenuItem onClick={() => setIsEditOpen(true)}>
                 <Pencil className="mr-2 h-4 w-4" /> Edit
             </DropdownMenuItem>
             
             {isOwner && (
               <>
-                <DropdownMenuItem onClick={() => setIsShareOpen(true)}>
-                    <Share2 className="mr-2 h-4 w-4" /> Manage Sharing
+                <DropdownMenuItem onClick={() => setIsCollabOpen(true)}>
+                    <Share2 className="mr-2 h-4 w-4" /> Manage Coaches
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 {canDelete ? (
@@ -78,12 +91,19 @@ export function DojoActions({
 
         {isOwner && (
           <DojoSharingDialog 
-            open={isShareOpen} 
-            onOpenChange={setIsShareOpen} 
+            open={isCollabOpen} 
+            onOpenChange={setIsCollabOpen} 
             dojo={dojo} 
             collaborators={collaborators} 
           />
         )}
+
+        <DojoShareDialog
+            open={isParentShareOpen}
+            onOpenChange={setIsParentShareOpen}
+            dojo={dojo}
+        />
     </>
   )
 }
+
