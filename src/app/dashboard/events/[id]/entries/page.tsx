@@ -52,6 +52,7 @@ export default async function EventEntriesPage({
                 student_rank: string | null
                 student_weight: number | null
                 student_registration_no: string | null
+                student_photo: string | null
                 dojo_name: string | null
                 category_name: string | null
                 event_day_name: string | null
@@ -69,6 +70,7 @@ export default async function EventEntriesPage({
                 s.rank AS student_rank,
                 s.weight AS student_weight,
                 s.registration_no AS student_registration_no,
+                s.photo_url AS student_photo,
                 d.name AS dojo_name,
                 c.name AS category_name,
                 ed.name AS event_day_name,
@@ -131,6 +133,7 @@ export default async function EventEntriesPage({
             rank: e.student_rank,
             weight: e.student_weight,
             registration_no: e.student_registration_no,
+            photo_url: e.student_photo,
             dojos: e.dojo_name ? { name: e.dojo_name } : null,
         },
         categories: e.category_name ? { name: e.category_name } : null,

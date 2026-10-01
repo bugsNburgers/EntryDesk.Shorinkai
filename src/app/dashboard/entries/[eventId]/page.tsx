@@ -29,6 +29,7 @@ export default async function EventEntriesPage({ params }: { params: Promise<{ e
                 date_of_birth: string | null
                 dojo_id: string
                 registration_no: string | null
+                photo_url: string | null
                 is_active: boolean
                 created_at: string
                 dojos: { id: string; name: string; coach_id: string }
@@ -43,6 +44,7 @@ export default async function EventEntriesPage({ params }: { params: Promise<{ e
                 s.date_of_birth,
                 s.dojo_id,
                 s.registration_no,
+                s.photo_url,
                 s.is_active,
                 s.created_at,
                 json_build_object('id', d.id, 'name', d.name, 'coach_id', d.coach_id) AS dojos
@@ -64,7 +66,15 @@ export default async function EventEntriesPage({ params }: { params: Promise<{ e
                 e.status,
                 e.chest_no,
                 e.generic_checked,
+                e.submitted_by,
+                e.coach_notes,
+                e.rejection_reason,
+                e.declared_weight_kg,
+                COALESCE(c.name, e.category_snapshot->>'displayName') AS category_name,
                 e.created_at,
+                pu.full_name AS parent_name,
+                pu.email AS parent_email,
+                s.phone AS parent_phone,
                 json_build_object(
                     'id', s.id, 
                     'name', s.name, 
@@ -74,14 +84,22 @@ export default async function EventEntriesPage({ params }: { params: Promise<{ e
                     'date_of_birth', s.date_of_birth, 
                     'dojo_id', s.dojo_id, 
                     'registration_no', s.registration_no,
-                    'is_active', s.is_active
+                    'photo_url', s.photo_url,
+                    'is_active', s.is_active,
+                    'parent_id', s.parent_id
                 ) AS students,
                 CASE WHEN ed.id IS NOT NULL THEN json_build_object('name', ed.name) ELSE NULL END AS event_days
             FROM entries e
             JOIN students s ON e.student_id = s.id
+            JOIN dojos d ON s.dojo_id = d.id
+            LEFT JOIN categories c ON e.category_id = c.id
             LEFT JOIN event_days ed ON e.event_day_id = ed.id
-            WHERE e.event_id = ${eventId} AND e.coach_id = ${user.id}
-            ORDER BY e.created_at DESC
+            LEFT JOIN users pu ON s.parent_id = pu.id
+            WHERE e.event_id = ${eventId}
+              AND (e.coach_id = ${user.id} OR d.coach_id = ${user.id})
+            ORDER BY 
+                CASE WHEN e.status = 'pending_coach' THEN 0 WHEN e.status = 'correction_needed' THEN 1 ELSE 2 END,
+                e.created_at DESC
         `,
         sql<EventDay[]>`
             SELECT * FROM event_days WHERE event_id = ${eventId} ORDER BY date ASC
@@ -118,8 +136,10 @@ export default async function EventEntriesPage({ params }: { params: Promise<{ e
     const stats = {
         total: validEntries.length,
         draft: validEntries.filter((e) => e.status === 'draft').length,
+        pending_coach: validEntries.filter((e) => e.status === 'pending_coach' || e.status === 'correction_needed').length,
         submitted: validEntries.filter((e) => e.status === 'submitted').length,
         approved: validEntries.filter((e) => e.status === 'approved').length,
+        rejected: validEntries.filter((e) => e.status === 'rejected' || e.status === 'coach_declined').length,
     }
 
     return (

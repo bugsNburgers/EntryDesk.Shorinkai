@@ -14,9 +14,19 @@ export function EntryApprovalButtons({ entryId, currentStatus }: EntryApprovalBu
     const [loading, setLoading] = useState<'approved' | 'rejected' | null>(null)
 
     const handleUpdate = async (status: 'approved' | 'rejected') => {
+        let reason: string | undefined = undefined
+        if (status === 'rejected') {
+            const promptVal = window.prompt('Reason for rejection (optional, will be emailed to parent):')
+            if (promptVal === null) {
+                // User cancelled prompt
+                return
+            }
+            reason = promptVal.trim() || undefined
+        }
+
         setLoading(status)
         try {
-            await updateEntryStatus(entryId, status)
+            await updateEntryStatus(entryId, status, reason)
         } catch (e) {
             console.error(e)
             alert('Failed to update')

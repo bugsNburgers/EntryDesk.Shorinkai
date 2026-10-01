@@ -3,28 +3,67 @@
 import { revalidatePath } from 'next/cache'
 import { requireRole } from '@/lib/auth/require-role'
 import sql from '@/lib/db'
+import { generateQrToken } from '@/lib/qr'
+import { audit, AUDIT_ACTIONS } from '@/lib/audit'
 
-export async function updateEntryStatus(entryId: string, status: 'approved' | 'rejected') {
+export async function updateEntryStatus(
+    entryId: string,
+    status: 'approved' | 'rejected',
+    reason?: string
+) {
     const { user, role } = await requireRole(['organizer', 'admin'])
 
     // Strictly enforce that entry's event is managed by this organizer or write collaborator
-    const updated = await sql<{ event_id: string }[]>`
+    const updated = await sql<{ event_id: string; student_id: string }[]>`
         UPDATE entries e
-        SET status = ${status}, updated_at = NOW()
+        SET status = ${status},
+            updated_at = NOW(),
+            rejection_reason = CASE
+                WHEN ${status} = 'rejected' THEN COALESCE(${reason?.trim() ?? null}, e.rejection_reason)
+                WHEN ${status} = 'approved' THEN NULL
+                ELSE e.rejection_reason
+            END,
+            qr_token = CASE
+                WHEN ${status} = 'approved' THEN COALESCE(e.qr_token, ${generateQrToken()})
+                WHEN ${status} = 'rejected' THEN NULL
+                ELSE e.qr_token
+            END
         FROM events ev
         WHERE e.id = ${entryId}
           AND e.event_id = ev.id
           ${role !== 'admin' ? sql`AND (ev.organizer_id = ${user.id} OR EXISTS (SELECT 1 FROM event_collaborators ec WHERE ec.event_id = ev.id AND ec.user_id = ${user.id} AND ec.permission = 'write'))` : sql``}
-        RETURNING e.event_id
+        RETURNING e.event_id, e.student_id
     `
 
     if (updated.length === 0) {
         throw new Error('Unauthorized or entry not found')
     }
 
-    const eventId = updated[0].event_id
+    const { event_id: eventId, student_id: studentId } = updated[0]
+
+    // Audit log
+    audit({
+        actorType: role === 'admin' ? 'admin' : 'organizer',
+        actorId: user.id,
+        action: status === 'approved' ? AUDIT_ACTIONS.ENTRY_APPROVED : AUDIT_ACTIONS.ENTRY_REJECTED,
+        entityType: 'entry',
+        entityId: entryId,
+        details: {
+            event_id: eventId,
+            student_id: studentId,
+            reason: reason?.trim() || null,
+        },
+    }).catch(console.error)
+
+    // Revalidate parent-facing pages so they reflect the new status immediately
     revalidatePath(`/dashboard/events/${eventId}/entries`)
     revalidatePath(`/dashboard/events/${eventId}`)
+    revalidatePath('/athlete')
+    revalidatePath('/parent')
+    revalidatePath(`/athlete/${studentId}`)
+    revalidatePath(`/parent/children/${studentId}`)
+    revalidatePath(`/athlete/entries/${entryId}`)
+    revalidatePath(`/parent/entries/${entryId}`)
     return { success: true }
 }
 
@@ -35,7 +74,17 @@ export async function bulkUpdateEntryStatus(entryIds: string[], status: 'approve
     // Atomic bulk update strictly scoped to events managed by this organizer or write collaborator
     const updated = await sql<{ event_id: string }[]>`
         UPDATE entries e
-        SET status = ${status}, updated_at = NOW()
+        SET status = ${status},
+            updated_at = NOW(),
+            rejection_reason = CASE
+                WHEN ${status} = 'approved' THEN NULL
+                ELSE e.rejection_reason
+            END,
+            qr_token = CASE
+                WHEN ${status} = 'approved' THEN COALESCE(e.qr_token, replace(gen_random_uuid()::text, '-', ''))
+                WHEN ${status} = 'rejected' THEN NULL
+                ELSE e.qr_token
+            END
         FROM events ev
         WHERE e.id = ANY(${entryIds}::uuid[])
           AND e.event_id = ev.id
@@ -46,6 +95,18 @@ export async function bulkUpdateEntryStatus(entryIds: string[], status: 'approve
 
     if (updated.length === 0) {
         throw new Error('Unauthorized or no eligible entries to update')
+    }
+
+    // Audit each entry in bulk update
+    for (const id of entryIds) {
+        audit({
+            actorType: role === 'admin' ? 'admin' : 'organizer',
+            actorId: user.id,
+            action: status === 'approved' ? AUDIT_ACTIONS.ENTRY_APPROVED : AUDIT_ACTIONS.ENTRY_REJECTED,
+            entityType: 'entry',
+            entityId: id,
+            details: { bulk: true },
+        }).catch(console.error)
     }
 
     updated.forEach((r) => {

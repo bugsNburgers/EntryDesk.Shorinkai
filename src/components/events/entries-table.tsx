@@ -1,12 +1,14 @@
 'use client'
 
 import { useState } from "react"
+import Image from "next/image"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
 import { EntryApprovalButtons } from "@/components/events/entry-approval-buttons"
 import { bulkUpdateEntryStatus } from "@/app/dashboard/events/[id]/entries/actions"
 import { Loader2 } from "lucide-react"
 import { toast } from "sonner" // Assuming we have sonner or use alert for now
+import { getStatusLabel, getStatusBgClass } from "@/lib/status"
 
 interface EntriesTableProps {
     entries: any[]
@@ -118,11 +120,30 @@ export function EntriesTable({ entries }: EntriesTableProps) {
                                 </td>
                                 {/* @ts-ignore */}
                                 <td className="p-4 align-middle font-medium">
-                                    <div className="flex flex-col">
-                                        <span>{entry.students?.name}</span>
-                                        <span className="text-[10px] font-mono text-muted-foreground">{entry.students?.registration_no}</span>
+                                    <div className="flex items-center gap-2.5">
+                                        {entry.students?.photo_url ? (
+                                            <div className="relative h-8 w-8 rounded-full overflow-hidden shrink-0 border border-border">
+                                                <Image
+                                                    src={entry.students.photo_url}
+                                                    alt={entry.students.name || ''}
+                                                    fill
+                                                    className="object-cover"
+                                                    unoptimized
+                                                />
+                                            </div>
+                                        ) : (
+                                            <div className="h-8 w-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-semibold shrink-0">
+                                                {(entry.students?.name || 'A').slice(0, 1).toUpperCase()}
+                                            </div>
+                                        )}
+                                        <div className="min-w-0">
+                                            <div className="flex flex-col">
+                                                <span className="truncate">{entry.students?.name}</span>
+                                                <span className="text-[10px] font-mono text-muted-foreground">{entry.students?.registration_no}</span>
+                                            </div>
+                                            <div className="text-[10px] text-muted-foreground">{entry.profiles?.full_name} (Coach)</div>
+                                        </div>
                                     </div>
-                                    <div className="text-[10px] text-muted-foreground">{entry.profiles?.full_name} (Coach)</div>
                                 </td>
                                 {/* @ts-ignore */}
                                 <td className="p-4 align-middle">{entry.students?.dojos?.name}</td>
@@ -137,13 +158,8 @@ export function EntriesTable({ entries }: EntriesTableProps) {
                                 </td>
                                 <td className="p-4 align-middle capitalize">{entry.participation_type}</td>
                                 <td className="p-4 align-middle">
-                                    <span className={
-                                        entry.status === 'approved' ? "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-emerald-100 text-emerald-800" :
-                                            entry.status === 'rejected' ? "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-red-100 text-red-800" :
-                                                entry.status === 'submitted' ? "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-blue-100 text-blue-800" :
-                                                    "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent text-foreground"
-                                    }>
-                                        {entry.status}
+                                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${getStatusBgClass(entry.status)}`}>
+                                        {getStatusLabel(entry.status)}
                                     </span>
                                 </td>
                                 <td className="p-4 align-middle text-right">

@@ -3,6 +3,10 @@
 import { revalidatePath } from 'next/cache'
 import { requireRole } from '@/lib/auth/require-role'
 import sql from '@/lib/db'
+import { calculateCategory } from '@/lib/category'
+import { auditAsync, AUDIT_ACTIONS } from '@/lib/audit'
+import { randomUUID } from 'crypto'
+import { normalizeDobToIso } from '@/lib/date'
 
 /**
  * Checks if an event is currently open for registration.
@@ -348,3 +352,263 @@ export async function updateEntryGenericChecked(entryId: string, checked: boolea
     }
     return { success: true }
 }
+
+export interface CoachAddManualStudentInput {
+    eventId: string
+    dojoId: string
+    existingStudentId?: string | null
+    name?: string | null
+    gender?: 'male' | 'female' | 'other' | null
+    dateOfBirth?: string | null
+    rank?: string | null
+    weight?: number | null
+    parentPhone?: string | null
+    parentName?: string | null
+    schoolOrCity?: string | null
+    participationType?: 'kata' | 'kumite' | 'both' | null
+    eventDayId?: string | null
+    status?: 'draft' | 'submitted'
+}
+
+export async function coachAddManualStudentAndEntry(input: CoachAddManualStudentInput) {
+    const { user } = await requireRole('coach')
+
+    if (!input.eventId) {
+        throw new Error('Event ID is required')
+    }
+
+    if (!input.dojoId) {
+        throw new Error('Dojo ID is required')
+    }
+
+    // 1. Strict Security: Verify registration is open
+    await assertRegistrationOpen(input.eventId)
+
+    // 2. Strict Security: Verify dojo belongs to coach or coach is collaborator
+    const dojoCheck = await sql<{ id: string }[]>`
+        SELECT d.id FROM dojos d
+        LEFT JOIN dojo_collaborators dc ON d.id = dc.dojo_id AND dc.user_id = ${user.id}
+        WHERE d.id = ${input.dojoId} AND (d.coach_id = ${user.id} OR dc.user_id = ${user.id})
+        LIMIT 1
+    `
+    if (dojoCheck.length === 0) {
+        throw new Error('Unauthorized: Selected dojo does not belong to you')
+    }
+
+    let studentId: string
+    let finalName: string
+    let finalGender: string
+    let finalDob: string | null = null
+    let finalRank: string | null = null
+    let finalWeight: number | null = input.weight ?? null
+
+    if (input.existingStudentId) {
+        // Use existing student from roster
+        const existingStudent = await sql<{
+            id: string
+            name: string
+            gender: string
+            date_of_birth: string | null
+            rank: string | null
+            weight: number | null
+            phone: string | null
+        }[]>`
+            SELECT id, name, gender, date_of_birth, rank, weight, phone
+            FROM students
+            WHERE id = ${input.existingStudentId} AND dojo_id = ${input.dojoId}
+            LIMIT 1
+        `
+        if (existingStudent.length === 0) {
+            throw new Error('Student not found in your dojo')
+        }
+        const s = existingStudent[0]
+        studentId = s.id
+        finalName = s.name
+        finalGender = s.gender
+        finalDob = s.date_of_birth
+        finalRank = input.rank || s.rank
+        finalWeight = input.weight ?? s.weight
+
+        // Update phone/weight/rank if new values provided
+        if (input.parentPhone || input.weight || input.rank) {
+            await sql`
+                UPDATE students
+                SET phone = COALESCE(${input.parentPhone?.trim() || null}, phone),
+                    weight = COALESCE(${input.weight ?? null}, weight),
+                    rank = COALESCE(${input.rank || null}, rank)
+                WHERE id = ${studentId}
+            `
+        }
+    } else {
+        // Edge Case 10.2: Coach adds a kid manually (name, DOB, parent phone). The kid has no guardian account.
+        const name = input.name?.trim()
+        if (!name) {
+            throw new Error('Student name is required')
+        }
+        if (!input.gender) {
+            throw new Error('Gender is required')
+        }
+
+        finalName = name
+        finalGender = input.gender
+        finalDob = normalizeDobToIso(input.dateOfBirth) || null
+        finalRank = input.rank || null
+
+        const [newStudent] = await sql<{ id: string }[]>`
+            INSERT INTO students (
+                dojo_id,
+                parent_id,
+                name,
+                gender,
+                date_of_birth,
+                rank,
+                weight,
+                phone,
+                school_or_city,
+                membership_status,
+                consent_given_at,
+                consent_version,
+                consent_given_by
+            ) VALUES (
+                ${input.dojoId},
+                NULL,
+                ${name},
+                ${input.gender},
+                ${finalDob},
+                ${finalRank},
+                ${finalWeight},
+                ${input.parentPhone?.trim() || null},
+                ${input.schoolOrCity?.trim() || null},
+                'active',
+                NOW(),
+                'coach_manual_edge_case_v1',
+                ${user.id}
+            )
+            RETURNING id
+        `
+        studentId = newStudent.id
+
+        auditAsync({
+            actorType: 'coach',
+            actorId: user.id,
+            action: AUDIT_ACTIONS.STUDENT_CREATED,
+            entityType: 'student',
+            entityId: studentId,
+            details: {
+                name,
+                dojo_id: input.dojoId,
+                source: 'coach_manual_edge_case_10_2',
+            },
+        })
+    }
+
+    // 3. Check for existing entry for this event
+    const existingEntry = await sql<{ id: string; status: string; qr_token: string | null }[]>`
+        SELECT id, status, qr_token FROM entries
+        WHERE event_id = ${input.eventId} AND student_id = ${studentId}
+        LIMIT 1
+    `
+
+    if (existingEntry.length > 0 && !['withdrawn', 'coach_declined', 'rejected'].includes(existingEntry[0].status)) {
+        throw new Error(`This student already has an active entry (${existingEntry[0].status}) for this event.`)
+    }
+
+    // 4. Calculate category
+    const category = calculateCategory({
+        date_of_birth: finalDob,
+        gender: finalGender,
+        rank: finalRank,
+        weight: finalWeight,
+    })
+
+    // Try finding matching category record in categories table if it exists
+    const matchingCategories = await sql<{ id: string }[]>`
+        SELECT id FROM categories
+        WHERE event_id = ${input.eventId}
+          AND lower(name) = lower(${category.displayName})
+        LIMIT 1
+    `
+    const categoryId = matchingCategories[0]?.id || null
+
+    // 5. Generate secure random qr_token for the public credential link (Plan 10.2)
+    const qrToken = randomUUID().replace(/-/g, '')
+    const targetStatus = input.status === 'draft' ? 'draft' : 'submitted'
+    let entryId: string
+
+    if (existingEntry.length > 0) {
+        const [updated] = await sql<{ id: string }[]>`
+            UPDATE entries
+            SET coach_id = ${user.id},
+                category_id = ${categoryId},
+                event_day_id = ${input.eventDayId || null},
+                participation_type = ${input.participationType || null},
+                declared_weight_kg = ${finalWeight},
+                category_snapshot = ${JSON.stringify(category)},
+                status = ${targetStatus},
+                qr_token = COALESCE(qr_token, ${qrToken}),
+                updated_at = NOW()
+            WHERE id = ${existingEntry[0].id}
+            RETURNING id
+        `
+        entryId = updated.id
+    } else {
+        const [inserted] = await sql<{ id: string }[]>`
+            INSERT INTO entries (
+                event_id,
+                coach_id,
+                student_id,
+                category_id,
+                event_day_id,
+                participation_type,
+                declared_weight_kg,
+                category_snapshot,
+                status,
+                submitted_by,
+                qr_token
+            ) VALUES (
+                ${input.eventId},
+                ${user.id},
+                ${studentId},
+                ${categoryId},
+                ${input.eventDayId || null},
+                ${input.participationType || null},
+                ${finalWeight},
+                ${JSON.stringify(category)},
+                ${targetStatus},
+                ${user.id},
+                ${qrToken}
+            )
+            RETURNING id
+        `
+        entryId = inserted.id
+    }
+
+    auditAsync({
+        actorType: 'coach',
+        actorId: user.id,
+        action: AUDIT_ACTIONS.ENTRY_CREATED,
+        entityType: 'entry',
+        entityId: entryId,
+        details: {
+            student_id: studentId,
+            event_id: input.eventId,
+            status: targetStatus,
+            source: 'coach_manual_add_student',
+        },
+    })
+
+    revalidatePath(`/dashboard/entries/${input.eventId}`)
+    revalidatePath('/dashboard/entries')
+    revalidatePath('/dashboard/students')
+
+    return {
+        success: true,
+        studentId,
+        entryId,
+        qrToken,
+        studentName: finalName,
+        categoryName: category.displayName,
+        status: targetStatus,
+    }
+}
+

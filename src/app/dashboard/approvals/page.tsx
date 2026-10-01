@@ -1,8 +1,8 @@
 import { requireRole } from '@/lib/auth/require-role'
 import { ApprovalButtons } from '@/components/approvals/approval-buttons'
 import { DashboardPageHeader } from '@/components/dashboard/page-header'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { CheckSquare } from 'lucide-react'
+import { EmptyState } from '@/components/ui/empty-state'
+import { CheckCircle2, Clock, Users } from 'lucide-react'
 import { PaginationControls } from '@/components/ui/pagination-controls'
 import sql from '@/lib/db'
 
@@ -60,46 +60,124 @@ export default async function ApprovalsPage({
     const totalPages = Math.ceil(totalCount / limit)
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-5">
             <DashboardPageHeader
                 title="Approvals"
-                description={`${totalCount} pending requests`}
+                description={
+                    totalCount > 0
+                        ? `${totalCount} pending coach request${totalCount !== 1 ? 's' : ''} — review and approve or decline each one.`
+                        : 'Review coach requests to participate in your events.'
+                }
             />
 
-            <div className="dashboard-surface">
-                {applications && applications.length > 0 ? (
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Event</TableHead>
-                                <TableHead>Coach</TableHead>
-                                <TableHead className="hidden sm:table-cell">Email</TableHead>
-                                <TableHead className="hidden md:table-cell">Date</TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
+            {applications && applications.length > 0 ? (
+                <>
+                    {/* ─── Desktop: Table view ─── */}
+                    <div className="dashboard-surface hidden sm:block">
+                        <div className="flex items-center gap-2.5 border-b border-border/40 px-5 py-3.5 dark:border-white/[0.06]">
+                            <Clock className="h-4 w-4 text-amber-500" />
+                            <h2 className="text-sm font-semibold">Pending Requests</h2>
+                            <span className="ml-auto inline-flex items-center justify-center rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:bg-amber-950 dark:text-amber-400">
+                                {totalCount}
+                            </span>
+                        </div>
+
+                        {/* Table header */}
+                        <div className="grid grid-cols-[1fr_1fr_auto] gap-4 border-b border-border/30 bg-muted/30 px-5 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground dark:border-white/[0.04]">
+                            <span>Coach</span>
+                            <span>Requesting to Join</span>
+                            <span>Actions</span>
+                        </div>
+
+                        <div className="divide-y divide-border/30 dark:divide-white/[0.04]">
                             {applications.map((app) => (
-                                <TableRow key={app.id}>
-                                    <TableCell className="font-medium text-xs">{app.event_title}</TableCell>
-                                    <TableCell className="text-xs">{app.coach_name || app.coach_email || '—'}</TableCell>
-                                    <TableCell className="hidden sm:table-cell text-xs text-muted-foreground">{app.coach_email || '—'}</TableCell>
-                                    <TableCell className="hidden md:table-cell text-xs text-muted-foreground">{new Date(app.created_at).toLocaleDateString()}</TableCell>
-                                    <TableCell className="text-right">
+                                <div key={app.id} className="grid grid-cols-[1fr_1fr_auto] items-center gap-4 px-5 py-4 transition-colors hover:bg-accent/30">
+                                    {/* Coach info */}
+                                    <div className="min-w-0">
+                                        <div className="flex items-center gap-2.5">
+                                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold border border-border/50">
+                                                {(app.coach_name || app.coach_email || 'U').charAt(0).toUpperCase()}
+                                            </div>
+                                            <div className="min-w-0">
+                                                <p className="text-sm font-medium truncate">
+                                                    {app.coach_name || '—'}
+                                                </p>
+                                                <p className="text-xs text-muted-foreground truncate">
+                                                    {app.coach_email}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Event + date */}
+                                    <div className="min-w-0">
+                                        <p className="text-sm font-medium truncate">{app.event_title}</p>
+                                        <p className="text-xs text-muted-foreground">
+                                            Requested {new Date(app.created_at).toLocaleDateString()}
+                                        </p>
+                                    </div>
+
+                                    {/* Action buttons */}
+                                    <div className="shrink-0">
                                         <ApprovalButtons applicationId={app.id} />
-                                    </TableCell>
-                                </TableRow>
+                                    </div>
+                                </div>
                             ))}
-                        </TableBody>
-                    </Table>
-                ) : (
-                    <div className="py-8 text-center">
-                        <CheckSquare className="mx-auto mb-2 h-6 w-6 text-muted-foreground" />
-                        <p className="text-sm font-medium">All clear</p>
-                        <p className="mt-1 text-xs text-muted-foreground">No pending approvals right now.</p>
+                        </div>
                     </div>
-                )}
-            </div>
+
+                    {/* ─── Mobile: Card view ─── */}
+                    <div className="space-y-3 sm:hidden">
+                        <div className="flex items-center gap-2 px-1">
+                            <Clock className="h-4 w-4 text-amber-500" />
+                            <span className="text-sm font-semibold">Pending Requests</span>
+                            <span className="ml-auto inline-flex items-center justify-center rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:bg-amber-950 dark:text-amber-400">
+                                {totalCount}
+                            </span>
+                        </div>
+
+                        {applications.map((app) => (
+                            <div
+                                key={app.id}
+                                className="dashboard-surface p-4 space-y-3"
+                            >
+                                {/* Coach avatar + name */}
+                                <div className="flex items-center gap-3">
+                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-semibold border border-border/50">
+                                        {(app.coach_name || app.coach_email || 'U').charAt(0).toUpperCase()}
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                        <p className="text-sm font-semibold truncate">{app.coach_name || '—'}</p>
+                                        <p className="text-xs text-muted-foreground truncate">{app.coach_email}</p>
+                                    </div>
+                                </div>
+
+                                {/* Event info */}
+                                <div className="rounded-lg bg-muted/40 px-3 py-2.5 dark:bg-white/[0.03]">
+                                    <p className="text-xs text-muted-foreground mb-0.5">Requesting to join</p>
+                                    <p className="text-sm font-medium">{app.event_title}</p>
+                                    <p className="text-xs text-muted-foreground mt-0.5">
+                                        {new Date(app.created_at).toLocaleDateString()}
+                                    </p>
+                                </div>
+
+                                {/* Full-width action buttons */}
+                                <div className="pt-1">
+                                    <ApprovalButtons applicationId={app.id} fullWidth />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </>
+            ) : (
+                <div className="dashboard-surface">
+                    <EmptyState
+                        icon={<CheckCircle2 />}
+                        title="All clear!"
+                        description="No pending approvals right now. When coaches apply to your events, their requests will appear here."
+                    />
+                </div>
+            )}
 
             <PaginationControls page={page} totalPages={totalPages} totalCount={totalCount} />
         </div>
