@@ -2,17 +2,13 @@
 
 import { CoachOverview } from "./coach-overview"
 import { CoachEntriesList } from "./coach-entries-list"
-import { CoachStudentRegister } from "./coach-student-register"
+import { CoachAddStudentDialog } from "./coach-add-student-dialog"
 import { useCallback, useMemo, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog"
 import { RegistrationDeadline } from "@/components/events/registration-deadline"
+import Link from "next/link"
+import { Printer, UserPlus } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 interface CoachDashboardProps {
     event: any
@@ -29,15 +25,17 @@ interface CoachDashboardProps {
 export function CoachDashboard({ event, eventType, stats, entries, students, eventDays, dojos, isPastEvent = false, isRegistrationClosed = false }: CoachDashboardProps) {
     const existingStudentIds = useMemo(() => new Set(entries.map(e => e.student_id)), [entries])
 
-    const [statusPreset, setStatusPreset] = useState<string>('all')
-    const [registerOpen, setRegisterOpen] = useState(false)
+    const [currentStatus, setCurrentStatus] = useState<string>('pending_submission')
+    const [addStudentOpen, setAddStudentOpen] = useState(false)
     const entriesRef = useRef<HTMLDivElement | null>(null)
 
     const selectStatus = useCallback((nextStatus: string) => {
-        setStatusPreset(nextStatus)
+        setCurrentStatus(nextStatus)
         // Jump user straight to the entries table.
         entriesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }, [])
+
+
 
     return (
         <div className="space-y-8">
@@ -63,7 +61,17 @@ export function CoachDashboard({ event, eventType, stats, entries, students, eve
                     </div>
                     <div className="flex flex-col items-end gap-2">
                         <RegistrationDeadline event={event} className="animate-pulse-gentle text-sm hidden sm:flex" />
-                        {!isPastEvent && !isRegistrationClosed && <Button onClick={() => setRegisterOpen(true)}>Register athletes</Button>}
+                        <div className="flex items-center gap-2">
+                            {!isPastEvent && !isRegistrationClosed && (
+                                <Button
+                                    onClick={() => setAddStudentOpen(true)}
+                                    className="gap-2 font-semibold shadow-sm rounded-xl"
+                                >
+                                    <UserPlus className="h-4 w-4" />
+                                    Add Student
+                                </Button>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -71,48 +79,42 @@ export function CoachDashboard({ event, eventType, stats, entries, students, eve
             <CoachOverview stats={stats} entries={entries} onSelectStatus={selectStatus} />
 
             <div ref={entriesRef} className="space-y-4">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <h3 className="text-lg font-medium">Entries</h3>
-                        <p className="text-sm text-muted-foreground">Filter, submit, and manage your entries.</p>
+                        <h3 className="text-xl font-bold tracking-tight">Entries</h3>
+                        <p className="text-xs text-muted-foreground">Filter, review, and manage your team athletes.</p>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <Button variant="outline" onClick={() => selectStatus('all')}>All</Button>
-                        <Button variant="outline" onClick={() => selectStatus('draft')}>Drafts</Button>
-                        <Button variant="outline" onClick={() => selectStatus('submitted')}>Submitted</Button>
-                        <Button variant="outline" onClick={() => selectStatus('approved')}>Approved</Button>
-                    </div>
+                    {stats.approved > 0 && (
+                        <Link href={`/dashboard/entries/${event.id}/print`} target="_blank">
+                            <Button variant="outline" size="sm" className="gap-1.5 rounded-xl font-semibold border-primary/30 text-primary hover:bg-primary/5">
+                                <Printer className="h-4 w-4" />
+                                Print Team Cards ({stats.approved})
+                            </Button>
+                        </Link>
+                    )}
                 </div>
                 <CoachEntriesList
                     entries={entries}
                     eventDays={eventDays}
                     dojos={dojos}
                     eventType={eventType}
-                    statusPreset={statusPreset}
+                    statusPreset={currentStatus}
+                    onStatusChange={setCurrentStatus}
                     isReadOnly={isPastEvent}
                 />
             </div>
 
             {!isPastEvent && (
-                <Dialog open={registerOpen} onOpenChange={setRegisterOpen}>
-                    <DialogContent className="sm:max-w-4xl w-[95vw] sm:w-[90vw] md:w-full max-h-[95vh] flex flex-col overflow-y-auto">
-                        <DialogHeader>
-                            <DialogTitle>Register athletes</DialogTitle>
-                            <DialogDescription>
-                                Pick students from your roster and add them to this event.
-                            </DialogDescription>
-                        </DialogHeader>
-
-                        <CoachStudentRegister
-                            students={students}
-                            existingStudentIds={existingStudentIds}
-                            eventId={event.id}
-                            eventDays={eventDays}
-                            eventType={eventType}
-                            dojos={dojos}
-                        />
-                    </DialogContent>
-                </Dialog>
+                <CoachAddStudentDialog
+                    open={addStudentOpen}
+                    onOpenChange={setAddStudentOpen}
+                    event={event}
+                    eventType={eventType}
+                    eventDays={eventDays}
+                    dojos={dojos}
+                    students={students}
+                    existingStudentIds={existingStudentIds}
+                />
             )}
         </div>
     )
