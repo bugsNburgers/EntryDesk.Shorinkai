@@ -12,9 +12,10 @@ import { ArrowRight, ShieldCheck, AlertCircle } from 'lucide-react'
 interface LoginFormClientProps {
     initialError?: string | null
     googleClientId: string
+    callbackUrl?: string
 }
 
-export function LoginFormClient({ initialError, googleClientId }: LoginFormClientProps) {
+export function LoginFormClient({ initialError, googleClientId, callbackUrl }: LoginFormClientProps) {
     const [customError, setCustomError] = useState<string | null>(null)
     const activeError = customError || initialError
 
@@ -36,6 +37,10 @@ export function LoginFormClient({ initialError, googleClientId }: LoginFormClien
 
             <form action={login} className="grid gap-4">
                 <NavigationOnPending title="Authenticating session" />
+                {/* Pass callbackUrl through the form so the action can redirect back */}
+                {callbackUrl && callbackUrl.startsWith('/') && (
+                    <input type="hidden" name="callbackUrl" value={callbackUrl} />
+                )}
                 <div className="space-y-2">
                     <Label htmlFor="login-email">Email</Label>
                     <Input

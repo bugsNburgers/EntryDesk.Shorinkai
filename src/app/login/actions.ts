@@ -5,9 +5,18 @@ import { redirect } from 'next/navigation'
 import { headers } from 'next/headers'
 import sql from '@/lib/db'
 import { verifyPassword } from '@/lib/auth/password'
-import { createSession } from '@/lib/auth/session'
+import { createSession, destroySession } from '@/lib/auth/session'
 import { verifyGoogleIdToken } from '@/lib/auth/google'
 import { checkRateLimit, resetRateLimit } from '@/lib/auth/rate-limit'
+
+/**
+ * Standard logout server action. Destroys session and redirects to /login.
+ */
+export async function logout() {
+    await destroySession()
+    revalidatePath('/', 'layout')
+    redirect('/login')
+}
 
 /**
  * Extracts client IP address from headers for rate limiting.
@@ -27,6 +36,12 @@ async function getClientIp(): Promise<string> {
 export async function login(formData: FormData) {
     const email = (formData.get('email') as string)?.trim().toLowerCase()
     const password = formData.get('password') as string
+    const rawCallback = formData.get('callbackUrl') as string | null
+    // Strictly validate callbackUrl — only allow same-origin relative paths
+    const callbackUrl =
+        rawCallback && rawCallback.startsWith('/') && !rawCallback.startsWith('//')
+            ? rawCallback
+            : '/dashboard'
     const clientIp = await getClientIp()
 
     if (!email || !password) {
@@ -35,7 +50,7 @@ export async function login(formData: FormData) {
 
     // Rate limiting: 5 attempts per 15 minutes per IP + email
     const rateLimitKey = `${clientIp}:${email}`
-    const rateCheck = checkRateLimit(rateLimitKey, 5, 15 * 60 * 1000)
+    const rateCheck = await checkRateLimit(rateLimitKey, 5, 15)
 
     if (!rateCheck.allowed) {
         console.warn(`[SECURITY] Rate limit exceeded for login attempt: ${email} from ${clientIp}`)
@@ -82,14 +97,14 @@ export async function login(formData: FormData) {
 
         // Login successful: reset rate limit & issue session
         resetRateLimit(rateLimitKey)
-        await createSession(user.id)
+        await createSession(user.id, user.role as import('@/types/database').UserRole)
     } catch (err) {
         console.error('[AUTH_ERROR] Login exception:', err)
         return redirect('/login?error=auth_failed')
     }
 
     revalidatePath('/', 'layout')
-    redirect('/dashboard')
+    redirect(callbackUrl)
 }
 
 /**
@@ -97,7 +112,7 @@ export async function login(formData: FormData) {
  */
 export async function verifyGoogleLogin(idToken: string): Promise<{ success: boolean; error?: string }> {
     const clientIp = await getClientIp()
-    const rateCheck = checkRateLimit(`google:${clientIp}`, 10, 15 * 60 * 1000)
+    const rateCheck = await checkRateLimit(`google:${clientIp}`, 10, 15)
 
     if (!rateCheck.allowed) {
         return {
@@ -129,7 +144,7 @@ export async function verifyGoogleLogin(idToken: string): Promise<{ success: boo
         }
 
         resetRateLimit(`google:${clientIp}`)
-        await createSession(result.user.id)
+        await createSession(result.user.id, result.user.role)
         return { success: true }
     } catch (err) {
         console.error('[AUTH_ERROR] Google verification exception:', err)

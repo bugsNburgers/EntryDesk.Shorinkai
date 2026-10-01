@@ -11,6 +11,7 @@ type SearchParams = {
     error?: string | string[]
     message?: string | string[]
     retry?: string | string[]
+    callbackUrl?: string | string[]
 }
 
 function getSingleParam(value: string | string[] | undefined) {
@@ -36,11 +37,13 @@ export default async function LoginPage({
     const errorCode = getSingleParam(resolvedSearchParams?.error)
     const retrySeconds = getSingleParam(resolvedSearchParams?.retry)
     const errorMessage = getErrorMessage(errorCode, retrySeconds)
+    const callbackUrl = getSingleParam(resolvedSearchParams?.callbackUrl)
 
-    // Check existing session
+    // Check existing session — redirect to callbackUrl if provided, else dashboard
     const sessionData = await getCurrentSession()
     if (sessionData) {
-        redirect('/dashboard')
+        const safeCb = callbackUrl && callbackUrl.startsWith('/') ? callbackUrl : '/dashboard'
+        redirect(safeCb)
     }
 
     const features = ['Entry approvals', 'Student registration', 'Event exports', 'Coach workflows']
@@ -96,9 +99,22 @@ export default async function LoginPage({
                 </section>
 
                 <section className="rounded-3xl border border-border/50 bg-card/70 p-6 shadow-sm backdrop-blur dark:border-white/[0.10] sm:p-8">
+                    {/* Session-expired notice — shown when redirected from a protected page */}
+                    {callbackUrl && callbackUrl.startsWith('/') && !errorMessage && (
+                        <div className="mb-5 flex items-start gap-3 rounded-xl border border-amber-500/25 bg-amber-500/10 p-4 text-sm text-amber-700 dark:text-amber-300">
+                            <span className="text-base leading-none mt-0.5">⏱</span>
+                            <div>
+                                <p className="font-semibold">Session expired</p>
+                                <p className="text-xs mt-0.5 opacity-80">
+                                    Please sign in again — you&apos;ll be sent right back to where you were.
+                                </p>
+                            </div>
+                        </div>
+                    )}
                     <LoginFormClient
                         initialError={errorMessage}
                         googleClientId={googleClientId}
+                        callbackUrl={callbackUrl}
                     />
                 </section>
             </main>
