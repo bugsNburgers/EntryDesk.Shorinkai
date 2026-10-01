@@ -7,7 +7,7 @@ import {
     Sheet,
     SheetContent,
     SheetTrigger,
-    SheetTitle, // ✅ added
+    SheetTitle,
 } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
 import {
@@ -18,16 +18,33 @@ import {
     Building2,
     Users,
     FileText,
+    Inbox,
 } from "lucide-react"
 import { DashboardNavLink } from "@/components/dashboard/nav-link"
-import { Badge } from "@/components/ui/badge"
 import { SignOutForm } from "@/components/dashboard/signout-form"
 import { ThemeSwitch } from "@/components/app/theme-toggle"
+import { cn } from "@/lib/utils"
 
 interface MobileNavProps {
     role: string
-    profile: any
+    profile: { full_name: string | null } | null
     userEmail: string
+}
+
+function getAvatarColor(name: string): string {
+    const colors = [
+        'from-emerald-500 to-teal-600',
+        'from-blue-500 to-indigo-600',
+        'from-violet-500 to-purple-600',
+        'from-amber-500 to-orange-600',
+        'from-rose-500 to-pink-600',
+        'from-cyan-500 to-sky-600',
+    ]
+    let hash = 0
+    for (let i = 0; i < name.length; i++) {
+        hash = name.charCodeAt(i) + ((hash << 5) - hash)
+    }
+    return colors[Math.abs(hash) % colors.length]!
 }
 
 export function MobileNav({ role, profile, userEmail }: MobileNavProps) {
@@ -39,128 +56,117 @@ export function MobileNav({ role, profile, userEmail }: MobileNavProps) {
         setOpen(false)
     }, [pathname])
 
+    const displayName = profile?.full_name || userEmail || 'User'
+    const initials = displayName.slice(0, 2).toUpperCase()
+    const avatarGradient = getAvatarColor(displayName)
+
     return (
         <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="md:hidden">
-                    <Menu className="h-5 w-5" />
+                <Button variant="ghost" size="icon" className="md:hidden h-8 w-8">
+                    <Menu className="h-4 w-4" />
                     <span className="sr-only">Toggle menu</span>
                 </Button>
             </SheetTrigger>
 
             <SheetContent
                 side="left"
-                className="w-[85vw] max-w-[320px] sm:w-[350px] sm:max-w-sm p-0"
+                className="w-[80vw] max-w-[300px] sm:w-[300px] p-0"
             >
-                {/* ✅ Required for Radix accessibility */}
-                <SheetTitle className="sr-only">
-                    Mobile Navigation
-                </SheetTitle>
+                <SheetTitle className="sr-only">Navigation</SheetTitle>
 
                 <div className="flex h-[100dvh] flex-col">
-                    <div className="flex items-center gap-3 p-6 border-b">
-                        <div className="relative h-10 w-10 overflow-hidden rounded-xl border border-border/50 bg-background/70 dark:border-white/[0.12]">
-                            <Image
-                                src="/favicon.ico"
-                                alt="EntryDesk logo"
-                                fill
-                                className="object-cover"
-                                sizes="40px"
-                                priority
-                            />
+                    {/* Brand header */}
+                    <div className="flex items-center gap-3 px-5 py-5 border-b border-border/50">
+                        <div className="relative h-9 w-9 overflow-hidden rounded-xl border border-border/50 bg-background/70 dark:border-white/[0.12] shrink-0">
+                            <Image src="/favicon.ico" alt="EntryDesk logo" fill className="object-cover" sizes="36px" priority />
                         </div>
                         <div className="leading-tight">
-                            <div className="text-sm font-bold tracking-tight">
-                                EntryDesk
-                            </div>
-                            <div className="text-xs text-muted-foreground font-medium capitalize">
-                                {role === 'organizer' ? 'Organizer' : role}
+                            <div className="text-sm font-bold tracking-tight">EntryDesk</div>
+                            <div className="text-[11px] text-muted-foreground font-medium capitalize">
+                                {role === 'organizer' ? 'Organizer Portal' : 'Coach Portal'}
                             </div>
                         </div>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto py-4">
-                        <div className="px-3 py-2">
-                            <h3 className="mb-2 px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
-                                Overview
-                            </h3>
-                            <div className="space-y-1">
-                                <DashboardNavLink href="/dashboard">
-                                    <LayoutDashboard className="h-4 w-4" />
-                                    Home
+                    {/* Nav links */}
+                    <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+                        {/* Home */}
+                        <DashboardNavLink href="/dashboard">
+                            <LayoutDashboard className="h-4 w-4" />
+                            Home
+                        </DashboardNavLink>
+
+                        {/* Section label */}
+                        <div className="pt-4 pb-1 px-2">
+                            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+                                {role === 'organizer' ? 'Manage' : 'My Workspace'}
+                            </p>
+                        </div>
+
+                        {role === 'organizer' ? (
+                            <>
+                                <DashboardNavLink href="/dashboard/events">
+                                    <Calendar className="h-4 w-4" />
+                                    Events
                                 </DashboardNavLink>
-                            </div>
-                        </div>
+                                <DashboardNavLink href="/dashboard/approvals">
+                                    <CheckCircle2 className="h-4 w-4" />
+                                    Approvals
+                                </DashboardNavLink>
+                            </>
+                        ) : (
+                            <>
+                                <DashboardNavLink href="/dashboard/events-browser">
+                                    <Calendar className="h-4 w-4" />
+                                    Events
+                                </DashboardNavLink>
+                                <DashboardNavLink href="/dashboard/dojos">
+                                    <Building2 className="h-4 w-4" />
+                                    My Dojos
+                                </DashboardNavLink>
+                                <DashboardNavLink href="/dashboard/students">
+                                    <Users className="h-4 w-4" />
+                                    Athletes
+                                </DashboardNavLink>
+                                <DashboardNavLink href="/dashboard/entries">
+                                    <FileText className="h-4 w-4" />
+                                    My Entries
+                                </DashboardNavLink>
+                            </>
+                        )}
+                    </nav>
 
-                        <div className="px-3 py-2">
-                            <h3 className="mb-2 px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
-                                {role === 'organizer'
-                                    ? 'Management'
-                                    : 'Dojo Management'}
-                            </h3>
-                            <div className="space-y-1">
-                                {role === 'organizer' ? (
-                                    <>
-                                        <DashboardNavLink href="/dashboard/events">
-                                            <Calendar className="h-4 w-4" />
-                                            Events
-                                        </DashboardNavLink>
-                                        <DashboardNavLink href="/dashboard/approvals">
-                                            <CheckCircle2 className="h-4 w-4" />
-                                            Approvals
-                                        </DashboardNavLink>
-                                    </>
-                                ) : (
-                                    <>
-                                        <DashboardNavLink href="/dashboard/events-browser">
-                                            <Calendar className="h-4 w-4" />
-                                            Events
-                                        </DashboardNavLink>
-                                        <DashboardNavLink href="/dashboard/dojos">
-                                            <Building2 className="h-4 w-4" />
-                                            My Dojos
-                                        </DashboardNavLink>
-                                        <DashboardNavLink href="/dashboard/students">
-                                            <Users className="h-4 w-4" />
-                                            Students
-                                        </DashboardNavLink>
-                                        <DashboardNavLink href="/dashboard/entries">
-                                            <FileText className="h-4 w-4" />
-                                            My Entries
-                                        </DashboardNavLink>
-                                    </>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="border-t p-4 bg-background/50">
-                        <div className="flex items-center justify-between mb-4">
-                            <Badge
-                                variant={
+                    {/* User profile footer */}
+                    <div className="border-t border-border/50 p-4 bg-background/40 dark:bg-background/20">
+                        {/* Role pill + theme */}
+                        <div className="flex items-center justify-between mb-3">
+                            <span
+                                className={cn(
+                                    'inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide',
                                     role === 'organizer'
-                                        ? 'success'
-                                        : 'secondary'
-                                }
-                                className="capitalize border-primary/20 bg-primary/10 text-primary pointer-events-none text-[10px] px-2 py-0.5 h-5"
+                                        ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400'
+                                        : 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400'
+                                )}
                             >
                                 {role}
-                            </Badge>
-                            <ThemeSwitch className="scale-[0.8]" />
+                            </span>
+                            <ThemeSwitch className="scale-[0.85]" />
                         </div>
 
-                        <div className="flex items-center gap-3 mb-3 px-1">
-                            <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-xs font-medium border border-border">
-                                {profile?.full_name?.[0] ||
-                                    userEmail?.[0]?.toUpperCase()}
+                        {/* Avatar + name */}
+                        <div className="flex items-center gap-3 rounded-xl px-2 py-2 mb-3">
+                            <div
+                                className={cn(
+                                    'flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br text-xs font-bold text-white shadow-sm ring-2 ring-background',
+                                    avatarGradient
+                                )}
+                            >
+                                {initials}
                             </div>
-                            <div className="flex-1 min-w-0">
-                                <div className="text-sm font-medium truncate">
-                                    {profile?.full_name || 'User'}
-                                </div>
-                                <div className="text-xs text-muted-foreground truncate">
-                                    {userEmail}
-                                </div>
+                            <div className="min-w-0 flex-1">
+                                <div className="truncate text-sm font-medium">{profile?.full_name || 'User'}</div>
+                                <div className="truncate text-xs text-muted-foreground">{userEmail}</div>
                             </div>
                         </div>
 

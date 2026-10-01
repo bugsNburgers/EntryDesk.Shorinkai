@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { cn } from "@/lib/utils"
 import {
     DropdownMenu,
     DropdownMenuCheckboxItem,
@@ -32,10 +33,12 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { StudentActions } from './student-actions'
-import { Search, ChevronDown, ArrowUpDown } from 'lucide-react'
+import { Search, ChevronDown, ArrowUpDown, UserCheck, MessageCircle, Copy } from 'lucide-react'
+import Image from 'next/image'
 import Fuse from 'fuse.js'
 import { normalizeDobToIso } from '@/lib/date'
 import { useAppNavigation } from '@/components/app/navigation-provider'
+import { toast } from 'sonner'
 
 interface Student {
     id: string
@@ -48,7 +51,13 @@ interface Student {
     dojos?: { name: string } | null
     registration_no?: string | null
     is_active?: boolean
-    // Add other fields as needed
+    photo_url?: string | null
+    parent_id?: string | null
+    parent?: {
+        name: string | null
+        email: string | null
+        phone: string | null
+    } | null
 }
 
 interface StudentDataTableProps {
@@ -72,8 +81,8 @@ export function StudentDataTable({ data, dojos, initialDojoFilter }: StudentData
 
     // Fuse.js instance for fuzzy search
     const fuse = useMemo(() => new Fuse(data, {
-        keys: ['name', 'dojos.name', 'rank'],
-        threshold: 0.3, // Adjust for fuzziness (0.0 = exact, 1.0 = match anything)
+        keys: ['name', 'dojos.name', 'rank', 'parent.name', 'parent.email', 'parent.phone'],
+        threshold: 0.3,
         distance: 100,
     }), [data]);
 
@@ -103,7 +112,30 @@ export function StudentDataTable({ data, dojos, initialDojoFilter }: StudentData
                     </Button>
                 )
             },
-            cell: ({ row }) => <div className="font-medium pl-4">{row.getValue("name")}</div>,
+            cell: ({ row }) => {
+                const photo = row.original.photo_url
+                const name = row.getValue("name") as string
+                return (
+                    <div className="flex items-center gap-2.5 pl-2">
+                        {photo ? (
+                            <div className="relative h-7 w-7 rounded-full overflow-hidden shrink-0 border border-border">
+                                <Image
+                                    src={photo}
+                                    alt={name}
+                                    fill
+                                    className="object-cover"
+                                    unoptimized
+                                />
+                            </div>
+                        ) : (
+                            <div className="h-7 w-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[11px] font-semibold shrink-0">
+                                {name.slice(0, 1).toUpperCase()}
+                            </div>
+                        )}
+                        <span className="font-medium">{name}</span>
+                    </div>
+                )
+            },
         },
         {
             accessorKey: "is_active",
@@ -167,6 +199,72 @@ export function StudentDataTable({ data, dojos, initialDojoFilter }: StudentData
             },
         },
         {
+            id: "added_by",
+            header: "Added By",
+            cell: ({ row }) => {
+                const parent = row.original.parent
+                if (!parent) {
+                    return (
+                        <span className="inline-flex items-center gap-1 rounded bg-muted/70 px-2 py-0.5 text-[11px] text-muted-foreground font-medium">
+                            Coach
+                        </span>
+                    )
+                }
+
+                const origin = typeof window !== 'undefined' ? window.location.origin : 'https://entrydesk.in'
+                const loginHelpMsg = `Namaste ${parent.name || 'there'} 🙏\nHere are your EntryDesk login details for ${row.original.name}:\n• Email: ${parent.email || 'your registered email'}\n• Login Link: ${origin}/login\n\nSteps to sign in:\n1. Open the login link above.\n2. Enter your email (${parent.email || ''}).\n3. Enter the 6-digit code sent to your inbox. No password needed!`
+                const phoneClean = parent.phone?.replace(/[^0-9]/g, '')
+
+                return (
+                    <div className="flex flex-col text-xs space-y-1">
+                        <span className="font-medium text-foreground flex items-center gap-1">
+                            <UserCheck className="h-3 w-3 text-primary shrink-0" />
+                            <span className="truncate max-w-[120px]">{parent.name || 'Athlete / Parent'}</span>
+                        </span>
+                        {parent.email && (
+                            <a
+                                href={`mailto:${parent.email}`}
+                                className="text-[11px] text-muted-foreground hover:text-foreground transition-colors truncate max-w-[130px]"
+                                title={parent.email}
+                            >
+                                {parent.email}
+                            </a>
+                        )}
+                        <div className="flex items-center gap-1.5 pt-0.5">
+                            {parent.phone && (
+                                <span className="text-[10px] text-muted-foreground font-mono">{parent.phone}</span>
+                            )}
+                            {phoneClean ? (
+                                <a
+                                    href={`https://wa.me/${phoneClean.startsWith('91') ? phoneClean : '91' + phoneClean}?text=${encodeURIComponent(loginHelpMsg)}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#128C7E] dark:text-[#25D366] bg-[#25D366]/10 hover:bg-[#25D366]/20 px-2 py-0.5 rounded-full transition-colors"
+                                    title="Send WhatsApp Login Help"
+                                >
+                                    <MessageCircle className="h-3 w-3 text-[#25D366]" />
+                                    WhatsApp Help
+                                </a>
+                            ) : (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        navigator.clipboard.writeText(loginHelpMsg)
+                                        toast.success('Login help message copied to clipboard!')
+                                    }}
+                                    className="inline-flex items-center gap-1 text-[10px] font-medium text-muted-foreground hover:text-foreground bg-muted px-2 py-0.5 rounded-full transition-colors"
+                                    title="Copy login help message to clipboard"
+                                >
+                                    <Copy className="h-3 w-3" />
+                                    Copy Help
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                )
+            },
+        },
+        {
             id: "actions",
             enableHiding: false,
             cell: ({ row }) => {
@@ -221,7 +319,7 @@ export function StudentDataTable({ data, dojos, initialDojoFilter }: StudentData
                         placeholder="Search students (fuzzy)..."
                         value={globalFilter}
                         onChange={(event) => setGlobalFilter(event.target.value)}
-                        className="h-11 rounded-full pl-8"
+                        className="h-10 rounded-xl pl-8"
                     />
                 </div>
 
@@ -244,8 +342,14 @@ export function StudentDataTable({ data, dojos, initialDojoFilter }: StudentData
                             router.push(`?${params.toString()}`)
                         }}
                     >
-                        <SelectTrigger className="h-11 w-[140px] rounded-full">
-                            <SelectValue placeholder="All Dojos" />
+                        <SelectTrigger className={cn(
+                            "h-9 w-auto min-w-[110px] max-w-[180px] text-xs font-medium rounded-lg px-2.5 py-1 gap-1.5 transition-all",
+                            dojoFilter !== 'all'
+                                ? "border-primary/60 bg-primary/10 text-primary font-semibold ring-1 ring-primary/30"
+                                : "border-border/60 bg-background/50 hover:bg-muted/40 text-muted-foreground hover:text-foreground"
+                        )}>
+                            <span className="text-muted-foreground font-normal">Dojo:</span>
+                            <span className="font-semibold truncate">{dojoFilter === 'all' ? 'All' : dojoFilter}</span>
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">All Dojos</SelectItem>
@@ -256,8 +360,9 @@ export function StudentDataTable({ data, dojos, initialDojoFilter }: StudentData
                     </Select>
 
                     <Select onValueChange={(val) => setFilter("gender", val)}>
-                        <SelectTrigger className="h-11 w-[110px] rounded-full">
-                            <SelectValue placeholder="Gender" />
+                        <SelectTrigger className="h-9 w-auto min-w-[95px] text-xs font-medium rounded-lg px-2.5 py-1 gap-1.5 border-border/60 bg-background/50 hover:bg-muted/40 text-muted-foreground hover:text-foreground">
+                            <span className="text-muted-foreground font-normal">Gender:</span>
+                            <SelectValue placeholder="All" />
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">All</SelectItem>
@@ -267,8 +372,9 @@ export function StudentDataTable({ data, dojos, initialDojoFilter }: StudentData
                     </Select>
 
                     <Select onValueChange={(val) => setFilter("is_active", val)}>
-                        <SelectTrigger className="h-11 w-[120px] rounded-full">
-                            <SelectValue placeholder="Status" />
+                        <SelectTrigger className="h-9 w-auto min-w-[95px] text-xs font-medium rounded-lg px-2.5 py-1 gap-1.5 border-border/60 bg-background/50 hover:bg-muted/40 text-muted-foreground hover:text-foreground">
+                            <span className="text-muted-foreground font-normal">Status:</span>
+                            <SelectValue placeholder="All" />
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">All Status</SelectItem>
@@ -279,7 +385,7 @@ export function StudentDataTable({ data, dojos, initialDojoFilter }: StudentData
 
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="outline" className="ml-auto h-11 rounded-full">
+                            <Button variant="outline" className="ml-auto h-10 rounded-xl">
                                 Columns <ChevronDown className="ml-2 h-4 w-4" />
                             </Button>
                         </DropdownMenuTrigger>

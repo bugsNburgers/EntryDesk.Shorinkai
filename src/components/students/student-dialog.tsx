@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import {
     Dialog,
@@ -24,6 +25,8 @@ import { createStudent, updateStudent } from '@/app/dashboard/students/actions'
 import { normalizeDobToIso } from '@/lib/date'
 import { upsertEntry } from '@/app/dashboard/entries/actions'
 import { isSimpleEntryEventType } from '@/lib/events/type'
+import { Camera } from 'lucide-react'
+import { PhotoUploadDialog } from '@/components/ui/photo-upload-dialog'
 
 interface Dojo {
     id: string
@@ -72,6 +75,8 @@ export function StudentDialog({ dojos, student, open, onOpenChange, showTrigger 
     const [dob, setDob] = useState<string>(normalizeDobToIso(student?.date_of_birth) || '')
     const [entryDayId, setEntryDayId] = useState<string>(entry?.event_day_id || '')
     const [entryType, setEntryType] = useState<string>(entry?.participation_type || '')
+    const [photoUrl, setPhotoUrl] = useState<string | null>(student?.photo_url || null)
+    const [photoDialogOpen, setPhotoDialogOpen] = useState(false)
     const isSimpleEntryEvent = isSimpleEntryEventType(eventType)
 
     // Update form data whenever student prop changes or dialog opens
@@ -83,6 +88,7 @@ export function StudentDialog({ dojos, student, open, onOpenChange, showTrigger 
             setName(student.name || '')
             setWeight(student.weight?.toString() || '')
             setDob(normalizeDobToIso(student.date_of_birth) || '')
+            setPhotoUrl(student.photo_url || null)
             if (entry) {
                 setEntryDayId(entry.event_day_id || '')
                 setEntryType(entry.participation_type || '')
@@ -159,6 +165,33 @@ export function StudentDialog({ dojos, student, open, onOpenChange, showTrigger 
                 </DialogHeader>
                 <form action={handleSubmit}>
                     <div className="grid gap-4 py-4">
+                        {isEditing && student && (
+                            <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/40 border">
+                                <div className="relative h-12 w-12 rounded-full overflow-hidden bg-primary/10 border flex items-center justify-center shrink-0">
+                                    {photoUrl ? (
+                                        <Image src={photoUrl} alt={name} fill className="object-cover" unoptimized />
+                                    ) : (
+                                        <span className="text-base font-bold text-primary">
+                                            {name ? name.slice(0, 1).toUpperCase() : 'A'}
+                                        </span>
+                                    )}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-xs font-semibold">Athlete Photo</p>
+                                    <p className="text-[11px] text-muted-foreground">Used on tournament ID card</p>
+                                </div>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setPhotoDialogOpen(true)}
+                                    className="rounded-xl text-xs gap-1.5"
+                                >
+                                    <Camera className="h-3.5 w-3.5" />
+                                    {photoUrl ? 'Change' : 'Upload'}
+                                </Button>
+                            </div>
+                        )}
                         <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="dojo" className="text-right">Dojo</Label>
                             <div className="col-span-3">
@@ -276,6 +309,17 @@ export function StudentDialog({ dojos, student, open, onOpenChange, showTrigger 
                     </DialogFooter>
                 </form>
             </DialogContent>
+
+            {isEditing && student && (
+                <PhotoUploadDialog
+                    open={photoDialogOpen}
+                    onOpenChange={setPhotoDialogOpen}
+                    studentId={student.id}
+                    studentName={student.name}
+                    currentPhotoUrl={photoUrl}
+                    onSuccess={(newUrl) => setPhotoUrl(newUrl)}
+                />
+            )}
         </Dialog>
     )
 }

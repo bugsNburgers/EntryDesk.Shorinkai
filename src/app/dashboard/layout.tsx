@@ -1,5 +1,7 @@
 import { getUserProfile } from '@/lib/auth/require-role'
+import { redirect } from 'next/navigation'
 import { ResponsiveDashboardFrame } from '@/components/dashboard/responsive-dashboard-frame'
+import { CompulsoryProfilePhotoUpload } from '@/components/auth/compulsory-profile-photo-upload'
 
 export default async function DashboardLayout({
   children,
@@ -8,8 +10,23 @@ export default async function DashboardLayout({
 }) {
   const { user, profile, role } = await getUserProfile()
 
-  // If no profile exists (e.g. first login), we should probably guide them to setup
-  // For now, let's assume profile is created on signup trigger or similar
+  // Parents / direct athletes should use /athlete portal
+  if (role === 'parent') {
+    redirect('/athlete')
+  }
+
+  // Coaches & Organizers: Profile photo is compulsory on sign-in
+  if (!user.avatar_url) {
+    return (
+      <CompulsoryProfilePhotoUpload
+        userId={user.id}
+        fullName={user.full_name || 'Coach'}
+        role={role}
+        email={user.email || ''}
+      />
+    )
+  }
+
   const roleLabel = role === 'organizer' ? 'Organizer' : role === 'admin' ? 'Admin' : 'Coach'
 
   return (
