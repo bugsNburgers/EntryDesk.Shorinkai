@@ -31,7 +31,7 @@ import {
     DialogFooter,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Search, Loader2 } from 'lucide-react'
+import { Search, Loader2, Check, X, Circle } from 'lucide-react'
 import { toast } from 'sonner'
 import { AthletePfp } from '@/components/ui/enlarged-pfp-dialog'
 
@@ -452,124 +452,130 @@ export function CoachEntriesList({
     }
 
     return (
-        <div className="w-full text-[#e8eef5] select-text font-['Google_Sans','Product_Sans',system-ui,sans-serif]">
-            {/* Filter Bar & Search */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-4">
-                <div className="relative flex-1 max-w-sm">
-                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8a99ab]" />
-                    <input
-                        type="text"
-                        placeholder="Search student, dojo, belt..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full h-10 pl-9 pr-3 rounded-xl bg-[#111a2b] border border-[#1f2b40] text-sm text-[#e8eef5] placeholder-[#8a99ab] focus:outline-none focus:border-[#2dd4b4] transition"
-                    />
+        <div className="w-full text-[#1c1917] dark:text-[#e8eef5] select-text font-['Google_Sans','Product_Sans',system-ui,sans-serif] space-y-4">
+            {/* Unified Card Container */}
+            <div className="rounded-2xl border border-[#ded8cb] bg-white shadow-xs overflow-hidden dark:border-[#1f2b40] dark:bg-[#111a2b]">
+                {/* Header with Search and Status Filter Tabs */}
+                <div className="border-b border-[#ded8cb] bg-[#faf8f3] px-4 py-3 sm:px-5 sm:py-3.5 dark:border-[#1f2b40] dark:bg-[#0d1624]">
+                    <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                        <div>
+                            <h3 className="text-base font-bold text-[#1c1917] dark:text-[#f8fafc] tracking-tight">
+                                Student Tournament Entries
+                            </h3>
+                            <p className="text-xs text-[#78716c] dark:text-[#8a99ab]">
+                                Mark each student as paid &amp; verified, then forward them to the organiser.
+                            </p>
+                        </div>
+
+                        {/* Search + Tabs Unified */}
+                        <div className="flex flex-wrap items-center gap-2">
+                            {/* Search */}
+                            <div className="relative w-full sm:w-56">
+                                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#78716c] dark:text-[#8a99ab]" />
+                                <input
+                                    type="text"
+                                    placeholder="Search student, dojo, belt..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="w-full h-8.5 pl-8 pr-7 text-xs rounded-lg bg-white dark:bg-[#0f1828] border border-[#ded8cb] dark:border-[#1f2b40] text-[#1c1917] dark:text-[#f8fafc] placeholder:text-[#a8a29e] dark:placeholder:text-[#6b7b8f] focus:outline-none focus:border-[#0d9488] dark:focus:border-[#2dd4b4] transition"
+                                />
+                                {searchQuery && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setSearchQuery('')}
+                                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#78716c] hover:text-[#1c1917] dark:text-[#8a99ab] dark:hover:text-[#e8eef5] cursor-pointer"
+                                    >
+                                        <X className="h-3.5 w-3.5" />
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* Status Tabs */}
+                            <div className="flex items-center gap-1 overflow-x-auto pb-0.5 sm:pb-0 text-xs">
+                                {[
+                                    { key: 'all', label: 'All', count: entries.length },
+                                    { key: 'not_forwarded', label: 'Not forwarded', count: entries.filter((e) => e.status === 'draft' || e.status === 'pending_coach').length },
+                                    { key: 'forwarded', label: 'Forwarded', count: entries.filter((e) => e.status === 'submitted').length },
+                                    { key: 'approved', label: 'Approved', count: entries.filter((e) => e.status === 'approved').length },
+                                    { key: 'rejected', label: 'Rejected', count: entries.filter((e) => e.status === 'rejected' || e.status === 'coach_declined').length },
+                                ].map((tab) => (
+                                    <button
+                                        key={tab.key}
+                                        onClick={() => {
+                                            setStatusFilter(tab.key)
+                                            if (onStatusChange) onStatusChange(tab.key)
+                                        }}
+                                        className={`h-8 px-2.5 rounded-lg text-xs font-semibold inline-flex items-center gap-1.5 transition cursor-pointer whitespace-nowrap shrink-0 ${
+                                            statusFilter === tab.key
+                                                ? 'bg-[#0d9488]/15 text-[#0d9488] dark:bg-[#2dd4b4]/15 dark:text-[#2dd4b4] border border-[#0d9488]/40 dark:border-[#2dd4b4]/40 font-bold'
+                                                : 'bg-white dark:bg-[#0f1828] text-[#57534e] dark:text-[#8a99ab] border border-[#ded8cb] dark:border-[#1f2b40] hover:bg-[#f5f0e6] dark:hover:bg-[#16233a]'
+                                        }`}
+                                    >
+                                        <span>{tab.label}</span>
+                                        <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-black/5 dark:bg-white/10">
+                                            {tab.count}
+                                        </span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                {/* Status Tabs */}
-                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 text-xs">
-                    {[
-                        { key: 'all', label: 'All' },
-                        { key: 'not_forwarded', label: 'Not forwarded' },
-                        { key: 'forwarded', label: 'Forwarded' },
-                        { key: 'approved', label: 'Approved' },
-                        { key: 'rejected', label: 'Rejected' },
-                    ].map((tab) => (
-                        <button
-                            key={tab.key}
-                            onClick={() => {
-                                setStatusFilter(tab.key)
-                                if (onStatusChange) onStatusChange(tab.key)
-                            }}
-                            className={`px-3 py-1.5 rounded-lg font-semibold transition cursor-pointer whitespace-nowrap ${
-                                statusFilter === tab.key
-                                    ? 'bg-[#2dd4b4] text-[#04231e]'
-                                    : 'bg-[#111a2b] text-[#8a99ab] hover:text-[#e8eef5] border border-[#1f2b40]'
-                            }`}
-                        >
-                            {tab.label}
-                        </button>
-                    ))}
-                </div>
-            </div>
-
-            {/* Subtitle from Design Specification */}
-            <div className="text-[#8a99ab] text-[14.5px] mb-3.5">
-                Mark each student as paid &amp; verified. Then forward them to the organiser.
-            </div>
-
-            {/* ========================================================================= */}
-            {/* 1. DESKTOP / LAPTOP TABLE (CoachLaptop.dc.html & CoachLaptopSel.dc.html)   */}
-            {/* ========================================================================= */}
-            <div className="hidden lg:block relative pb-28">
-                <div className="bg-[#111a2b] border border-[#1f2b40] rounded-2xl overflow-hidden shadow-xl">
+                {/* ========================================================================= */}
+                {/* 1. DESKTOP / LAPTOP TABLE                                                 */}
+                {/* ========================================================================= */}
+                <div className="hidden lg:block overflow-x-auto">
                     {/* Table Header */}
                     <div
                         style={{
                             display: 'grid',
-                            gridTemplateColumns: '28px 56px 190px 58px 72px 58px 60px 1fr 168px 170px',
+                            gridTemplateColumns: '28px 50px 185px 48px 80px 65px 55px 1fr 155px 145px',
                             columnGap: '10px',
                             alignItems: 'center',
-                            padding: '0 20px',
-                            height: '48px',
-                            background: '#0f1828',
-                            borderBottom: '1px solid #1f2b40',
+                            padding: '0 16px',
+                            height: '42px',
                         }}
+                        className="bg-[#f5f0e6] dark:bg-[#0f1828] border-b border-[#ded8cb] dark:border-[#1f2b40] text-[#78716c] dark:text-[#8a99ab] text-[11px] font-bold uppercase tracking-wider"
                     >
                         {/* Select All Checkbox */}
                         <span
                             onClick={handleToggleSelectAll}
-                            className={`w-5 h-5 rounded-[6px] border-2 border-[#34455f] flex items-center justify-center cursor-pointer transition ${
-                                isAllSelected ? 'bg-[#2dd4b4] border-[#2dd4b4]' : ''
+                            className={`w-4 h-4 rounded border-2 flex items-center justify-center cursor-pointer transition ${
+                                isAllSelected
+                                    ? 'bg-[#0d9488] dark:bg-[#2dd4b4] border-[#0d9488] dark:border-[#2dd4b4]'
+                                    : 'border-[#ded8cb] dark:border-[#34455f] bg-white dark:bg-transparent'
                             }`}
                         >
                             {isAllSelected && <CheckmarkSvg />}
                         </span>
 
-                        <span className="text-[11px] tracking-[0.12em] uppercase font-bold text-[#6b7b8f]">
-                            Chest
-                        </span>
-                        <span className="text-[11px] tracking-[0.12em] uppercase font-bold text-[#6b7b8f]">
-                            Athlete
-                        </span>
-                        <span className="text-[11px] tracking-[0.12em] uppercase font-bold text-[#6b7b8f]">
-                            Age
-                        </span>
-                        <span className="text-[11px] tracking-[0.12em] uppercase font-bold text-[#6b7b8f]">
-                            Dojo
-                        </span>
-                        <span className="text-[11px] tracking-[0.12em] uppercase font-bold text-[#6b7b8f]">
-                            Belt
-                        </span>
-                        <span className="text-[11px] tracking-[0.12em] uppercase font-bold text-[#6b7b8f]">
-                            Weight
-                        </span>
-                        <span className="text-[11px] tracking-[0.12em] uppercase font-bold text-[#6b7b8f]">
-                            Events applied
-                        </span>
+                        <span>Chest</span>
+                        <span>Athlete</span>
+                        <span>Age</span>
+                        <span>Dojo</span>
+                        <span>Belt</span>
+                        <span>Weight</span>
+                        <span>Events applied</span>
 
                         {/* Payment Header with Mark all Pill */}
                         <span className="flex items-center justify-between">
-                            <span className="text-[11px] tracking-[0.12em] uppercase font-bold text-[#6b7b8f]">
-                                Payment
-                            </span>
+                            <span>Payment</span>
                             <button
                                 onClick={handleMarkAllPaid}
-                                className="h-7 px-2.5 border-[1.5px] border-[#2dd4b4] text-[#2dd4b4] rounded-full text-[12.5px] font-semibold inline-flex items-center gap-1.5 cursor-pointer hover:bg-[#2dd4b4]/10 transition"
+                                className="h-6 px-2 rounded-full border border-[#0d9488] dark:border-[#2dd4b4] text-[#0d9488] dark:text-[#2dd4b4] text-[10.5px] font-bold inline-flex items-center gap-1 hover:bg-[#0d9488]/10 cursor-pointer transition"
                             >
                                 <PillCheckmarkSvg />
                                 Mark all
                             </button>
                         </span>
 
-                        <span className="text-[11px] tracking-[0.12em] uppercase font-bold text-[#6b7b8f] text-right">
-                            Action
-                        </span>
+                        <span className="text-right">Action</span>
                     </div>
 
                     {/* Table Body Rows */}
                     {filteredEntries.length === 0 ? (
-                        <div className="py-16 text-center text-[#8a99ab] text-sm">
+                        <div className="py-12 text-center text-[#78716c] dark:text-[#8a99ab] text-sm">
                             No tournament entries found matching your criteria.
                         </div>
                     ) : (
@@ -588,42 +594,48 @@ export function CoachEntriesList({
                                     key={entry.id}
                                     style={{
                                         display: 'grid',
-                                        gridTemplateColumns: '28px 56px 190px 58px 72px 58px 60px 1fr 168px 170px',
+                                        gridTemplateColumns: '28px 50px 185px 48px 80px 65px 55px 1fr 155px 145px',
                                         columnGap: '10px',
                                         alignItems: 'center',
-                                        padding: '0 20px',
-                                        height: '82px',
-                                        borderBottom: '1px solid #1f2b40',
-                                        background: isSelected ? 'rgba(45, 212, 180, 0.07)' : 'transparent',
+                                        padding: '0 16px',
+                                        height: '58px',
                                     }}
-                                    className="transition-colors hover:bg-[#152238]/60"
+                                    className={`border-b border-[#ded8cb]/80 dark:border-[#1f2b40] transition-colors ${
+                                        isSelected
+                                            ? 'bg-[#0d9488]/10 dark:bg-[#2dd4b4]/10'
+                                            : 'bg-white dark:bg-[#111a2b] hover:bg-[#faf8f3] dark:hover:bg-[#15233c]'
+                                    }`}
                                 >
                                     {/* Row Checkbox */}
                                     <span
                                         onClick={() => handleToggleSelect(entry.id)}
-                                        className={`w-5 h-5 rounded-[6px] border-2 border-[#34455f] flex items-center justify-center cursor-pointer transition ${
-                                            isSelected ? 'bg-[#2dd4b4] border-[#2dd4b4]' : ''
+                                        className={`w-4 h-4 rounded border-2 flex items-center justify-center cursor-pointer transition ${
+                                            isSelected
+                                                ? 'bg-[#0d9488] dark:bg-[#2dd4b4] border-[#0d9488] dark:border-[#2dd4b4]'
+                                                : 'border-[#ded8cb] dark:border-[#34455f] bg-white dark:bg-transparent hover:border-[#0d9488]/60'
                                         }`}
                                     >
                                         {isSelected && <CheckmarkSvg />}
                                     </span>
 
                                     {/* Chest Number */}
-                                    {entry.chest_no ? (
-                                        <span className="text-[17px] font-bold text-[#2dd4b4]">
-                                            #{String(entry.chest_no).padStart(3, '0')}
-                                        </span>
-                                    ) : (
-                                        <span className="text-[17px] text-[#8a99ab]">—</span>
-                                    )}
+                                    <div className="flex items-center">
+                                        {entry.chest_no ? (
+                                            <span className="text-xs font-bold text-[#0d9488] dark:text-[#2dd4b4] tracking-tight">
+                                                #{String(entry.chest_no).padStart(3, '0')}
+                                            </span>
+                                        ) : (
+                                            <span className="text-xs text-[#a8a29e] dark:text-[#6b7b8f]">—</span>
+                                        )}
+                                    </div>
 
                                     {/* Athlete Info */}
-                                    <div className="flex items-center gap-3 min-w-0">
+                                    <div className="flex items-center gap-2.5 min-w-0">
                                         <AthletePfp
                                             photoUrl={entry.students?.photo_url}
                                             name={entry.students?.name || 'Athlete'}
                                             subtitle={entry.dojos?.name || entry.parent_email || 'Athlete'}
-                                            size={46}
+                                            size={36}
                                             extraDetails={{
                                                 dojo: entry.dojos?.name,
                                                 chestNo: entry.chest_no,
@@ -636,26 +648,26 @@ export function CoachEntriesList({
                                             }}
                                         />
                                         <div className="min-w-0">
-                                            <div className="text-[16px] font-bold text-[#e8eef5] truncate">
+                                            <div className="text-sm font-bold text-[#1c1917] dark:text-[#e8eef5] truncate">
                                                 {entry.students?.name || 'Athlete'}
                                             </div>
-                                            <div className="text-[13px] text-[#8a99ab] mt-0.5 truncate max-w-[130px]">
+                                            <div className="text-[11px] text-[#78716c] dark:text-[#8a99ab] truncate">
                                                 {entry.parent_email || entry.students?.phone || 'athlete@email.com'}
                                             </div>
                                         </div>
                                     </div>
 
                                     {/* Age */}
-                                    <span className="text-[16px] font-bold text-[#e8eef5]">{age}</span>
+                                    <span className="text-xs font-semibold text-[#1c1917] dark:text-[#e8eef5]">{age}</span>
 
                                     {/* Dojo */}
-                                    <span className="text-[15px] text-[#e8eef5] truncate">{dojo}</span>
+                                    <span className="text-xs text-[#1c1917] dark:text-[#e8eef5] truncate" title={dojo}>{dojo}</span>
 
                                     {/* Belt */}
-                                    <span className="text-[15px] font-semibold text-[#e8eef5] truncate">{rank}</span>
+                                    <span className="text-xs font-semibold text-[#1c1917] dark:text-[#e8eef5] truncate">{rank}</span>
 
                                     {/* Weight */}
-                                    <span className="text-[15px] font-semibold text-[#e8eef5]">
+                                    <span className="text-xs font-semibold text-[#1c1917] dark:text-[#e8eef5]">
                                         {weight !== '—' ? `${weight} kg` : '—'}
                                     </span>
 
@@ -664,7 +676,7 @@ export function CoachEntriesList({
                                         {tags.map((t, idx) => (
                                             <span
                                                 key={idx}
-                                                className="text-[12.5px] font-semibold bg-[#1a2a44] rounded-full px-2.5 py-1 whitespace-nowrap text-[#e8eef5]"
+                                                className="text-[11px] font-semibold bg-[#f5f0e6] dark:bg-[#1a2a44] text-[#57534e] dark:text-[#c9d3df] border border-[#ded8cb] dark:border-[#2a3b57] rounded-full px-2 py-0.5 whitespace-nowrap"
                                             >
                                                 {t}
                                             </span>
@@ -674,78 +686,45 @@ export function CoachEntriesList({
                                     {/* Payment Toggle Box */}
                                     <div
                                         onClick={() => handleTogglePaid(entry)}
-                                        style={{
-                                            height: '40px',
-                                            borderRadius: '10px',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '10px',
-                                            padding: '0 14px',
-                                            fontSize: '14px',
-                                            fontWeight: 600,
-                                            whiteSpace: 'nowrap',
-                                            background: isPaid ? 'rgba(45, 212, 180, 0.14)' : 'transparent',
-                                            border: isPaid ? '1.5px solid #2dd4b4' : '1.5px solid #34455f',
-                                            color: isPaid ? '#2dd4b4' : '#c9d3df',
-                                            opacity: isLocked ? 0.55 : 1,
-                                            cursor: isLocked ? 'default' : 'pointer',
-                                            width: '100%',
-                                        }}
-                                        className="transition-all select-none"
+                                        className={`h-8 px-2.5 rounded-lg text-xs font-semibold inline-flex items-center gap-2 transition select-none cursor-pointer w-full ${
+                                            isPaid
+                                                ? 'bg-[#0d9488]/10 dark:bg-[#2dd4b4]/15 border border-[#0d9488]/40 dark:border-[#2dd4b4] text-[#0d9488] dark:text-[#2dd4b4] font-bold'
+                                                : 'bg-white dark:bg-transparent border border-[#ded8cb] dark:border-[#34455f] text-[#57534e] dark:text-[#c9d3df] hover:border-[#0d9488]/50'
+                                        } ${isLocked ? 'opacity-55 cursor-default' : ''}`}
                                     >
                                         <span
-                                            className={`w-5 h-5 rounded-[6px] border-2 flex items-center justify-center transition shrink-0 ${
+                                            className={`w-3.5 h-3.5 rounded-[4px] border flex items-center justify-center transition shrink-0 ${
                                                 isPaid
-                                                    ? 'bg-[#2dd4b4] border-[#2dd4b4]'
-                                                    : 'border-[#34455f]'
+                                                    ? 'bg-[#0d9488] dark:bg-[#2dd4b4] border-[#0d9488] dark:border-[#2dd4b4]'
+                                                    : 'border-[#ded8cb] dark:border-[#34455f]'
                                             }`}
                                         >
                                             {isPaid && <CheckmarkSvg />}
                                         </span>
-                                        Paid &amp; verified
+                                        <span>Paid &amp; verified</span>
                                     </div>
 
                                     {/* Action: Status + Three-dot Menu */}
-                                    <div className="flex gap-2.5 justify-end items-center">
+                                    <div className="flex gap-2 justify-end items-center">
                                         {/* Status Text with SVG */}
                                         {entry.status === 'approved' ? (
-                                            <span className="text-[13.5px] font-semibold text-[#2dd4b4] inline-flex items-center gap-1.5 whitespace-nowrap">
-                                                <svg width="13" height="13" viewBox="0 0 14 14">
-                                                    <path
-                                                        d="M2 7.5l3 3 7-7.5"
-                                                        fill="none"
-                                                        stroke="#2dd4b4"
-                                                        strokeWidth="2.2"
-                                                        strokeLinecap="round"
-                                                    />
-                                                </svg>
+                                            <span className="text-xs font-bold text-[#0d9488] dark:text-[#2dd4b4] inline-flex items-center gap-1 whitespace-nowrap">
+                                                <Check className="h-3 w-3" />
                                                 Approved
                                             </span>
                                         ) : entry.status === 'submitted' ? (
-                                            <span className="text-[13.5px] font-semibold text-[#6b7b8f] inline-flex items-center gap-1.5 whitespace-nowrap">
-                                                <svg width="13" height="13" viewBox="0 0 14 14">
-                                                    <path
-                                                        d="M2 7.5l3 3 7-7.5"
-                                                        fill="none"
-                                                        stroke="#6b7b8f"
-                                                        strokeWidth="2.2"
-                                                        strokeLinecap="round"
-                                                    />
-                                                </svg>
+                                            <span className="text-xs font-semibold text-[#78716c] dark:text-[#8a99ab] inline-flex items-center gap-1 whitespace-nowrap">
+                                                <Check className="h-3 w-3" />
                                                 Forwarded
                                             </span>
                                         ) : entry.status === 'rejected' || entry.status === 'coach_declined' ? (
-                                            <span className="text-[13.5px] font-semibold text-[#f87171] inline-flex items-center gap-1.5 whitespace-nowrap">
-                                                <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="#f87171" strokeWidth="1.6">
-                                                    <circle cx="7" cy="7" r="5" />
-                                                </svg>
+                                            <span className="text-xs font-semibold text-rose-600 dark:text-rose-400 inline-flex items-center gap-1 whitespace-nowrap">
+                                                <X className="h-3 w-3" />
                                                 Rejected
                                             </span>
                                         ) : (
-                                            <span className="text-[13.5px] font-semibold text-[#8a99ab] inline-flex items-center gap-1.5 whitespace-nowrap">
-                                                <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="#8a99ab" strokeWidth="1.6">
-                                                    <circle cx="7" cy="7" r="5" />
-                                                </svg>
+                                            <span className="text-xs font-medium text-[#a8a29e] dark:text-[#6b7b8f] inline-flex items-center gap-1 whitespace-nowrap">
+                                                <Circle className="h-2.5 w-2.5" />
                                                 Not forwarded
                                             </span>
                                         )}
@@ -754,7 +733,7 @@ export function CoachEntriesList({
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
                                                 <button
-                                                    className="w-10 h-10 rounded-[10px] border border-[#2a3b57] text-[#8a99ab] inline-flex items-center justify-center text-[18px] tracking-[1px] hover:text-[#e8eef5] hover:border-[#3d5173] hover:bg-[#16233a] cursor-pointer transition shrink-0"
+                                                    className="w-7 h-7 rounded-lg border border-[#ded8cb] dark:border-[#2a3b57] text-[#78716c] dark:text-[#8a99ab] hover:text-[#1c1917] dark:hover:text-[#e8eef5] hover:border-border inline-flex items-center justify-center text-xs transition cursor-pointer shrink-0"
                                                     aria-label="Row menu"
                                                 >
                                                     ···
@@ -763,7 +742,7 @@ export function CoachEntriesList({
 
                                             <DropdownMenuContent
                                                 align="end"
-                                                className="w-[276px] bg-[#16233a] border border-[#34455f] rounded-[14px] p-[6px] shadow-[0_20px_40px_rgba(0,0,0,0.5)] z-50 text-[#e8eef5]"
+                                                className="w-60 bg-white dark:bg-[#16233a] border border-[#ded8cb] dark:border-[#34455f] text-[#1c1917] dark:text-[#e8eef5] rounded-xl shadow-xl p-1.5 z-50"
                                             >
                                                 {/* Download ID Card (Before vs After Organiser Approval) */}
                                                 {entry.status === 'approved' ? (
@@ -771,30 +750,30 @@ export function CoachEntriesList({
                                                         onClick={() =>
                                                             window.open(`/parent/entries/${entry.id}/id-card`, '_blank')
                                                         }
-                                                        className="flex items-center gap-3 p-[12px_14px] text-[#e8eef5] hover:bg-[#1f304d] rounded-lg cursor-pointer transition focus:bg-[#1f304d]"
+                                                        className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-[#1c1917] dark:text-[#e8eef5] hover:bg-[#faf8f3] dark:hover:bg-[#1f2f4d] rounded-lg cursor-pointer transition"
                                                     >
-                                                        <span className="text-[#2dd4b4] flex">
+                                                        <span className="text-[#0d9488] dark:text-[#2dd4b4] flex">
                                                             <MenuDownloadSvg />
                                                         </span>
                                                         <div>
-                                                            <div className="text-[15.5px] font-semibold">
+                                                            <div className="font-semibold text-xs">
                                                                 Download ID card
                                                             </div>
-                                                            <div className="text-[#8a99ab] text-[12.5px] mt-0.5">
+                                                            <div className="text-[#78716c] dark:text-[#8a99ab] text-[10.5px]">
                                                                 PDF · Chest #{entry.chest_no ? String(entry.chest_no).padStart(3, '0') : '001'}
                                                             </div>
                                                         </div>
                                                     </DropdownMenuItem>
                                                 ) : (
-                                                    <div className="flex items-center gap-3 p-[12px_14px] cursor-not-allowed select-none">
-                                                        <span className="flex text-[#8a99ab] opacity-50 blur-[1.5px]">
+                                                    <div className="flex items-center gap-2.5 px-3 py-2 cursor-not-allowed select-none opacity-50">
+                                                        <span className="flex text-[#78716c] dark:text-[#8a99ab]">
                                                             <MenuDownloadSvg />
                                                         </span>
                                                         <div>
-                                                            <div className="text-[15.5px] font-semibold text-[#8a99ab] opacity-55 blur-[2.6px]">
+                                                            <div className="font-semibold text-xs text-[#78716c] dark:text-[#8a99ab]">
                                                                 Download ID card
                                                             </div>
-                                                            <div className="flex items-center gap-1.5 text-[12.5px] text-[#8a99ab] mt-1">
+                                                            <div className="flex items-center gap-1 text-[10.5px] text-[#78716c] dark:text-[#8a99ab]">
                                                                 <MenuLockSvg />
                                                                 Not generated yet
                                                             </div>
@@ -802,7 +781,7 @@ export function CoachEntriesList({
                                                     </div>
                                                 )}
 
-                                                <div className="h-[1px] bg-[#2a3b57] mx-2 my-1" />
+                                                <div className="h-[1px] bg-[#ded8cb] dark:bg-[#2a3b57] my-1" />
 
                                                 {/* Reject Entry */}
                                                 <DropdownMenuItem
@@ -810,7 +789,7 @@ export function CoachEntriesList({
                                                         setEntryToReject(entry)
                                                         setRejectDialogOpen(true)
                                                     }}
-                                                    className="flex items-center gap-3 p-[13px_14px] text-[#f87171] hover:bg-red-500/10 rounded-lg cursor-pointer font-semibold text-[15.5px] transition focus:bg-red-500/10 focus:text-[#f87171]"
+                                                    className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg cursor-pointer transition"
                                                 >
                                                     <MenuRejectSvg />
                                                     Reject entry
@@ -824,72 +803,57 @@ export function CoachEntriesList({
                     )}
                 </div>
 
-                {/* Desktop Sticky Floating Bottom Bar */}
-                <div
-                    style={{
-                        position: 'absolute',
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        background: '#0d1626',
-                        borderTop: '1px solid #1f2b40',
-                        boxShadow: '0 -16px 30px rgba(10, 18, 32, 0.95)',
-                        padding: '14px 20px',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        borderRadius: '0 0 16px 16px',
-                    }}
-                >
+                {/* Desktop Card Footer Actions (In-flow, clean) */}
+                <div className="hidden lg:flex border-t border-[#ded8cb] dark:border-[#1f2b40] bg-[#faf8f3] dark:bg-[#0f1828] px-5 py-3 items-center justify-between text-xs text-[#78716c] dark:text-[#8a99ab]">
                     {selectedCount > 0 ? (
-                        /* Selected Mode (CoachLaptopSel.dc.html) */
+                        /* Selected Mode */
                         <>
-                            <div className="text-[15px] text-[#e8eef5]">
-                                <b>{selectedCount} selected</b> &nbsp;
+                            <div className="text-xs text-[#1c1917] dark:text-[#e8eef5]">
+                                <b className="font-bold">{selectedCount} selected</b> &nbsp;·&nbsp;
                                 <button
                                     onClick={handleClearSelection}
-                                    className="text-[#2dd4b4] font-semibold cursor-pointer hover:underline bg-transparent border-none p-0"
+                                    className="text-[#0d9488] dark:text-[#2dd4b4] font-semibold cursor-pointer hover:underline ml-1"
                                 >
                                     Clear
                                 </button>
                             </div>
-                            <div className="flex items-center gap-2.5">
+                            <div className="flex items-center gap-2">
                                 <button
                                     onClick={handleForwardAllPaid}
                                     disabled={isSubmitting || countPaid === 0}
-                                    className="h-[46px] px-5 text-[15.5px] font-bold border-[1.5px] border-[#2dd4b4] text-[#2dd4b4] rounded-xl hover:bg-[#2dd4b4]/10 transition disabled:opacity-40 cursor-pointer"
+                                    className="h-8 px-3 rounded-lg border border-[#0d9488] dark:border-[#2dd4b4] text-[#0d9488] dark:text-[#2dd4b4] font-bold text-xs hover:bg-[#0d9488]/10 transition disabled:opacity-40 cursor-pointer"
                                 >
                                     Forward all paid &amp; verified ({countPaid})
                                 </button>
                                 <button
                                     onClick={handleForwardSelected}
                                     disabled={isSubmitting || selectedCount === 0}
-                                    className="h-[46px] px-5 text-[15.5px] font-bold bg-[#2dd4b4] text-[#04231e] rounded-xl inline-flex items-center gap-2 hover:bg-[#25c4a5] transition disabled:opacity-40 cursor-pointer shadow-md"
+                                    className="h-8 px-3.5 rounded-lg bg-[#0d9488] hover:bg-[#0f766e] dark:bg-[#2dd4b4] dark:hover:bg-[#25c4a5] text-white dark:text-[#04231e] font-bold text-xs inline-flex items-center gap-1.5 transition disabled:opacity-40 cursor-pointer shadow-xs"
                                 >
                                     {isSubmitting ? (
-                                        <Loader2 className="h-4 w-4 animate-spin text-[#04231e]" />
+                                        <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
                                     ) : (
-                                        <ButtonCheckmarkSvg />
+                                        <Check className="h-3.5 w-3.5 mr-1" />
                                     )}
                                     Forward selected ({selectedCount})
                                 </button>
                             </div>
                         </>
                     ) : (
-                        /* Normal Mode (CoachLaptop.dc.html) */
+                        /* Normal Mode */
                         <>
-                            <div className="text-[#8a99ab] text-[14.5px]">
-                                <b className="text-[#e8eef5]">{countPaid}</b> paid &amp; verified, ready to forward &nbsp;·&nbsp; {countNotPaid} not paid yet
+                            <div className="text-xs text-[#78716c] dark:text-[#8a99ab]">
+                                <b className="text-[#1c1917] dark:text-[#e8eef5] font-bold">{countPaid}</b> paid &amp; verified, ready to forward &nbsp;·&nbsp; {countNotPaid} not paid yet
                             </div>
                             <button
                                 onClick={handleForwardAllPaid}
                                 disabled={isSubmitting || countPaid === 0}
-                                className="h-[46px] px-5 text-[15.5px] font-bold bg-[#2dd4b4] text-[#04231e] rounded-xl inline-flex items-center gap-2 hover:bg-[#25c4a5] transition disabled:opacity-40 cursor-pointer shadow-md"
+                                className="h-8 px-3.5 rounded-lg bg-[#0d9488] hover:bg-[#0f766e] dark:bg-[#2dd4b4] dark:hover:bg-[#25c4a5] text-white dark:text-[#04231e] font-bold text-xs inline-flex items-center gap-1.5 transition disabled:opacity-40 cursor-pointer shadow-xs"
                             >
                                 {isSubmitting ? (
-                                    <Loader2 className="h-4 w-4 animate-spin text-[#04231e]" />
+                                    <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
                                 ) : (
-                                    <ButtonCheckmarkSvg />
+                                    <Check className="h-3.5 w-3.5 mr-1" />
                                 )}
                                 Forward all paid &amp; verified ({countPaid})
                             </button>
@@ -899,28 +863,30 @@ export function CoachEntriesList({
             </div>
 
             {/* ========================================================================= */}
-            {/* 2. MOBILE VIEW (CoachMobile.dc.html & CoachMobileSel.dc.html)             */}
+            {/* 2. MOBILE VIEW (Responsive Light & Dark Modes)                            */}
             {/* ========================================================================= */}
-            <div className="block lg:hidden relative pb-44">
+            <div className="block lg:hidden space-y-3 pb-8">
                 {/* Mobile Top Controls Bar */}
-                <div className="flex justify-between items-center mb-3">
+                <div className="flex justify-between items-center px-1">
                     <div
                         onClick={handleToggleSelectAll}
-                        className="flex items-center gap-2.5 text-[15px] font-semibold text-[#e8eef5] cursor-pointer"
+                        className="flex items-center gap-2 text-xs font-semibold text-[#78716c] dark:text-[#e8eef5] cursor-pointer"
                     >
                         <span
-                            className={`w-5 h-5 rounded-[6px] border-2 border-[#34455f] flex items-center justify-center transition ${
-                                isAllSelected ? 'bg-[#2dd4b4] border-[#2dd4b4]' : ''
+                            className={`w-5 h-5 rounded-[6px] border-2 flex items-center justify-center transition ${
+                                isAllSelected
+                                    ? 'bg-[#0d9488] dark:bg-[#2dd4b4] border-[#0d9488] dark:border-[#2dd4b4]'
+                                    : 'border-[#ded8cb] dark:border-[#34455f] bg-white dark:bg-transparent'
                             }`}
                         >
                             {isAllSelected && <CheckmarkSvg />}
                         </span>
-                        Select all
+                        <span>Select all ({filteredEntries.length})</span>
                     </div>
 
                     <button
                         onClick={handleMarkAllPaid}
-                        className="h-9 px-3 border-[1.5px] border-[#2dd4b4] text-[#2dd4b4] rounded-full text-[13.5px] font-semibold inline-flex items-center gap-1.5 cursor-pointer hover:bg-[#2dd4b4]/10 transition"
+                        className="h-8 px-3 border border-[#0d9488] dark:border-[#2dd4b4] text-[#0d9488] dark:text-[#2dd4b4] rounded-full text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer hover:bg-[#0d9488]/10 transition"
                     >
                         <PillCheckmarkSvg />
                         Mark all paid &amp; verified
@@ -928,9 +894,9 @@ export function CoachEntriesList({
                 </div>
 
                 {/* Mobile Cards List */}
-                <div className="flex flex-col gap-3.5">
+                <div className="flex flex-col gap-3">
                     {filteredEntries.length === 0 ? (
-                        <div className="py-12 text-center text-[#8a99ab] text-sm bg-[#111a2b] rounded-2xl border border-[#1f2b40]">
+                        <div className="py-12 text-center text-[#78716c] dark:text-[#8a99ab] text-sm bg-white dark:bg-[#111a2b] rounded-2xl border border-[#ded8cb] dark:border-[#1f2b40] shadow-xs">
                             No tournament entries found.
                         </div>
                     ) : (
@@ -947,21 +913,20 @@ export function CoachEntriesList({
                             return (
                                 <div
                                     key={entry.id}
-                                    style={{
-                                        border: isSelected ? '1.5px solid #2dd4b4' : '1.5px solid #1f2b40',
-                                        background: isSelected ? 'rgba(45, 212, 180, 0.06)' : '#111a2b',
-                                        borderRadius: '16px',
-                                        padding: '16px',
-                                        boxSizing: 'border-box',
-                                    }}
-                                    className="shadow-md transition-all"
+                                    className={`rounded-2xl p-4 transition-all border ${
+                                        isSelected
+                                            ? 'bg-[#0d9488]/5 dark:bg-[#15233c] border-[#0d9488]/60 dark:border-[#2dd4b4]/60 ring-1 ring-[#0d9488]/30 dark:ring-[#2dd4b4]/30'
+                                            : 'bg-white dark:bg-[#111a2b] border-[#ded8cb] dark:border-[#1f2b40] shadow-xs'
+                                    }`}
                                 >
                                     {/* Card Header: Checkbox + Avatar + Name/Email + Chest */}
                                     <div className="flex gap-3 items-center">
                                         <span
                                             onClick={() => handleToggleSelect(entry.id)}
-                                            className={`w-5 h-5 rounded-[6px] border-2 border-[#34455f] flex items-center justify-center cursor-pointer transition shrink-0 ${
-                                                isSelected ? 'bg-[#2dd4b4] border-[#2dd4b4]' : ''
+                                            className={`w-5 h-5 rounded-[6px] border-2 flex items-center justify-center cursor-pointer transition shrink-0 ${
+                                                isSelected
+                                                    ? 'bg-[#0d9488] dark:bg-[#2dd4b4] border-[#0d9488] dark:border-[#2dd4b4]'
+                                                    : 'border-[#ded8cb] dark:border-[#34455f] bg-white dark:bg-transparent'
                                             }`}
                                         >
                                             {isSelected && <CheckmarkSvg />}
@@ -971,7 +936,7 @@ export function CoachEntriesList({
                                             photoUrl={entry.students?.photo_url}
                                             name={entry.students?.name || 'Athlete'}
                                             subtitle={entry.dojos?.name || entry.parent_email || 'Athlete'}
-                                            size={54}
+                                            size={44}
                                             extraDetails={{
                                                 dojo: entry.dojos?.name,
                                                 chestNo: entry.chest_no,
@@ -985,21 +950,21 @@ export function CoachEntriesList({
                                         />
 
                                         <div className="min-w-0 flex-1">
-                                            <div className="text-[17px] font-bold text-[#e8eef5] truncate">
+                                            <div className="text-sm font-bold text-[#1c1917] dark:text-[#e8eef5] truncate">
                                                 {entry.students?.name || 'Athlete'}
                                             </div>
-                                            <div className="text-[13px] text-[#8a99ab] mt-0.5 truncate">
+                                            <div className="text-xs text-[#78716c] dark:text-[#8a99ab] mt-0.5 truncate">
                                                 {entry.parent_email || entry.students?.phone || 'athlete@email.com'}
                                             </div>
                                         </div>
 
                                         <div className="text-right shrink-0">
-                                            <div className="text-[11px] tracking-[0.12em] uppercase font-bold text-[#6b7b8f]">
+                                            <div className="text-[10px] tracking-wider uppercase font-bold text-[#78716c] dark:text-[#6b7b8f]">
                                                 Chest
                                             </div>
                                             <div
-                                                className={`text-[19px] font-bold ${
-                                                    entry.chest_no ? 'text-[#2dd4b4]' : 'text-[#6b7b8f]'
+                                                className={`text-sm font-bold ${
+                                                    entry.chest_no ? 'text-[#0d9488] dark:text-[#2dd4b4]' : 'text-[#a8a29e] dark:text-[#6b7b8f]'
                                                 }`}
                                             >
                                                 {entry.chest_no ? `#${String(entry.chest_no).padStart(3, '0')}` : '—'}
@@ -1008,57 +973,47 @@ export function CoachEntriesList({
                                     </div>
 
                                     {/* 4-Item Spec Grid (Age / Belt / Weight / Dojo) */}
-                                    <div
-                                        style={{
-                                            display: 'grid',
-                                            gridTemplateColumns: '1fr 1fr 1fr 1fr',
-                                            gap: '8px',
-                                            marginTop: '14px',
-                                            padding: '12px 0',
-                                            borderTop: '1px solid #1f2b40',
-                                            borderBottom: '1px solid #1f2b40',
-                                        }}
-                                    >
+                                    <div className="grid grid-cols-4 gap-2 mt-3 py-2.5 border-t border-b border-[#ded8cb]/80 dark:border-[#1f2b40] text-xs">
                                         <div>
-                                            <div className="text-[11px] tracking-[0.12em] uppercase font-bold text-[#6b7b8f]">
+                                            <div className="text-[10px] uppercase font-bold text-[#78716c] dark:text-[#6b7b8f]">
                                                 Age
                                             </div>
-                                            <div className="text-[15px] font-semibold text-[#e8eef5] mt-1 truncate">
+                                            <div className="text-xs font-semibold text-[#1c1917] dark:text-[#e8eef5] mt-0.5 truncate">
                                                 {age}
                                             </div>
                                         </div>
                                         <div>
-                                            <div className="text-[11px] tracking-[0.12em] uppercase font-bold text-[#6b7b8f]">
+                                            <div className="text-[10px] uppercase font-bold text-[#78716c] dark:text-[#6b7b8f]">
                                                 Belt
                                             </div>
-                                            <div className="text-[15px] font-semibold text-[#e8eef5] mt-1 truncate">
+                                            <div className="text-xs font-semibold text-[#1c1917] dark:text-[#e8eef5] mt-0.5 truncate">
                                                 {rank}
                                             </div>
                                         </div>
                                         <div>
-                                            <div className="text-[11px] tracking-[0.12em] uppercase font-bold text-[#6b7b8f]">
+                                            <div className="text-[10px] uppercase font-bold text-[#78716c] dark:text-[#6b7b8f]">
                                                 Weight
                                             </div>
-                                            <div className="text-[15px] font-semibold text-[#e8eef5] mt-1 truncate">
+                                            <div className="text-xs font-semibold text-[#1c1917] dark:text-[#e8eef5] mt-0.5 truncate">
                                                 {weight !== '—' ? `${weight} kg` : '—'}
                                             </div>
                                         </div>
                                         <div>
-                                            <div className="text-[11px] tracking-[0.12em] uppercase font-bold text-[#6b7b8f]">
+                                            <div className="text-[10px] uppercase font-bold text-[#78716c] dark:text-[#6b7b8f]">
                                                 Dojo
                                             </div>
-                                            <div className="text-[15px] font-semibold text-[#e8eef5] mt-1 truncate">
+                                            <div className="text-xs font-semibold text-[#1c1917] dark:text-[#e8eef5] mt-0.5 truncate">
                                                 {dojo}
                                             </div>
                                         </div>
                                     </div>
 
                                     {/* Events Applied Tags */}
-                                    <div className="flex gap-1.5 flex-wrap mt-3.5">
+                                    <div className="flex gap-1.5 flex-wrap mt-3">
                                         {tags.map((t, idx) => (
                                             <span
                                                 key={idx}
-                                                className="text-[12.5px] font-semibold bg-[#1a2a44] rounded-full px-2.5 py-1 text-[#e8eef5] whitespace-nowrap"
+                                                className="text-[11px] font-semibold bg-[#f5f0e6] dark:bg-[#1a2a44] text-[#57534e] dark:text-[#c9d3df] border border-[#ded8cb] dark:border-[#2a3b57] rounded-full px-2 py-0.5 whitespace-nowrap"
                                             >
                                                 {t}
                                             </span>
@@ -1066,80 +1021,47 @@ export function CoachEntriesList({
                                     </div>
 
                                     {/* Card Footer: Paid Toggle + Status + Three-dot Menu */}
-                                    <div className="flex gap-2.5 mt-3.5 items-center">
+                                    <div className="flex gap-2.5 mt-3 items-center">
                                         {/* Paid Toggle Button */}
                                         <div
                                             onClick={() => handleTogglePaid(entry)}
-                                            style={{
-                                                height: '48px',
-                                                borderRadius: '10px',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '10px',
-                                                padding: '0 14px',
-                                                fontSize: '15px',
-                                                fontWeight: 600,
-                                                whiteSpace: 'nowrap',
-                                                background: isPaid ? 'rgba(45, 212, 180, 0.14)' : 'transparent',
-                                                border: isPaid ? '1.5px solid #2dd4b4' : '1.5px solid #34455f',
-                                                color: isPaid ? '#2dd4b4' : '#c9d3df',
-                                                opacity: isLocked ? 0.55 : 1,
-                                                flex: 1,
-                                                cursor: isLocked ? 'default' : 'pointer',
-                                            }}
-                                            className="transition-all select-none"
+                                            className={`h-9 px-3 rounded-xl text-xs font-semibold inline-flex items-center gap-2 select-none cursor-pointer transition flex-1 ${
+                                                isPaid
+                                                    ? 'bg-[#0d9488]/10 dark:bg-[#2dd4b4]/15 border border-[#0d9488]/40 dark:border-[#2dd4b4] text-[#0d9488] dark:text-[#2dd4b4] font-bold'
+                                                    : 'bg-white dark:bg-transparent border border-[#ded8cb] dark:border-[#34455f] text-[#57534e] dark:text-[#c9d3df]'
+                                            } ${isLocked ? 'opacity-55 cursor-default' : ''}`}
                                         >
                                             <span
-                                                className={`w-5 h-5 rounded-[6px] border-2 flex items-center justify-center transition shrink-0 ${
+                                                className={`w-4 h-4 rounded-[4px] border flex items-center justify-center transition shrink-0 ${
                                                     isPaid
-                                                        ? 'bg-[#2dd4b4] border-[#2dd4b4]'
-                                                        : 'border-[#34455f]'
+                                                        ? 'bg-[#0d9488] dark:bg-[#2dd4b4] border-[#0d9488] dark:border-[#2dd4b4]'
+                                                        : 'border-[#ded8cb] dark:border-[#34455f]'
                                                 }`}
                                             >
                                                 {isPaid && <CheckmarkSvg />}
                                             </span>
-                                            Paid &amp; verified
+                                            <span>Paid &amp; verified</span>
                                         </div>
 
                                         {/* Status */}
                                         {entry.status === 'approved' ? (
-                                            <span className="text-[13.5px] font-semibold text-[#2dd4b4] inline-flex items-center gap-1.5 whitespace-nowrap">
-                                                <svg width="13" height="13" viewBox="0 0 14 14">
-                                                    <path
-                                                        d="M2 7.5l3 3 7-7.5"
-                                                        fill="none"
-                                                        stroke="#2dd4b4"
-                                                        strokeWidth="2.2"
-                                                        strokeLinecap="round"
-                                                    />
-                                                </svg>
+                                            <span className="text-xs font-bold text-[#0d9488] dark:text-[#2dd4b4] inline-flex items-center gap-1 whitespace-nowrap">
+                                                <Check className="h-3 w-3" />
                                                 Approved
                                             </span>
                                         ) : entry.status === 'submitted' ? (
-                                            <span className="text-[13.5px] font-semibold text-[#6b7b8f] inline-flex items-center gap-1.5 whitespace-nowrap">
-                                                <svg width="13" height="13" viewBox="0 0 14 14">
-                                                    <path
-                                                        d="M2 7.5l3 3 7-7.5"
-                                                        fill="none"
-                                                        stroke="#6b7b8f"
-                                                        strokeWidth="2.2"
-                                                        strokeLinecap="round"
-                                                    />
-                                                </svg>
+                                            <span className="text-xs font-semibold text-[#78716c] dark:text-[#8a99ab] inline-flex items-center gap-1 whitespace-nowrap">
+                                                <Check className="h-3 w-3" />
                                                 Forwarded
                                             </span>
                                         ) : entry.status === 'rejected' || entry.status === 'coach_declined' ? (
-                                            <span className="text-[13.5px] font-semibold text-[#f87171] inline-flex items-center gap-1.5 whitespace-nowrap">
-                                                <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="#f87171" strokeWidth="1.6">
-                                                    <circle cx="7" cy="7" r="5" />
-                                                </svg>
+                                            <span className="text-xs font-semibold text-rose-600 dark:text-rose-400 inline-flex items-center gap-1 whitespace-nowrap">
+                                                <X className="h-3 w-3" />
                                                 Rejected
                                             </span>
                                         ) : (
-                                            <span className="text-[13.5px] font-semibold text-[#8a99ab] inline-flex items-center gap-1.5 whitespace-nowrap">
-                                                <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="#8a99ab" strokeWidth="1.6">
-                                                    <circle cx="7" cy="7" r="5" />
-                                                </svg>
+                                            <span className="text-xs font-medium text-[#a8a29e] dark:text-[#6b7b8f] inline-flex items-center gap-1 whitespace-nowrap">
+                                                <Circle className="h-2.5 w-2.5" />
                                                 Not forwarded
                                             </span>
                                         )}
@@ -1148,7 +1070,7 @@ export function CoachEntriesList({
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
                                                 <button
-                                                    className="w-12 h-12 rounded-[10px] border border-[#2a3b57] text-[#8a99ab] inline-flex items-center justify-center text-[18px] tracking-[1px] hover:text-[#e8eef5] hover:border-[#3d5173] hover:bg-[#16233a] cursor-pointer transition shrink-0"
+                                                    className="w-9 h-9 rounded-xl border border-[#ded8cb] dark:border-[#2a3b57] text-[#78716c] dark:text-[#8a99ab] inline-flex items-center justify-center text-xs hover:text-[#1c1917] dark:hover:text-[#e8eef5] transition shrink-0"
                                                     aria-label="Row menu"
                                                 >
                                                     ···
@@ -1157,37 +1079,37 @@ export function CoachEntriesList({
 
                                             <DropdownMenuContent
                                                 align="end"
-                                                className="w-[276px] bg-[#16233a] border border-[#34455f] rounded-[14px] p-[6px] shadow-[0_20px_40px_rgba(0,0,0,0.5)] z-50 text-[#e8eef5]"
+                                                className="w-56 bg-white dark:bg-[#16233a] border border-[#ded8cb] dark:border-[#34455f] rounded-xl p-1.5 shadow-xl z-50 text-[#1c1917] dark:text-[#e8eef5]"
                                             >
                                                 {entry.status === 'approved' ? (
                                                     <DropdownMenuItem
                                                         onClick={() =>
                                                             window.open(`/parent/entries/${entry.id}/id-card`, '_blank')
                                                         }
-                                                        className="flex items-center gap-3 p-[12px_14px] text-[#e8eef5] hover:bg-[#1f304d] rounded-lg cursor-pointer transition focus:bg-[#1f304d]"
+                                                        className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold hover:bg-[#faf8f3] dark:hover:bg-[#1f304d] rounded-lg cursor-pointer transition"
                                                     >
-                                                        <span className="text-[#2dd4b4] flex">
+                                                        <span className="text-[#0d9488] dark:text-[#2dd4b4] flex">
                                                             <MenuDownloadSvg />
                                                         </span>
                                                         <div>
-                                                            <div className="text-[15.5px] font-semibold">
+                                                            <div className="font-semibold text-xs">
                                                                 Download ID card
                                                             </div>
-                                                            <div className="text-[#8a99ab] text-[12.5px] mt-0.5">
+                                                            <div className="text-[#78716c] dark:text-[#8a99ab] text-[10.5px]">
                                                                 PDF · Chest #{entry.chest_no ? String(entry.chest_no).padStart(3, '0') : '001'}
                                                             </div>
                                                         </div>
                                                     </DropdownMenuItem>
                                                 ) : (
-                                                    <div className="flex items-center gap-3 p-[12px_14px] cursor-not-allowed select-none">
-                                                        <span className="flex text-[#8a99ab] opacity-50 blur-[1.5px]">
+                                                    <div className="flex items-center gap-2.5 px-3 py-2 cursor-not-allowed select-none opacity-50">
+                                                        <span className="flex text-[#78716c] dark:text-[#8a99ab]">
                                                             <MenuDownloadSvg />
                                                         </span>
                                                         <div>
-                                                            <div className="text-[15.5px] font-semibold text-[#8a99ab] opacity-55 blur-[2.6px]">
+                                                            <div className="font-semibold text-xs text-[#78716c] dark:text-[#8a99ab]">
                                                                 Download ID card
                                                             </div>
-                                                            <div className="flex items-center gap-1.5 text-[12.5px] text-[#8a99ab] mt-1">
+                                                            <div className="flex items-center gap-1 text-[10.5px] text-[#78716c] dark:text-[#8a99ab]">
                                                                 <MenuLockSvg />
                                                                 Not generated yet
                                                             </div>
@@ -1195,14 +1117,14 @@ export function CoachEntriesList({
                                                     </div>
                                                 )}
 
-                                                <div className="h-[1px] bg-[#2a3b57] mx-2 my-1" />
+                                                <div className="h-[1px] bg-[#ded8cb] dark:bg-[#2a3b57] my-1" />
 
                                                 <DropdownMenuItem
                                                     onClick={() => {
                                                         setEntryToReject(entry)
                                                         setRejectDialogOpen(true)
                                                     }}
-                                                    className="flex items-center gap-3 p-[13px_14px] text-[#f87171] hover:bg-red-500/10 rounded-lg cursor-pointer font-semibold text-[15.5px] transition focus:bg-red-500/10 focus:text-[#f87171]"
+                                                    className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg cursor-pointer transition"
                                                 >
                                                     <MenuRejectSvg />
                                                     Reject entry
@@ -1216,28 +1138,16 @@ export function CoachEntriesList({
                     )}
                 </div>
 
-                {/* Mobile Fixed Floating Bottom Bar */}
-                <div
-                    style={{
-                        position: 'fixed',
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        background: '#0d1626',
-                        borderTop: '1px solid #1f2b40',
-                        boxShadow: '0 -16px 30px rgba(10, 18, 32, 0.95)',
-                        padding: '12px 16px 16px',
-                        zIndex: 40,
-                    }}
-                >
+                {/* Mobile In-flow Bottom Action Bar (NO fixed overlay) */}
+                <div className="mt-4 p-4 rounded-2xl bg-[#faf8f3] dark:bg-[#0d1626] border border-[#ded8cb] dark:border-[#1f2b40] shadow-xs space-y-2.5">
                     {selectedCount > 0 ? (
-                        /* Mobile Selected Mode (CoachMobileSel.dc.html) */
+                        /* Mobile Selected Mode */
                         <>
-                            <div className="flex justify-between items-center text-[14px] mb-2.5 text-[#e8eef5]">
-                                <b>{selectedCount} selected</b>
+                            <div className="flex justify-between items-center text-xs text-[#1c1917] dark:text-[#e8eef5]">
+                                <b className="font-bold">{selectedCount} selected</b>
                                 <button
                                     onClick={handleClearSelection}
-                                    className="text-[#2dd4b4] font-semibold cursor-pointer hover:underline bg-transparent border-none p-0"
+                                    className="text-[#0d9488] dark:text-[#2dd4b4] font-semibold cursor-pointer hover:underline"
                                 >
                                     Clear
                                 </button>
@@ -1245,38 +1155,38 @@ export function CoachEntriesList({
                             <button
                                 onClick={handleForwardSelected}
                                 disabled={isSubmitting || selectedCount === 0}
-                                className="h-[50px] w-full text-[16px] font-bold bg-[#2dd4b4] text-[#04231e] rounded-xl inline-flex items-center justify-center gap-2 hover:bg-[#25c4a5] transition disabled:opacity-40 cursor-pointer shadow-md"
+                                className="h-10 w-full text-xs font-bold bg-[#0d9488] hover:bg-[#0f766e] dark:bg-[#2dd4b4] dark:hover:bg-[#25c4a5] text-white dark:text-[#04231e] rounded-xl inline-flex items-center justify-center gap-1.5 transition disabled:opacity-40 cursor-pointer shadow-xs"
                             >
                                 {isSubmitting ? (
-                                    <Loader2 className="h-4 w-4 animate-spin text-[#04231e]" />
+                                    <Loader2 className="h-4 w-4 animate-spin mr-1" />
                                 ) : (
-                                    <ButtonCheckmarkSvg />
+                                    <Check className="h-4 w-4 mr-1" />
                                 )}
                                 Forward selected ({selectedCount})
                             </button>
                             <button
                                 onClick={handleForwardAllPaid}
                                 disabled={isSubmitting || countPaid === 0}
-                                className="h-[44px] w-full text-[14.5px] font-bold border-[1.5px] border-[#2dd4b4] text-[#2dd4b4] rounded-xl hover:bg-[#2dd4b4]/10 transition disabled:opacity-40 cursor-pointer mt-2"
+                                className="h-9 w-full text-xs font-bold border border-[#0d9488] dark:border-[#2dd4b4] text-[#0d9488] dark:text-[#2dd4b4] rounded-xl hover:bg-[#0d9488]/10 transition disabled:opacity-40 cursor-pointer"
                             >
                                 Forward all paid &amp; verified ({countPaid})
                             </button>
                         </>
                     ) : (
-                        /* Mobile Normal Mode (CoachMobile.dc.html) */
+                        /* Mobile Normal Mode */
                         <>
-                            <div className="text-[#8a99ab] text-[13.5px] mb-2.5">
-                                <b className="text-[#e8eef5]">{countPaid}</b> paid &amp; verified · {countNotPaid} not paid yet
+                            <div className="text-xs text-[#78716c] dark:text-[#8a99ab]">
+                                <b className="text-[#1c1917] dark:text-[#e8eef5] font-bold">{countPaid}</b> paid &amp; verified · {countNotPaid} not paid yet
                             </div>
                             <button
                                 onClick={handleForwardAllPaid}
                                 disabled={isSubmitting || countPaid === 0}
-                                className="h-[50px] w-full text-[16px] font-bold bg-[#2dd4b4] text-[#04231e] rounded-xl inline-flex items-center justify-center gap-2 hover:bg-[#25c4a5] transition disabled:opacity-40 cursor-pointer shadow-md"
+                                className="h-10 w-full text-xs font-bold bg-[#0d9488] hover:bg-[#0f766e] dark:bg-[#2dd4b4] dark:hover:bg-[#25c4a5] text-white dark:text-[#04231e] rounded-xl inline-flex items-center justify-center gap-1.5 transition disabled:opacity-40 cursor-pointer shadow-xs"
                             >
                                 {isSubmitting ? (
-                                    <Loader2 className="h-4 w-4 animate-spin text-[#04231e]" />
+                                    <Loader2 className="h-4 w-4 animate-spin mr-1" />
                                 ) : (
-                                    <ButtonCheckmarkSvg />
+                                    <Check className="h-4 w-4 mr-1" />
                                 )}
                                 Forward all paid &amp; verified ({countPaid})
                             </button>
@@ -1287,15 +1197,15 @@ export function CoachEntriesList({
 
             {/* Reject Entry Confirmation Modal */}
             <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
-                <DialogContent className="max-w-md bg-[#111a2b] border border-[#1f2b40] text-[#e8eef5] rounded-2xl p-6 shadow-2xl">
+                <DialogContent className="max-w-md bg-white dark:bg-[#111a2b] border border-[#ded8cb] dark:border-[#1f2b40] text-[#1c1917] dark:text-[#e8eef5] rounded-2xl p-6 shadow-2xl">
                     <DialogHeader>
-                        <DialogTitle className="text-lg font-bold text-rose-400 flex items-center gap-2">
+                        <DialogTitle className="text-lg font-bold text-rose-600 dark:text-rose-400 flex items-center gap-2">
                             <MenuRejectSvg />
                             Reject Tournament Entry
                         </DialogTitle>
-                        <DialogDescription className="text-xs text-[#8a99ab] mt-1.5 leading-relaxed">
+                        <DialogDescription className="text-xs text-[#78716c] dark:text-[#8a99ab] mt-1.5 leading-relaxed">
                             Are you sure you want to reject the entry for{' '}
-                            <strong className="text-[#e8eef5]">
+                            <strong className="text-[#1c1917] dark:text-[#e8eef5]">
                                 {entryToReject?.students?.name || 'this athlete'}
                             </strong>
                             ? This athlete will be removed from your tournament entry list.
@@ -1309,14 +1219,14 @@ export function CoachEntriesList({
                                 setRejectDialogOpen(false)
                                 setEntryToReject(null)
                             }}
-                            className="h-10 px-4 rounded-xl border-[#1f2b40] bg-[#16233a] text-[#8a99ab] hover:text-[#e8eef5] hover:bg-[#1a2b47] text-xs font-semibold"
+                            className="h-9 px-4 rounded-xl border-[#ded8cb] dark:border-[#1f2b40] bg-[#faf8f3] dark:bg-[#16233a] text-[#78716c] dark:text-[#8a99ab] hover:text-[#1c1917] dark:hover:text-[#e8eef5] text-xs font-semibold"
                         >
                             Cancel
                         </Button>
                         <Button
                             onClick={handleConfirmReject}
                             disabled={isRejecting}
-                            className="h-10 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs gap-1.5 shadow-md"
+                            className="h-9 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs gap-1.5 shadow-xs"
                         >
                             {isRejecting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
                             Confirm Reject

@@ -366,182 +366,145 @@ export function OrganiserEntriesList({
 
     return (
         <div className="space-y-4">
-            {/* Header + Filters Card */}
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between bg-[#111a2b] border border-[#1f2b40] rounded-2xl p-4 shadow-sm">
-                <div>
-                    <h3 className="text-xl font-bold text-[#e8eef5] tracking-tight">Tournament Entries</h3>
-                    <p className="text-xs text-[#8a99ab]">
-                        Review, verify, and accept athlete entries submitted by coaches.
-                    </p>
+            {/* Unified Card Container */}
+            <div className="rounded-2xl border border-[#ded8cb] bg-white shadow-xs overflow-hidden dark:border-[#1f2b40] dark:bg-[#111a2b]">
+                {/* Header with Search and Status Filter Tabs */}
+                <div className="border-b border-[#ded8cb] bg-[#faf8f3] px-4 py-3 sm:px-5 sm:py-3.5 dark:border-[#1f2b40] dark:bg-[#0d1624]">
+                    <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                        <div>
+                            <h3 className="text-base font-bold text-[#1c1917] dark:text-[#f8fafc] tracking-tight">
+                                Tournament Entries
+                            </h3>
+                            <p className="text-xs text-[#78716c] dark:text-[#8a99ab]">
+                                Review, verify, and accept athlete entries submitted by coaches.
+                            </p>
+                        </div>
+
+                        {/* Search + Tabs Unified */}
+                        <div className="flex flex-wrap items-center gap-2">
+                            {/* Search */}
+                            <div className="relative w-full sm:w-56">
+                                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                                <Input
+                                    placeholder="Search entries..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="h-8.5 pl-8 pr-7 text-xs rounded-lg bg-white dark:bg-[#0f1828] border-[#ded8cb] dark:border-[#1f2b40] text-[#1c1917] dark:text-[#f8fafc] placeholder:text-muted-foreground focus:ring-1 focus:ring-[#0d9488]"
+                                />
+                                {searchQuery && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setSearchQuery('')}
+                                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                                    >
+                                        <X className="h-3.5 w-3.5" />
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* Status Tabs */}
+                            <div className="flex items-center gap-1 overflow-x-auto pb-0.5 sm:pb-0">
+                                <button
+                                    onClick={() => setActiveTab('pending')}
+                                    className={`h-8 px-2.5 rounded-lg text-xs font-semibold inline-flex items-center gap-1.5 transition cursor-pointer shrink-0 ${
+                                        activeTab === 'pending'
+                                            ? 'bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/40 font-bold'
+                                            : 'bg-white dark:bg-[#0f1828] text-[#57534e] dark:text-[#8a99ab] border border-[#ded8cb] dark:border-[#1f2b40] hover:bg-[#f5f0e6] dark:hover:bg-[#16233a]'
+                                    }`}
+                                >
+                                    <span>Pending</span>
+                                    <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-500/20 text-amber-900 dark:text-amber-200">
+                                        {counts.pending}
+                                    </span>
+                                </button>
+
+                                <button
+                                    onClick={() => setActiveTab('all')}
+                                    className={`h-8 px-2.5 rounded-lg text-xs font-semibold inline-flex items-center gap-1.5 transition cursor-pointer shrink-0 ${
+                                        activeTab === 'all'
+                                            ? 'bg-[#0d9488]/15 text-[#0d9488] dark:bg-[#2dd4b4]/15 dark:text-[#2dd4b4] border border-[#0d9488]/40 dark:border-[#2dd4b4]/40 font-bold'
+                                            : 'bg-white dark:bg-[#0f1828] text-[#57534e] dark:text-[#8a99ab] border border-[#ded8cb] dark:border-[#1f2b40] hover:bg-[#f5f0e6] dark:hover:bg-[#16233a]'
+                                    }`}
+                                >
+                                    <span>All</span>
+                                    <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-black/5 dark:bg-white/10">
+                                        {counts.all}
+                                    </span>
+                                </button>
+
+                                <button
+                                    onClick={() => setActiveTab('approved')}
+                                    className={`h-8 px-2.5 rounded-lg text-xs font-semibold inline-flex items-center gap-1.5 transition cursor-pointer shrink-0 ${
+                                        activeTab === 'approved'
+                                            ? 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border border-emerald-500/40 font-bold'
+                                            : 'bg-white dark:bg-[#0f1828] text-[#57534e] dark:text-[#8a99ab] border border-[#ded8cb] dark:border-[#1f2b40] hover:bg-[#f5f0e6] dark:hover:bg-[#16233a]'
+                                    }`}
+                                >
+                                    <span>Accepted</span>
+                                    <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-900 dark:text-emerald-200">
+                                        {counts.approved}
+                                    </span>
+                                </button>
+
+                                <button
+                                    onClick={() => setActiveTab('rejected')}
+                                    className={`h-8 px-2.5 rounded-lg text-xs font-semibold inline-flex items-center gap-1.5 transition cursor-pointer shrink-0 ${
+                                        activeTab === 'rejected'
+                                            ? 'bg-rose-500/15 text-rose-800 dark:text-rose-300 border border-rose-500/40 font-bold'
+                                            : 'bg-white dark:bg-[#0f1828] text-[#57534e] dark:text-[#8a99ab] border border-[#ded8cb] dark:border-[#1f2b40] hover:bg-[#f5f0e6] dark:hover:bg-[#16233a]'
+                                    }`}
+                                >
+                                    <span>Rejected</span>
+                                    <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-rose-500/20 text-rose-900 dark:text-rose-200">
+                                        {counts.rejected}
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                {/* Status Tabs Matching Coach View */}
-                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
-                    <button
-                        onClick={() => setActiveTab('pending')}
-                        className={`h-9 px-3.5 rounded-xl text-xs font-semibold inline-flex items-center gap-2 transition cursor-pointer shrink-0 ${
-                            activeTab === 'pending'
-                                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-xs'
-                                : 'bg-[#0f1828] text-[#8a99ab] border border-[#1f2b40] hover:text-[#e8eef5]'
-                        }`}
-                    >
-                        <span>Pending Approvals</span>
-                        <span
-                            className={`px-1.5 py-0.2 rounded-md text-[11px] font-bold ${
-                                activeTab === 'pending'
-                                    ? 'bg-amber-500/30 text-amber-200'
-                                    : 'bg-[#16233a] text-[#8a99ab]'
-                            }`}
-                        >
-                            {counts.pending}
-                        </span>
-                    </button>
-
-                    <button
-                        onClick={() => setActiveTab('all')}
-                        className={`h-9 px-3.5 rounded-xl text-xs font-semibold inline-flex items-center gap-2 transition cursor-pointer shrink-0 ${
-                            activeTab === 'all'
-                                ? 'bg-[#2dd4b4]/15 text-[#2dd4b4] border border-[#2dd4b4]/40 shadow-xs'
-                                : 'bg-[#0f1828] text-[#8a99ab] border border-[#1f2b40] hover:text-[#e8eef5]'
-                        }`}
-                    >
-                        <span>All</span>
-                        <span
-                            className={`px-1.5 py-0.2 rounded-md text-[11px] font-bold ${
-                                activeTab === 'all'
-                                    ? 'bg-[#2dd4b4]/30 text-[#2dd4b4]'
-                                    : 'bg-[#16233a] text-[#8a99ab]'
-                            }`}
-                        >
-                            {counts.all}
-                        </span>
-                    </button>
-
-                    <button
-                        onClick={() => setActiveTab('approved')}
-                        className={`h-9 px-3.5 rounded-xl text-xs font-semibold inline-flex items-center gap-2 transition cursor-pointer shrink-0 ${
-                            activeTab === 'approved'
-                                ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-xs'
-                                : 'bg-[#0f1828] text-[#8a99ab] border border-[#1f2b40] hover:text-[#e8eef5]'
-                        }`}
-                    >
-                        <span>Accepted</span>
-                        <span
-                            className={`px-1.5 py-0.2 rounded-md text-[11px] font-bold ${
-                                activeTab === 'approved'
-                                    ? 'bg-emerald-500/30 text-emerald-200'
-                                    : 'bg-[#16233a] text-[#8a99ab]'
-                            }`}
-                        >
-                            {counts.approved}
-                        </span>
-                    </button>
-
-                    <button
-                        onClick={() => setActiveTab('rejected')}
-                        className={`h-9 px-3.5 rounded-xl text-xs font-semibold inline-flex items-center gap-2 transition cursor-pointer shrink-0 ${
-                            activeTab === 'rejected'
-                                ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40 shadow-xs'
-                                : 'bg-[#0f1828] text-[#8a99ab] border border-[#1f2b40] hover:text-[#e8eef5]'
-                        }`}
-                    >
-                        <span>Rejected</span>
-                        <span
-                            className={`px-1.5 py-0.2 rounded-md text-[11px] font-bold ${
-                                activeTab === 'rejected'
-                                    ? 'bg-rose-500/30 text-rose-200'
-                                    : 'bg-[#16233a] text-[#8a99ab]'
-                            }`}
-                        >
-                            {counts.rejected}
-                        </span>
-                    </button>
-                </div>
-            </div>
-
-            {/* Search Input Bar */}
-            <div className="relative">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#8a99ab]" />
-                <Input
-                    placeholder="Search athlete, coach, dojo, chest #, belt rank..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="h-10 pl-10 pr-9 rounded-xl bg-[#111a2b] border-[#1f2b40] text-[#e8eef5] placeholder:text-[#6b7b8f] text-xs focus:border-[#2dd4b4] focus:ring-1 focus:ring-[#2dd4b4]"
-                />
-                {searchQuery && (
-                    <button
-                        type="button"
-                        onClick={() => setSearchQuery('')}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8a99ab] hover:text-[#e8eef5] cursor-pointer"
-                    >
-                        <X className="h-4 w-4" />
-                    </button>
-                )}
-            </div>
-
-            {/* ========================================================================= */}
-            {/* 1. DESKTOP / LAPTOP TABLE (Obsidian Dark Theme Pixel-Perfect)              */}
-            {/* ========================================================================= */}
-            <div className="hidden lg:block relative pb-28">
-                <div className="bg-[#111a2b] border border-[#1f2b40] rounded-2xl overflow-hidden shadow-xl">
+                {/* 1. DESKTOP / LAPTOP TABLE */}
+                <div className="hidden lg:block overflow-x-auto">
                     {/* Table Header */}
                     <div
                         style={{
                             display: 'grid',
-                            gridTemplateColumns: '28px 56px 190px 58px 85px 105px 65px 58px 1fr 140px 160px',
+                            gridTemplateColumns: '28px 50px 185px 48px 80px 95px 60px 52px 1fr 115px 125px',
                             columnGap: '10px',
                             alignItems: 'center',
-                            padding: '0 20px',
-                            height: '48px',
-                            background: '#0f1828',
-                            borderBottom: '1px solid #1f2b40',
+                            padding: '0 16px',
+                            height: '42px',
                         }}
+                        className="bg-[#f5f0e6] dark:bg-[#0f1828] border-b border-[#ded8cb] dark:border-[#1f2b40] text-[#78716c] dark:text-[#8a99ab] text-[11px] font-bold uppercase tracking-wider"
                     >
                         {/* Select All Checkbox */}
                         <span
                             onClick={handleToggleSelectAll}
-                            className={`w-5 h-5 rounded-[6px] border-2 border-[#34455f] flex items-center justify-center cursor-pointer transition ${
-                                isAllSelected ? 'bg-[#2dd4b4] border-[#2dd4b4]' : ''
+                            className={`w-4 h-4 rounded border-2 flex items-center justify-center cursor-pointer transition ${
+                                isAllSelected
+                                    ? 'bg-[#0d9488] dark:bg-[#2dd4b4] border-[#0d9488] dark:border-[#2dd4b4]'
+                                    : 'border-[#ded8cb] dark:border-[#34455f] bg-white dark:bg-transparent'
                             }`}
                         >
                             {isAllSelected && <CheckmarkSvg />}
                         </span>
 
-                        <span className="text-[11px] tracking-[0.12em] uppercase font-bold text-[#6b7b8f]">
-                            Chest
-                        </span>
-                        <span className="text-[11px] tracking-[0.12em] uppercase font-bold text-[#6b7b8f]">
-                            Athlete
-                        </span>
-                        <span className="text-[11px] tracking-[0.12em] uppercase font-bold text-[#6b7b8f]">
-                            Age
-                        </span>
-                        <span className="text-[11px] tracking-[0.12em] uppercase font-bold text-[#6b7b8f]">
-                            Dojo
-                        </span>
-                        <span className="text-[11px] tracking-[0.12em] uppercase font-bold text-[#6b7b8f]">
-                            Coach
-                        </span>
-                        <span className="text-[11px] tracking-[0.12em] uppercase font-bold text-[#6b7b8f]">
-                            Belt
-                        </span>
-                        <span className="text-[11px] tracking-[0.12em] uppercase font-bold text-[#6b7b8f]">
-                            Weight
-                        </span>
-                        <span className="text-[11px] tracking-[0.12em] uppercase font-bold text-[#6b7b8f]">
-                            Events applied
-                        </span>
-                        <span className="text-[11px] tracking-[0.12em] uppercase font-bold text-[#6b7b8f]">
-                            Status
-                        </span>
-                        <span className="text-[11px] tracking-[0.12em] uppercase font-bold text-[#6b7b8f] text-right">
-                            Action
-                        </span>
+                        <span>Chest</span>
+                        <span>Athlete</span>
+                        <span>Age</span>
+                        <span>Dojo</span>
+                        <span>Coach</span>
+                        <span>Belt</span>
+                        <span>Weight</span>
+                        <span>Events applied</span>
+                        <span>Status</span>
+                        <span className="text-right">Action</span>
                     </div>
 
                     {/* Table Body Rows */}
                     {filteredEntries.length === 0 ? (
-                        <div className="py-16 text-center text-[#8a99ab] text-sm">
+                        <div className="py-12 text-center text-[#78716c] dark:text-[#8a99ab] text-sm">
                             No tournament entries found in this view.
                         </div>
                     ) : (
@@ -562,23 +525,25 @@ export function OrganiserEntriesList({
                                     key={entry.id}
                                     style={{
                                         display: 'grid',
-                                        gridTemplateColumns: '28px 56px 190px 58px 85px 105px 65px 58px 1fr 140px 160px',
+                                        gridTemplateColumns: '28px 50px 185px 48px 80px 95px 60px 52px 1fr 115px 125px',
                                         columnGap: '10px',
                                         alignItems: 'center',
-                                        padding: '0 20px',
-                                        height: '82px',
-                                        borderBottom: '1px solid #1f2b40',
-                                        background: isSelected ? 'rgba(45, 212, 180, 0.07)' : 'transparent',
+                                        padding: '0 16px',
+                                        height: '58px',
                                     }}
-                                    className="transition-colors hover:bg-[#152238]/60"
+                                    className={`border-b border-[#ded8cb]/80 dark:border-[#1f2b40] transition-colors ${
+                                        isSelected
+                                            ? 'bg-[#0d9488]/10 dark:bg-[#2dd4b4]/10'
+                                            : 'hover:bg-[#faf8f3] dark:hover:bg-[#15233c]'
+                                    }`}
                                 >
                                     {/* Row Checkbox */}
                                     <span
                                         onClick={() => handleToggleSelectOne(entry.id)}
-                                        className={`w-5 h-5 rounded-[6px] border-2 cursor-pointer flex items-center justify-center transition ${
+                                        className={`w-4 h-4 rounded border-2 cursor-pointer flex items-center justify-center transition ${
                                             isSelected
-                                                ? 'bg-[#2dd4b4] border-[#2dd4b4]'
-                                                : 'border-[#34455f] hover:border-[#2dd4b4]/60'
+                                                ? 'bg-[#0d9488] dark:bg-[#2dd4b4] border-[#0d9488] dark:border-[#2dd4b4]'
+                                                : 'border-[#ded8cb] dark:border-[#34455f] bg-white dark:bg-transparent hover:border-[#0d9488]/60'
                                         }`}
                                     >
                                         {isSelected && <CheckmarkSvg />}
@@ -587,21 +552,21 @@ export function OrganiserEntriesList({
                                     {/* Chest # */}
                                     <div className="flex items-center">
                                         {entry.chest_no ? (
-                                            <span className="text-[16px] font-bold text-[#2dd4b4] tracking-tight">
+                                            <span className="text-xs font-bold text-[#0d9488] dark:text-[#2dd4b4] tracking-tight">
                                                 #{String(entry.chest_no).padStart(3, '0')}
                                             </span>
                                         ) : (
-                                            <span className="text-[#6b7b8f] text-[16px]">—</span>
+                                            <span className="text-[#a8a29e] dark:text-[#6b7b8f] text-xs">—</span>
                                         )}
                                     </div>
 
                                     {/* Athlete Avatar + Name */}
-                                    <div className="flex items-center gap-3 min-w-0">
+                                    <div className="flex items-center gap-2.5 min-w-0">
                                         <AthletePfp
                                             photoUrl={entry.student_photo}
                                             name={entry.student_name}
                                             subtitle={entry.dojo_name || entry.student_registration_no}
-                                            size={46}
+                                            size={36}
                                             extraDetails={{
                                                 dojo: entry.dojo_name,
                                                 chestNo: entry.chest_no,
@@ -613,46 +578,46 @@ export function OrganiserEntriesList({
                                             }}
                                         />
                                         <div className="min-w-0">
-                                            <div className="text-[15.5px] font-bold text-[#e8eef5] truncate">
+                                            <div className="text-sm font-bold text-[#1c1917] dark:text-[#e8eef5] truncate">
                                                 {entry.student_name}
                                             </div>
-                                            <div className="text-[12.5px] text-[#8a99ab] truncate mt-0.5">
+                                            <div className="text-[11px] text-[#78716c] dark:text-[#8a99ab] truncate">
                                                 {entry.student_registration_no || entry.student_gender || 'Athlete'}
                                             </div>
                                         </div>
                                     </div>
 
                                     {/* Age */}
-                                    <span className="text-[15.5px] font-bold text-[#e8eef5]">
+                                    <span className="text-xs font-semibold text-[#1c1917] dark:text-[#e8eef5]">
                                         {age}
                                     </span>
 
                                     {/* Dojo */}
-                                    <span className="text-[14.5px] text-[#e8eef5] truncate" title={dojo}>
+                                    <span className="text-xs text-[#1c1917] dark:text-[#e8eef5] truncate" title={dojo}>
                                         {dojo}
                                     </span>
 
                                     {/* Coach */}
-                                    <span className="text-[14px] text-[#8a99ab] truncate" title={coach}>
+                                    <span className="text-xs text-[#78716c] dark:text-[#8a99ab] truncate" title={coach}>
                                         {coach}
                                     </span>
 
                                     {/* Belt */}
-                                    <span className="text-[14.5px] font-semibold text-[#e8eef5] truncate">
+                                    <span className="text-xs font-semibold text-[#1c1917] dark:text-[#e8eef5] truncate">
                                         {rank}
                                     </span>
 
                                     {/* Weight */}
-                                    <span className="text-[14.5px] font-semibold text-[#e8eef5]">
+                                    <span className="text-xs text-[#1c1917] dark:text-[#e8eef5]">
                                         {weight !== '—' ? `${weight} kg` : '—'}
                                     </span>
 
                                     {/* Events Applied Tags */}
-                                    <div className="flex gap-1.5 flex-wrap">
+                                    <div className="flex gap-1 flex-wrap">
                                         {tags.map((t, idx) => (
                                             <span
                                                 key={idx}
-                                                className="text-[12px] font-semibold bg-[#1a2a44] text-[#c9d3df] rounded-full px-2.5 py-0.5 whitespace-nowrap"
+                                                className="text-[10.5px] font-semibold bg-[#f2eee5] dark:bg-[#1a2a44] text-[#44403c] dark:text-[#c9d3df] border border-[#ded8cb] dark:border-transparent rounded-full px-2 py-0.5 whitespace-nowrap"
                                             >
                                                 {t}
                                             </span>
@@ -662,19 +627,19 @@ export function OrganiserEntriesList({
                                     {/* Status Pill */}
                                     <div>
                                         {isApproved && (
-                                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11.5px] font-bold bg-[#2dd4b4]/12 text-[#2dd4b4] border border-[#2dd4b4]/35">
+                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-300 dark:bg-emerald-500/15 dark:text-emerald-300 dark:border-emerald-500/35">
                                                 <Check className="h-3 w-3" />
                                                 Accepted ✓
                                             </span>
                                         )}
                                         {isPending && (
-                                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11.5px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/35">
+                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-bold bg-amber-50 text-amber-700 border border-amber-300 dark:bg-amber-500/15 dark:text-amber-300 dark:border-amber-500/35">
                                                 <Clock className="h-3 w-3" />
-                                                Waiting for Review
+                                                Pending Review
                                             </span>
                                         )}
                                         {isRejected && (
-                                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11.5px] font-bold bg-rose-500/15 text-rose-300 border border-rose-500/35">
+                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-bold bg-rose-50 text-rose-700 border border-rose-300 dark:bg-rose-500/15 dark:text-rose-300 dark:border-rose-500/35">
                                                 <X className="h-3 w-3" />
                                                 Rejected
                                             </span>
@@ -689,9 +654,9 @@ export function OrganiserEntriesList({
                                                     size="sm"
                                                     disabled={isActionPending}
                                                     onClick={() => handleApproveSingle(entry)}
-                                                    className="h-8 px-2.5 rounded-lg bg-[#2dd4b4] text-[#04231e] font-bold text-xs hover:bg-[#26bfa2] cursor-pointer shadow-xs"
+                                                    className="h-7 px-2.5 rounded-lg bg-[#0d9488] hover:bg-[#0f766e] dark:bg-[#2dd4b4] dark:hover:bg-[#26bfa2] text-white dark:text-[#04231e] font-bold text-xs cursor-pointer shadow-xs"
                                                 >
-                                                    <Check className="h-3.5 w-3.5 mr-1" />
+                                                    <Check className="h-3 w-3 mr-1" />
                                                     Approve
                                                 </Button>
                                                 <Button
@@ -699,10 +664,10 @@ export function OrganiserEntriesList({
                                                     variant="ghost"
                                                     disabled={isActionPending}
                                                     onClick={() => handleOpenRejectSingle(entry)}
-                                                    className="h-8 w-8 p-0 rounded-lg text-rose-400 hover:text-rose-300 hover:bg-rose-500/15 cursor-pointer"
+                                                    className="h-7 w-7 p-0 rounded-lg text-rose-600 dark:text-rose-400 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-500/15 cursor-pointer"
                                                     title="Reject entry"
                                                 >
-                                                    <X className="h-4 w-4" />
+                                                    <X className="h-3.5 w-3.5" />
                                                 </Button>
                                             </>
                                         )}
@@ -711,10 +676,10 @@ export function OrganiserEntriesList({
                                             <Link
                                                 href={`/parent/entries/${entry.id}/id-card`}
                                                 target="_blank"
-                                                className="h-8 px-2.5 rounded-lg border border-[#2dd4b4]/40 text-[#2dd4b4] hover:bg-[#2dd4b4]/10 text-xs font-semibold inline-flex items-center gap-1.5 transition"
+                                                className="h-7 px-2 rounded-lg border border-[#0d9488]/40 dark:border-[#2dd4b4]/40 text-[#0d9488] dark:text-[#2dd4b4] hover:bg-[#0d9488]/10 text-xs font-semibold inline-flex items-center gap-1 transition"
                                                 title="View official ID pass"
                                             >
-                                                <Eye className="h-3.5 w-3.5" />
+                                                <Eye className="h-3 w-3" />
                                                 ID Pass
                                             </Link>
                                         )}
@@ -725,24 +690,24 @@ export function OrganiserEntriesList({
                                                 variant="outline"
                                                 disabled={isActionPending}
                                                 onClick={() => handleApproveSingle(entry)}
-                                                className="h-8 px-2.5 rounded-lg border-[#2dd4b4]/40 text-[#2dd4b4] hover:bg-[#2dd4b4]/10 text-xs font-semibold"
+                                                className="h-7 px-2.5 rounded-lg border-[#0d9488]/40 dark:border-[#2dd4b4]/40 text-[#0d9488] dark:text-[#2dd4b4] hover:bg-[#0d9488]/10 text-xs font-semibold"
                                             >
                                                 Re-approve
                                             </Button>
                                         )}
 
-                                        {/* 3-Dot Row Menu (···) Matching CoachMenu.dc.html */}
+                                        {/* 3-Dot Row Menu (···) */}
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
                                                 <button
-                                                    className="w-8 h-8 rounded-lg border border-[#2a3b57] text-[#8a99ab] hover:text-[#e8eef5] hover:border-[#34455f] inline-flex items-center justify-center text-sm transition cursor-pointer"
+                                                    className="w-7 h-7 rounded-lg border border-[#ded8cb] dark:border-[#2a3b57] text-[#78716c] dark:text-[#8a99ab] hover:text-[#1c1917] dark:hover:text-[#e8eef5] hover:border-border inline-flex items-center justify-center text-xs transition cursor-pointer"
                                                 >
                                                     ···
                                                 </button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent
                                                 align="end"
-                                                className="w-56 bg-[#16233a] border border-[#34455f] text-[#e8eef5] rounded-xl shadow-2xl p-1.5"
+                                                className="w-56 bg-white dark:bg-[#16233a] border border-[#ded8cb] dark:border-[#34455f] text-[#1c1917] dark:text-[#e8eef5] rounded-xl shadow-xl p-1.5"
                                             >
                                                 {/* ID Card / Pass Action */}
                                                 {isApproved ? (
@@ -750,14 +715,14 @@ export function OrganiserEntriesList({
                                                         <Link
                                                             href={`/parent/entries/${entry.id}/id-card`}
                                                             target="_blank"
-                                                            className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#e8eef5] hover:bg-[#1f2f4d] rounded-lg cursor-pointer"
+                                                            className="flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-[#faf8f3] dark:hover:bg-[#1f2f4d] rounded-lg cursor-pointer"
                                                         >
-                                                            <span className="text-[#2dd4b4]">
+                                                            <span className="text-[#0d9488] dark:text-[#2dd4b4]">
                                                                 <FileText className="h-4 w-4" />
                                                             </span>
                                                             <div>
                                                                 <div className="font-semibold text-xs">Download ID Pass</div>
-                                                                <div className="text-[10.5px] text-[#8a99ab]">
+                                                                <div className="text-[10.5px] text-[#78716c] dark:text-[#8a99ab]">
                                                                     Chest #{entry.chest_no ? String(entry.chest_no).padStart(3, '0') : '001'}
                                                                 </div>
                                                             </div>
@@ -765,17 +730,17 @@ export function OrganiserEntriesList({
                                                     </DropdownMenuItem>
                                                 ) : (
                                                     <div className="flex items-center gap-2.5 px-3 py-2 opacity-50 cursor-not-allowed">
-                                                        <FileText className="h-4 w-4 text-[#8a99ab]" />
+                                                        <FileText className="h-4 w-4 text-[#78716c] dark:text-[#8a99ab]" />
                                                         <div>
-                                                            <div className="font-semibold text-xs text-[#8a99ab]">Download ID Pass</div>
-                                                            <div className="text-[10.5px] text-[#8a99ab]">
+                                                            <div className="font-semibold text-xs text-[#78716c] dark:text-[#8a99ab]">Download ID Pass</div>
+                                                            <div className="text-[10.5px] text-[#78716c] dark:text-[#8a99ab]">
                                                                 Available after approval
                                                             </div>
                                                         </div>
                                                     </div>
                                                 )}
 
-                                                <DropdownMenuSeparator className="bg-[#2a3b57] my-1" />
+                                                <DropdownMenuSeparator className="bg-[#ded8cb] dark:bg-[#2a3b57] my-1" />
 
                                                 {/* Athlete Details */}
                                                 <DropdownMenuItem
@@ -783,7 +748,7 @@ export function OrganiserEntriesList({
                                                         setSelectedDetailEntry(entry)
                                                         setDetailDialogOpen(true)
                                                     }}
-                                                    className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-[#8a99ab] hover:text-[#e8eef5] hover:bg-[#1f2f4d] rounded-lg cursor-pointer"
+                                                    className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-[#57534e] dark:text-[#8a99ab] hover:text-[#1c1917] dark:hover:text-[#e8eef5] hover:bg-[#faf8f3] dark:hover:bg-[#1f2f4d] rounded-lg cursor-pointer"
                                                 >
                                                     <User className="h-4 w-4" />
                                                     View Athlete Details
@@ -792,9 +757,9 @@ export function OrganiserEntriesList({
                                                 {/* Assign / Edit Chest # */}
                                                 <DropdownMenuItem
                                                     onClick={() => handleOpenChestDialog(entry)}
-                                                    className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-[#8a99ab] hover:text-[#e8eef5] hover:bg-[#1f2f4d] rounded-lg cursor-pointer"
+                                                    className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-[#57534e] dark:text-[#8a99ab] hover:text-[#1c1917] dark:hover:text-[#e8eef5] hover:bg-[#faf8f3] dark:hover:bg-[#1f2f4d] rounded-lg cursor-pointer"
                                                 >
-                                                    <Hash className="h-4 w-4 text-[#2dd4b4]" />
+                                                    <Hash className="h-4 w-4 text-[#0d9488] dark:text-[#2dd4b4]" />
                                                     {entry.chest_no ? 'Edit Chest Number' : 'Assign Chest Number'}
                                                 </DropdownMenuItem>
 
@@ -802,7 +767,7 @@ export function OrganiserEntriesList({
                                                 {!isApproved && (
                                                     <DropdownMenuItem
                                                         onClick={() => handleApproveSingle(entry)}
-                                                        className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-[#2dd4b4] hover:bg-[#2dd4b4]/10 rounded-lg cursor-pointer"
+                                                        className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-[#0d9488] dark:text-[#2dd4b4] hover:bg-[#0d9488]/10 rounded-lg cursor-pointer"
                                                     >
                                                         <Check className="h-4 w-4" />
                                                         Accept Entry
@@ -812,7 +777,7 @@ export function OrganiserEntriesList({
                                                 {!isRejected && (
                                                     <DropdownMenuItem
                                                         onClick={() => handleOpenRejectSingle(entry)}
-                                                        className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-rose-400 hover:bg-rose-500/10 rounded-lg cursor-pointer"
+                                                        className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg cursor-pointer"
                                                     >
                                                         <X className="h-4 w-4" />
                                                         Reject Entry
@@ -827,78 +792,67 @@ export function OrganiserEntriesList({
                     )}
                 </div>
 
-                {/* Floating Batch Selection Bar (Matching CoachLaptopSel.dc.html) */}
-                {selectedIds.size > 0 && (
-                    <div
-                        style={{
-                            position: 'absolute',
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            background: '#0d1626',
-                            borderTop: '1px solid #1f2b40',
-                            boxShadow: '0 -16px 30px rgba(10,18,32,.95)',
-                            padding: '14px 24px',
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            borderRadius: '0 0 16px 16px',
-                            zIndex: 40,
-                        }}
-                    >
-                        <div className="flex items-center gap-3">
-                            <span className="text-sm text-[#8a99ab]">
-                                <b className="text-[#e8eef5] font-bold text-base">{selectedIds.size}</b> entries selected
-                            </span>
-                            <button
-                                onClick={() => setSelectedIds(new Set())}
-                                className="text-xs text-[#2dd4b4] hover:underline cursor-pointer"
-                            >
-                                Deselect all
-                            </button>
+                {/* Desktop Card Footer Actions (In-flow, clean) */}
+                <div className="hidden lg:flex border-t border-[#ded8cb] dark:border-[#1f2b40] bg-[#faf8f3] dark:bg-[#0f1828] px-4 py-2.5 items-center justify-between text-xs text-[#78716c] dark:text-[#8a99ab]">
+                    {selectedIds.size > 0 ? (
+                        <>
+                            <div className="flex items-center gap-3">
+                                <span>
+                                    <strong className="text-[#1c1917] dark:text-[#e8eef5] font-bold">{selectedIds.size}</strong> entries selected
+                                </span>
+                                <button
+                                    onClick={() => setSelectedIds(new Set())}
+                                    className="text-xs text-[#0d9488] dark:text-[#2dd4b4] hover:underline font-semibold cursor-pointer"
+                                >
+                                    Deselect all
+                                </button>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Button
+                                    size="sm"
+                                    disabled={isActionPending}
+                                    onClick={handleBulkApprove}
+                                    className="h-8 px-3 rounded-lg bg-[#0d9488] hover:bg-[#0f766e] dark:bg-[#2dd4b4] dark:hover:bg-[#25c4a5] text-white dark:text-[#04231e] font-bold text-xs shadow-xs"
+                                >
+                                    {isActionPending ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Check className="h-3.5 w-3.5 mr-1" />}
+                                    Approve selected ({selectedIds.size})
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    disabled={isActionPending}
+                                    onClick={handleOpenRejectBulk}
+                                    className="h-8 px-3 rounded-lg border-rose-300 dark:border-rose-500/40 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 text-xs font-semibold"
+                                >
+                                    <X className="h-3.5 w-3.5 mr-1" />
+                                    Reject selected ({selectedIds.size})
+                                </Button>
+                            </div>
+                        </>
+                    ) : (
+                        <div className="flex items-center justify-between w-full">
+                            <span>Showing {filteredEntries.length} of {entries.length} entries</span>
+                            <span className="text-[11px] opacity-75">Click checkbox to select entries for bulk actions</span>
                         </div>
-
-                        <div className="flex items-center gap-2.5">
-                            <Button
-                                disabled={isActionPending}
-                                onClick={handleBulkApprove}
-                                className="h-10 px-5 rounded-xl bg-[#2dd4b4] text-[#04231e] font-bold text-sm hover:bg-[#26bfa2] cursor-pointer shadow-md inline-flex items-center gap-2"
-                            >
-                                {isActionPending ? (
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : (
-                                    <Check className="h-4 w-4 stroke-[2.5]" />
-                                )}
-                                Approve selected ({selectedIds.size})
-                            </Button>
-
-                            <Button
-                                variant="outline"
-                                disabled={isActionPending}
-                                onClick={handleOpenRejectBulk}
-                                className="h-10 px-4 rounded-xl border-rose-500/40 text-rose-400 hover:bg-rose-500/10 text-sm font-semibold cursor-pointer"
-                            >
-                                <X className="h-4 w-4 mr-1.5" />
-                                Reject selected ({selectedIds.size})
-                            </Button>
-                        </div>
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
 
             {/* ========================================================================= */}
-            {/* 2. MOBILE CARD VIEW (Obsidian Dark Theme Pixel-Perfect)                   */}
+            {/* 2. MOBILE CARD VIEW (Responsive Light & Dark Modes)                       */}
             {/* ========================================================================= */}
-            <div className="lg:hidden space-y-3 pb-24">
+            <div className="lg:hidden space-y-3 pb-8">
                 {/* Mobile Select All */}
                 <div className="flex items-center justify-between px-2 py-1">
                     <span
                         onClick={handleToggleSelectAll}
-                        className="flex items-center gap-2 text-xs font-semibold text-[#8a99ab] cursor-pointer"
+                        className="flex items-center gap-2 text-xs font-semibold text-[#78716c] dark:text-[#8a99ab] cursor-pointer"
                     >
                         <span
-                            className={`w-5 h-5 rounded-[6px] border-2 border-[#34455f] flex items-center justify-center transition ${
-                                isAllSelected ? 'bg-[#2dd4b4] border-[#2dd4b4]' : ''
+                            className={`w-5 h-5 rounded-[6px] border-2 flex items-center justify-center transition ${
+                                isAllSelected
+                                    ? 'bg-[#0d9488] dark:bg-[#2dd4b4] border-[#0d9488] dark:border-[#2dd4b4]'
+                                    : 'border-[#ded8cb] dark:border-[#34455f] bg-white dark:bg-transparent'
                             }`}
                         >
                             {isAllSelected && <CheckmarkSvg />}
@@ -907,14 +861,14 @@ export function OrganiserEntriesList({
                     </span>
 
                     {selectedIds.size > 0 && (
-                        <span className="text-xs text-[#2dd4b4] font-semibold">
+                        <span className="text-xs text-[#0d9488] dark:text-[#2dd4b4] font-semibold">
                             {selectedIds.size} selected
                         </span>
                     )}
                 </div>
 
                 {filteredEntries.length === 0 ? (
-                    <div className="py-12 text-center text-[#8a99ab] text-sm bg-[#111a2b] border border-[#1f2b40] rounded-2xl">
+                    <div className="py-12 text-center text-[#78716c] dark:text-[#8a99ab] text-sm bg-white dark:bg-[#111a2b] border border-[#ded8cb] dark:border-[#1f2b40] rounded-2xl shadow-xs">
                         No tournament entries found.
                     </div>
                 ) : (
@@ -935,8 +889,8 @@ export function OrganiserEntriesList({
                                 key={entry.id}
                                 className={`p-4 rounded-2xl border transition-all ${
                                     isSelected
-                                        ? 'bg-[#15233c] border-[#2dd4b4]/60 ring-1 ring-[#2dd4b4]/30'
-                                        : 'bg-[#111a2b] border-[#1f2b40]'
+                                        ? 'bg-[#0d9488]/5 dark:bg-[#15233c] border-[#0d9488]/60 dark:border-[#2dd4b4]/60 ring-1 ring-[#0d9488]/30 dark:ring-[#2dd4b4]/30'
+                                        : 'bg-white dark:bg-[#111a2b] border-[#ded8cb] dark:border-[#1f2b40] shadow-xs'
                                 }`}
                             >
                                 <div className="flex items-start justify-between gap-3">
@@ -945,8 +899,8 @@ export function OrganiserEntriesList({
                                             onClick={() => handleToggleSelectOne(entry.id)}
                                             className={`w-5 h-5 rounded-[6px] border-2 cursor-pointer flex items-center justify-center shrink-0 transition ${
                                                 isSelected
-                                                    ? 'bg-[#2dd4b4] border-[#2dd4b4]'
-                                                    : 'border-[#34455f]'
+                                                    ? 'bg-[#0d9488] dark:bg-[#2dd4b4] border-[#0d9488] dark:border-[#2dd4b4]'
+                                                    : 'border-[#ded8cb] dark:border-[#34455f] bg-white dark:bg-transparent'
                                             }`}
                                         >
                                             {isSelected && <CheckmarkSvg />}
@@ -956,7 +910,7 @@ export function OrganiserEntriesList({
                                             photoUrl={entry.student_photo}
                                             name={entry.student_name}
                                             subtitle={entry.dojo_name || entry.student_registration_no}
-                                            size={48}
+                                            size={44}
                                             extraDetails={{
                                                 dojo: entry.dojo_name,
                                                 chestNo: entry.chest_no,
@@ -969,10 +923,10 @@ export function OrganiserEntriesList({
                                         />
 
                                         <div className="min-w-0">
-                                            <div className="font-bold text-base text-[#e8eef5] truncate">
+                                            <div className="font-bold text-sm text-[#1c1917] dark:text-[#e8eef5] truncate">
                                                 {entry.student_name}
                                             </div>
-                                            <div className="text-xs text-[#8a99ab] truncate">
+                                            <div className="text-xs text-[#78716c] dark:text-[#8a99ab] truncate">
                                                 {entry.student_registration_no || entry.student_gender || 'Athlete'}
                                             </div>
                                         </div>
@@ -980,41 +934,41 @@ export function OrganiserEntriesList({
 
                                     {/* Chest # badge */}
                                     {entry.chest_no ? (
-                                        <span className="text-sm font-bold text-[#2dd4b4] bg-[#2dd4b4]/10 border border-[#2dd4b4]/30 rounded-lg px-2 py-0.5 shrink-0">
+                                        <span className="text-xs font-bold text-[#0d9488] dark:text-[#2dd4b4] bg-[#0d9488]/10 dark:bg-[#2dd4b4]/10 border border-[#0d9488]/30 dark:border-[#2dd4b4]/30 rounded-lg px-2 py-0.5 shrink-0">
                                             #{String(entry.chest_no).padStart(3, '0')}
                                         </span>
                                     ) : (
-                                        <span className="text-xs text-[#6b7b8f]">—</span>
+                                        <span className="text-xs text-[#a8a29e] dark:text-[#6b7b8f]">—</span>
                                     )}
                                 </div>
 
                                 {/* Metadata Grid */}
-                                <div className="grid grid-cols-2 gap-2 mt-3.5 pt-3 border-t border-[#1f2b40]/80 text-xs">
+                                <div className="grid grid-cols-2 gap-2 mt-3.5 pt-3 border-t border-[#ded8cb]/80 dark:border-[#1f2b40]/80 text-xs">
                                     <div>
-                                        <span className="text-[#6b7b8f]">Age / Belt: </span>
-                                        <span className="text-[#e8eef5] font-semibold">{age} · {rank}</span>
+                                        <span className="text-[#78716c] dark:text-[#6b7b8f]">Age / Belt: </span>
+                                        <span className="text-[#1c1917] dark:text-[#e8eef5] font-semibold">{age} · {rank}</span>
                                     </div>
                                     <div>
-                                        <span className="text-[#6b7b8f]">Weight: </span>
-                                        <span className="text-[#e8eef5] font-semibold">{weight !== '—' ? `${weight} kg` : '—'}</span>
+                                        <span className="text-[#78716c] dark:text-[#6b7b8f]">Weight: </span>
+                                        <span className="text-[#1c1917] dark:text-[#e8eef5] font-semibold">{weight !== '—' ? `${weight} kg` : '—'}</span>
                                     </div>
                                     <div>
-                                        <span className="text-[#6b7b8f]">Dojo: </span>
-                                        <span className="text-[#e8eef5] font-semibold truncate">{dojo}</span>
+                                        <span className="text-[#78716c] dark:text-[#6b7b8f]">Dojo: </span>
+                                        <span className="text-[#1c1917] dark:text-[#e8eef5] font-semibold truncate">{dojo}</span>
                                     </div>
                                     <div>
-                                        <span className="text-[#6b7b8f]">Coach: </span>
-                                        <span className="text-[#e8eef5] font-semibold truncate">{coach}</span>
+                                        <span className="text-[#78716c] dark:text-[#6b7b8f]">Coach: </span>
+                                        <span className="text-[#1c1917] dark:text-[#e8eef5] font-semibold truncate">{coach}</span>
                                     </div>
                                 </div>
 
                                 {/* Tags + Status */}
-                                <div className="flex items-center justify-between gap-2 mt-3 pt-2.5 border-t border-[#1f2b40]/60">
+                                <div className="flex items-center justify-between gap-2 mt-3 pt-2.5 border-t border-[#ded8cb]/60 dark:border-[#1f2b40]/60">
                                     <div className="flex gap-1.5 flex-wrap">
                                         {tags.map((t, idx) => (
                                             <span
                                                 key={idx}
-                                                className="text-[11px] font-semibold bg-[#1a2a44] text-[#c9d3df] rounded-full px-2 py-0.5"
+                                                className="text-[11px] font-semibold bg-[#f5f0e6] dark:bg-[#1a2a44] text-[#57534e] dark:text-[#c9d3df] border border-[#ded8cb] dark:border-[#2a3b57] rounded-full px-2 py-0.5"
                                             >
                                                 {t}
                                             </span>
@@ -1023,17 +977,17 @@ export function OrganiserEntriesList({
 
                                     <div>
                                         {isApproved && (
-                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-[#2dd4b4]/12 text-[#2dd4b4] border border-[#2dd4b4]/35">
+                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border border-emerald-500/35">
                                                 Accepted ✓
                                             </span>
                                         )}
                                         {isPending && (
-                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/35">
+                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/35">
                                                 Review
                                             </span>
                                         )}
                                         {isRejected && (
-                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-rose-500/15 text-rose-300 border border-rose-500/35">
+                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-rose-500/15 text-rose-800 dark:text-rose-300 border border-rose-500/35">
                                                 Rejected
                                             </span>
                                         )}
@@ -1041,14 +995,14 @@ export function OrganiserEntriesList({
                                 </div>
 
                                 {/* Mobile Actions */}
-                                <div className="flex items-center justify-end gap-2 mt-3 pt-2.5 border-t border-[#1f2b40]/60">
+                                <div className="flex items-center justify-end gap-2 mt-3 pt-2.5 border-t border-[#ded8cb]/60 dark:border-[#1f2b40]/60">
                                     {isPending && (
                                         <>
                                             <Button
                                                 size="sm"
                                                 disabled={isActionPending}
                                                 onClick={() => handleApproveSingle(entry)}
-                                                className="h-8 px-3 rounded-xl bg-[#2dd4b4] text-[#04231e] font-bold text-xs hover:bg-[#26bfa2]"
+                                                className="h-8 px-3 rounded-xl bg-[#0d9488] hover:bg-[#0f766e] dark:bg-[#2dd4b4] text-white dark:text-[#04231e] font-bold text-xs"
                                             >
                                                 <Check className="h-3.5 w-3.5 mr-1" />
                                                 Approve
@@ -1058,7 +1012,7 @@ export function OrganiserEntriesList({
                                                 variant="outline"
                                                 disabled={isActionPending}
                                                 onClick={() => handleOpenRejectSingle(entry)}
-                                                className="h-8 px-3 rounded-xl border-rose-500/40 text-rose-400 hover:bg-rose-500/15 text-xs font-semibold"
+                                                className="h-8 px-3 rounded-xl border-rose-300 dark:border-rose-500/40 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/15 text-xs font-semibold"
                                             >
                                                 Reject
                                             </Button>
@@ -1069,7 +1023,7 @@ export function OrganiserEntriesList({
                                         <Link
                                             href={`/parent/entries/${entry.id}/id-card`}
                                             target="_blank"
-                                            className="h-8 px-3 rounded-xl border border-[#2dd4b4]/40 text-[#2dd4b4] hover:bg-[#2dd4b4]/10 text-xs font-semibold inline-flex items-center gap-1.5"
+                                            className="h-8 px-3 rounded-xl border border-[#0d9488]/40 dark:border-[#2dd4b4]/40 text-[#0d9488] dark:text-[#2dd4b4] hover:bg-[#0d9488]/10 text-xs font-semibold inline-flex items-center gap-1.5"
                                         >
                                             <Eye className="h-3.5 w-3.5" />
                                             View Pass
@@ -1079,33 +1033,33 @@ export function OrganiserEntriesList({
                                     {/* Mobile 3-dot dropdown */}
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
-                                            <button className="h-8 w-8 rounded-xl border border-[#2a3b57] text-[#8a99ab] inline-flex items-center justify-center text-xs">
+                                            <button className="h-8 w-8 rounded-xl border border-[#ded8cb] dark:border-[#2a3b57] text-[#78716c] dark:text-[#8a99ab] inline-flex items-center justify-center text-xs">
                                                 ···
                                             </button>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent
                                             align="end"
-                                            className="w-48 bg-[#16233a] border border-[#34455f] text-[#e8eef5] rounded-xl shadow-xl p-1"
+                                            className="w-48 bg-white dark:bg-[#16233a] border border-[#ded8cb] dark:border-[#34455f] text-[#1c1917] dark:text-[#e8eef5] rounded-xl shadow-xl p-1"
                                         >
                                             <DropdownMenuItem
                                                 onClick={() => {
                                                     setSelectedDetailEntry(entry)
                                                     setDetailDialogOpen(true)
                                                 }}
-                                                className="text-xs py-2"
+                                                className="text-xs py-2 cursor-pointer"
                                             >
                                                 Athlete Details
                                             </DropdownMenuItem>
                                             <DropdownMenuItem
                                                 onClick={() => handleOpenChestDialog(entry)}
-                                                className="text-xs py-2 text-[#2dd4b4]"
+                                                className="text-xs py-2 text-[#0d9488] dark:text-[#2dd4b4] cursor-pointer"
                                             >
                                                 Edit Chest #
                                             </DropdownMenuItem>
                                             {!isApproved && (
                                                 <DropdownMenuItem
                                                     onClick={() => handleApproveSingle(entry)}
-                                                    className="text-xs py-2 text-[#2dd4b4]"
+                                                    className="text-xs py-2 text-[#0d9488] dark:text-[#2dd4b4] cursor-pointer"
                                                 >
                                                     Accept Entry
                                                 </DropdownMenuItem>
@@ -1113,7 +1067,7 @@ export function OrganiserEntriesList({
                                             {!isRejected && (
                                                 <DropdownMenuItem
                                                     onClick={() => handleOpenRejectSingle(entry)}
-                                                    className="text-xs py-2 text-rose-400"
+                                                    className="text-xs py-2 text-rose-600 dark:text-rose-400 cursor-pointer"
                                                 >
                                                     Reject Entry
                                                 </DropdownMenuItem>
@@ -1126,10 +1080,10 @@ export function OrganiserEntriesList({
                     })
                 )}
 
-                {/* Mobile Floating Action Bar */}
+                {/* Mobile In-flow Action Bar (NO fixed overlay) */}
                 {selectedIds.size > 0 && (
-                    <div className="fixed left-3 right-3 bottom-3 z-50 bg-[#0d1626] border border-[#1f2b40] rounded-2xl p-3 shadow-2xl flex items-center justify-between">
-                        <span className="text-xs text-[#e8eef5] font-bold">
+                    <div className="p-3.5 bg-[#faf8f3] dark:bg-[#0d1626] border border-[#ded8cb] dark:border-[#1f2b40] rounded-2xl shadow-xs flex items-center justify-between">
+                        <span className="text-xs text-[#1c1917] dark:text-[#e8eef5] font-bold">
                             {selectedIds.size} selected
                         </span>
                         <div className="flex gap-2">
@@ -1137,7 +1091,7 @@ export function OrganiserEntriesList({
                                 size="sm"
                                 disabled={isActionPending}
                                 onClick={handleBulkApprove}
-                                className="h-8 rounded-xl bg-[#2dd4b4] text-[#04231e] font-bold text-xs"
+                                className="h-8 rounded-xl bg-[#0d9488] hover:bg-[#0f766e] dark:bg-[#2dd4b4] text-white dark:text-[#04231e] font-bold text-xs"
                             >
                                 Approve ({selectedIds.size})
                             </Button>
@@ -1146,7 +1100,7 @@ export function OrganiserEntriesList({
                                 variant="outline"
                                 disabled={isActionPending}
                                 onClick={handleOpenRejectBulk}
-                                className="h-8 rounded-xl border-rose-500/40 text-rose-400 text-xs"
+                                className="h-8 rounded-xl border-rose-300 dark:border-rose-500/40 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 text-xs"
                             >
                                 Reject
                             </Button>
@@ -1159,14 +1113,14 @@ export function OrganiserEntriesList({
             {/* 3. REJECT DIALOG MODAL                                                    */}
             {/* ========================================================================= */}
             <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
-                <DialogContent className="sm:max-w-md bg-[#111a2b] border-[#1f2b40] text-[#e8eef5] rounded-2xl shadow-2xl">
+                <DialogContent className="sm:max-w-md bg-white dark:bg-[#111a2b] border-[#ded8cb] dark:border-[#1f2b40] text-[#1c1917] dark:text-[#e8eef5] rounded-2xl shadow-2xl">
                     <DialogHeader>
-                        <DialogTitle className="text-lg font-bold text-[#e8eef5]">
+                        <DialogTitle className="text-lg font-bold text-[#1c1917] dark:text-[#e8eef5]">
                             {isBulkReject
                                 ? `Reject ${selectedIds.size} selected entries?`
                                 : `Reject entry for ${targetEntryForReject?.student_name}?`}
                         </DialogTitle>
-                        <DialogDescription className="text-xs text-[#8a99ab]">
+                        <DialogDescription className="text-xs text-[#78716c] dark:text-[#8a99ab]">
                             The coach and parent will be notified. You can specify a reason below (optional).
                         </DialogDescription>
                     </DialogHeader>
@@ -1174,7 +1128,7 @@ export function OrganiserEntriesList({
                     <div className="space-y-3 py-2">
                         {/* Quick Reason Chips */}
                         <div className="space-y-1.5">
-                            <span className="text-[11px] font-semibold text-[#8a99ab] uppercase tracking-wider">
+                            <span className="text-[11px] font-semibold text-[#78716c] dark:text-[#8a99ab] uppercase tracking-wider">
                                 Quick Reasons
                             </span>
                             <div className="flex flex-wrap gap-1.5">
@@ -1191,8 +1145,8 @@ export function OrganiserEntriesList({
                                         onClick={() => setRejectReason(chip)}
                                         className={`text-xs px-2.5 py-1 rounded-lg border transition cursor-pointer ${
                                             rejectReason === chip
-                                                ? 'bg-rose-500/20 text-rose-300 border-rose-500/50'
-                                                : 'bg-[#16233a] text-[#8a99ab] border-[#243349] hover:text-[#e8eef5]'
+                                                ? 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-300 dark:border-rose-500/50'
+                                                : 'bg-[#faf8f3] dark:bg-[#16233a] text-[#57534e] dark:text-[#8a99ab] border-[#ded8cb] dark:border-[#243349] hover:text-[#1c1917] dark:hover:text-[#e8eef5]'
                                         }`}
                                     >
                                         {chip}
@@ -1203,14 +1157,14 @@ export function OrganiserEntriesList({
 
                         {/* Custom Reason Input */}
                         <div className="space-y-1">
-                            <span className="text-[11px] font-semibold text-[#8a99ab] uppercase tracking-wider">
+                            <span className="text-[11px] font-semibold text-[#78716c] dark:text-[#8a99ab] uppercase tracking-wider">
                                 Specific Note / Reason
                             </span>
                             <Input
                                 placeholder="Explain why this entry is rejected..."
                                 value={rejectReason}
                                 onChange={(e) => setRejectReason(e.target.value)}
-                                className="bg-[#0f1828] border-[#1f2b40] text-[#e8eef5] placeholder:text-[#6b7b8f] text-xs rounded-xl"
+                                className="bg-white dark:bg-[#0f1828] border-[#ded8cb] dark:border-[#1f2b40] text-[#1c1917] dark:text-[#e8eef5] placeholder:text-[#a8a29e] dark:placeholder:text-[#6b7b8f] text-xs rounded-xl"
                             />
                         </div>
                     </div>
@@ -1219,7 +1173,7 @@ export function OrganiserEntriesList({
                         <Button
                             variant="ghost"
                             onClick={() => setRejectDialogOpen(false)}
-                            className="text-[#8a99ab] hover:text-[#e8eef5] rounded-xl text-xs"
+                            className="text-[#78716c] dark:text-[#8a99ab] hover:text-[#1c1917] dark:hover:text-[#e8eef5] rounded-xl text-xs"
                         >
                             Cancel
                         </Button>
@@ -1241,13 +1195,13 @@ export function OrganiserEntriesList({
             {/* 4. ASSIGN CHEST NUMBER DIALOG                                             */}
             {/* ========================================================================= */}
             <Dialog open={chestDialogOpen} onOpenChange={setChestDialogOpen}>
-                <DialogContent className="sm:max-w-xs bg-[#111a2b] border-[#1f2b40] text-[#e8eef5] rounded-2xl shadow-2xl">
+                <DialogContent className="sm:max-w-xs bg-white dark:bg-[#111a2b] border-[#ded8cb] dark:border-[#1f2b40] text-[#1c1917] dark:text-[#e8eef5] rounded-2xl shadow-2xl">
                     <DialogHeader>
-                        <DialogTitle className="text-base font-bold text-[#e8eef5]">
+                        <DialogTitle className="text-base font-bold text-[#1c1917] dark:text-[#e8eef5]">
                             Assign Chest Number
                         </DialogTitle>
-                        <DialogDescription className="text-xs text-[#8a99ab]">
-                            Athlete: <b className="text-[#e8eef5]">{targetEntryForChest?.student_name}</b>
+                        <DialogDescription className="text-xs text-[#78716c] dark:text-[#8a99ab]">
+                            Athlete: <b className="text-[#1c1917] dark:text-[#e8eef5]">{targetEntryForChest?.student_name}</b>
                         </DialogDescription>
                     </DialogHeader>
 
@@ -1257,9 +1211,9 @@ export function OrganiserEntriesList({
                             placeholder="e.g. 12"
                             value={chestInputValue}
                             onChange={(e) => setChestInputValue(e.target.value)}
-                            className="bg-[#0f1828] border-[#1f2b40] text-[#2dd4b4] font-bold text-center text-xl h-12 rounded-xl focus:border-[#2dd4b4]"
+                            className="bg-[#faf8f3] dark:bg-[#0f1828] border-[#ded8cb] dark:border-[#1f2b40] text-[#0d9488] dark:text-[#2dd4b4] font-bold text-center text-xl h-12 rounded-xl focus:border-[#0d9488] dark:focus:border-[#2dd4b4]"
                         />
-                        <p className="text-[11px] text-[#6b7b8f] text-center mt-2">
+                        <p className="text-[11px] text-[#78716c] dark:text-[#6b7b8f] text-center mt-2">
                             Leave empty or clear to unassign.
                         </p>
                     </div>
@@ -1268,14 +1222,14 @@ export function OrganiserEntriesList({
                         <Button
                             variant="ghost"
                             onClick={() => setChestDialogOpen(false)}
-                            className="text-[#8a99ab] hover:text-[#e8eef5] rounded-xl text-xs"
+                            className="text-[#78716c] dark:text-[#8a99ab] hover:text-[#1c1917] dark:hover:text-[#e8eef5] rounded-xl text-xs"
                         >
                             Cancel
                         </Button>
                         <Button
                             disabled={isActionPending}
                             onClick={handleSaveChestNo}
-                            className="bg-[#2dd4b4] text-[#04231e] font-bold rounded-xl text-xs hover:bg-[#26bfa2]"
+                            className="bg-[#0d9488] hover:bg-[#0f766e] dark:bg-[#2dd4b4] dark:hover:bg-[#26bfa2] text-white dark:text-[#04231e] font-bold rounded-xl text-xs"
                         >
                             {isActionPending ? (
                                 <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
@@ -1290,9 +1244,9 @@ export function OrganiserEntriesList({
             {/* 5. ATHLETE DETAIL MODAL                                                    */}
             {/* ========================================================================= */}
             <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
-                <DialogContent className="sm:max-w-md bg-[#111a2b] border-[#1f2b40] text-[#e8eef5] rounded-2xl shadow-2xl">
+                <DialogContent className="sm:max-w-md bg-white dark:bg-[#111a2b] border-[#ded8cb] dark:border-[#1f2b40] text-[#1c1917] dark:text-[#e8eef5] rounded-2xl shadow-2xl">
                     <DialogHeader>
-                        <DialogTitle className="text-lg font-bold text-[#e8eef5]">
+                        <DialogTitle className="text-lg font-bold text-[#1c1917] dark:text-[#e8eef5]">
                             Entry Details
                         </DialogTitle>
                     </DialogHeader>
@@ -1300,69 +1254,69 @@ export function OrganiserEntriesList({
                     {selectedDetailEntry && (
                         <div className="space-y-4 py-2">
                             <div className="flex items-center gap-3">
-                                <div className="w-12 h-12 rounded-full bg-[#16233a] border-2 border-[#2dd4b4] flex items-center justify-center font-bold text-[#2dd4b4] text-lg">
+                                <div className="w-12 h-12 rounded-full bg-[#f5f0e6] dark:bg-[#16233a] border-2 border-[#0d9488] dark:border-[#2dd4b4] flex items-center justify-center font-bold text-[#0d9488] dark:text-[#2dd4b4] text-lg">
                                     {selectedDetailEntry.student_name.charAt(0).toUpperCase()}
                                 </div>
                                 <div>
-                                    <h4 className="text-base font-bold text-[#e8eef5]">
+                                    <h4 className="text-base font-bold text-[#1c1917] dark:text-[#e8eef5]">
                                         {selectedDetailEntry.student_name}
                                     </h4>
-                                    <p className="text-xs text-[#8a99ab]">
+                                    <p className="text-xs text-[#78716c] dark:text-[#8a99ab]">
                                         Reg: {selectedDetailEntry.student_registration_no || '—'} · {selectedDetailEntry.student_gender}
                                     </p>
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-3 text-xs bg-[#0f1828] border border-[#1f2b40] rounded-xl p-3">
+                            <div className="grid grid-cols-2 gap-3 text-xs bg-[#faf8f3] dark:bg-[#0f1828] border border-[#ded8cb] dark:border-[#1f2b40] rounded-xl p-3">
                                 <div>
-                                    <span className="text-[#6b7b8f]">Dojo:</span>
-                                    <p className="font-semibold text-[#e8eef5] mt-0.5">
+                                    <span className="text-[#78716c] dark:text-[#6b7b8f]">Dojo:</span>
+                                    <p className="font-semibold text-[#1c1917] dark:text-[#e8eef5] mt-0.5">
                                         {selectedDetailEntry.dojo_name || '—'}
                                     </p>
                                 </div>
                                 <div>
-                                    <span className="text-[#6b7b8f]">Coach:</span>
-                                    <p className="font-semibold text-[#e8eef5] mt-0.5">
+                                    <span className="text-[#78716c] dark:text-[#6b7b8f]">Coach:</span>
+                                    <p className="font-semibold text-[#1c1917] dark:text-[#e8eef5] mt-0.5">
                                         {selectedDetailEntry.coach_name || selectedDetailEntry.coach_email}
                                     </p>
                                 </div>
                                 <div>
-                                    <span className="text-[#6b7b8f]">Rank / Belt:</span>
-                                    <p className="font-semibold text-[#e8eef5] mt-0.5">
+                                    <span className="text-[#78716c] dark:text-[#6b7b8f]">Rank / Belt:</span>
+                                    <p className="font-semibold text-[#1c1917] dark:text-[#e8eef5] mt-0.5">
                                         {selectedDetailEntry.student_rank || '—'}
                                     </p>
                                 </div>
                                 <div>
-                                    <span className="text-[#6b7b8f]">Weight:</span>
-                                    <p className="font-semibold text-[#e8eef5] mt-0.5">
+                                    <span className="text-[#78716c] dark:text-[#6b7b8f]">Weight:</span>
+                                    <p className="font-semibold text-[#1c1917] dark:text-[#e8eef5] mt-0.5">
                                         {selectedDetailEntry.declared_weight_kg || selectedDetailEntry.student_weight
                                             ? `${selectedDetailEntry.declared_weight_kg || selectedDetailEntry.student_weight} kg`
                                             : '—'}
                                     </p>
                                 </div>
                                 <div>
-                                    <span className="text-[#6b7b8f]">Category:</span>
-                                    <p className="font-semibold text-[#e8eef5] mt-0.5">
+                                    <span className="text-[#78716c] dark:text-[#6b7b8f]">Category:</span>
+                                    <p className="font-semibold text-[#1c1917] dark:text-[#e8eef5] mt-0.5">
                                         {selectedDetailEntry.category_name || 'Standard'}
                                     </p>
                                 </div>
                                 <div>
-                                    <span className="text-[#6b7b8f]">Chest Number:</span>
-                                    <p className="font-bold text-[#2dd4b4] mt-0.5">
+                                    <span className="text-[#78716c] dark:text-[#6b7b8f]">Chest Number:</span>
+                                    <p className="font-bold text-[#0d9488] dark:text-[#2dd4b4] mt-0.5">
                                         {selectedDetailEntry.chest_no ? `#${selectedDetailEntry.chest_no}` : 'Not assigned'}
                                     </p>
                                 </div>
                             </div>
 
                             {selectedDetailEntry.rejection_reason && (
-                                <div className="text-xs bg-rose-500/10 border border-rose-500/30 rounded-xl p-3 text-rose-300">
+                                <div className="text-xs bg-rose-500/10 border border-rose-500/30 rounded-xl p-3 text-rose-700 dark:text-rose-300">
                                     <span className="font-bold">Rejection Note: </span>
                                     {selectedDetailEntry.rejection_reason}
                                 </div>
                             )}
 
                             {selectedDetailEntry.coach_notes && (
-                                <div className="text-xs bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 text-amber-300">
+                                <div className="text-xs bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 text-amber-800 dark:text-amber-300">
                                     <span className="font-bold">Coach Note: </span>
                                     {selectedDetailEntry.coach_notes}
                                 </div>
@@ -1377,7 +1331,7 @@ export function OrganiserEntriesList({
                                 target="_blank"
                                 className="w-full sm:w-auto"
                             >
-                                <Button className="w-full rounded-xl bg-[#2dd4b4] text-[#04231e] font-bold text-xs hover:bg-[#26bfa2]">
+                                <Button className="w-full rounded-xl bg-[#0d9488] hover:bg-[#0f766e] dark:bg-[#2dd4b4] dark:hover:bg-[#26bfa2] text-white dark:text-[#04231e] font-bold text-xs">
                                     <Eye className="h-4 w-4 mr-1.5" />
                                     Open ID Card Pass
                                 </Button>
@@ -1386,7 +1340,7 @@ export function OrganiserEntriesList({
                         <Button
                             variant="ghost"
                             onClick={() => setDetailDialogOpen(false)}
-                            className="text-[#8a99ab] hover:text-[#e8eef5] rounded-xl text-xs"
+                            className="text-[#78716c] dark:text-[#8a99ab] hover:text-[#1c1917] dark:hover:text-[#e8eef5] rounded-xl text-xs"
                         >
                             Close
                         </Button>
