@@ -29,6 +29,7 @@ export interface SubmitParentEntryInput {
     event_id: string
     participation_type?: string | null
     declared_weight_kg?: number | null
+    event_day_id?: string | null
 }
 
 export async function submitParentEntry(
@@ -43,6 +44,7 @@ export async function submitParentEntry(
         event_id: input.event_id,
         participation_type: input.participation_type ?? null,
         declared_weight_kg: input.declared_weight_kg ?? null,
+        event_day_id: input.event_day_id ?? null,
     })
     if (!parsed.success) {
         return { error: parsed.error.issues[0]?.message ?? 'Invalid input.' }
@@ -167,6 +169,7 @@ export async function submitParentEntry(
             SET status = ${initialStatus},
                 participation_type = ${data.participation_type ?? null},
                 declared_weight_kg = ${data.declared_weight_kg ?? null},
+                event_day_id = ${data.event_day_id ?? null},
                 category_snapshot = NULL,
                 submitted_by = ${user.id},
                 coach_notes = NULL,
@@ -187,6 +190,7 @@ export async function submitParentEntry(
                 coach_id,
                 participation_type,
                 declared_weight_kg,
+                event_day_id,
                 category_snapshot,
                 status,
                 submitted_by
@@ -196,6 +200,7 @@ export async function submitParentEntry(
                 ${coachId},
                 ${data.participation_type ?? null},
                 ${data.declared_weight_kg ?? null},
+                ${data.event_day_id ?? null},
                 NULL,
                 ${initialStatus},
                 ${user.id}
@@ -320,5 +325,59 @@ export async function withdrawParentEntry(
     revalidatePath(`/dashboard/entries/${entry.event_id}`)
     revalidatePath('/dashboard/parent-entries')
 
+    return { success: true }
+}
+
+// ─── Update Parent Entry Day ──────────────────────────────────────────────────
+
+export async function updateParentEntryDay(
+    entryId: string,
+    eventDayId: string | null
+): Promise<{ success?: boolean; error?: string }> {
+    const { user } = await requireRole('parent', { redirectTo: '/login' })
+
+    const rows = await sql<{ id: string; status: string; student_id: string; event_id: string }[]>`
+        SELECT e.id, e.status, e.student_id, e.event_id
+        FROM entries e
+        JOIN students s ON e.student_id = s.id
+        WHERE e.id = ${entryId}
+          AND s.parent_id = ${user.id}
+        LIMIT 1
+    `
+    if (!rows.length) {
+        return { error: 'Entry not found or unauthorized.' }
+    }
+    const entry = rows[0]
+
+    // Only allow editing day if not already approved
+    if (entry.status === 'approved') {
+        return { error: 'Entry has already been approved by organizer and cannot be modified.' }
+    }
+
+    if (eventDayId) {
+        const dayRows = await sql<{ id: string }[]>`
+            SELECT id FROM event_days
+            WHERE id = ${eventDayId} AND event_id = ${entry.event_id}
+            LIMIT 1
+        `
+        if (!dayRows.length) {
+            return { error: 'Selected day is invalid for this tournament.' }
+        }
+    }
+
+    await sql`
+        UPDATE entries
+        SET event_day_id = ${eventDayId || null},
+            updated_at = NOW()
+        WHERE id = ${entryId}
+    `
+
+    revalidatePath('/athlete')
+    revalidatePath('/parent')
+    revalidatePath(`/athlete/${entry.student_id}`)
+    revalidatePath(`/parent/children/${entry.student_id}`)
+    revalidatePath(`/athlete/entries/${entryId}`)
+    revalidatePath(`/parent/entries/${entryId}`)
+    revalidatePath(`/dashboard/events/${entry.event_id}/entries`)
     return { success: true }
 }

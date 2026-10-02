@@ -37,7 +37,7 @@ export function TeamCardsPrintClient({
             <header className="no-print sticky top-0 z-30 bg-card/95 backdrop-blur border-b px-4 py-3 shadow-sm">
                 <div className="max-w-6xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
-                        <Link href={`/dashboard/entries/${eventId}`}>
+                        <Link href={`/dashboard/events/${eventId}/entries`}>
                             <Button variant="ghost" size="sm" className="gap-1.5 rounded-md">
                                 <ArrowLeft className="h-4 w-4" />
                                 Back to Event
@@ -95,7 +95,7 @@ export function TeamCardsPrintClient({
                     <p className="text-xs text-muted-foreground">
                         ID cards can only be generated for entries that have been approved by the tournament organiser.
                     </p>
-                    <Link href={`/dashboard/entries/${eventId}`}>
+                    <Link href={`/dashboard/events/${eventId}/entries`}>
                         <Button size="sm" variant="outline" className="mt-2 rounded-md">
                             Return to Entries
                         </Button>

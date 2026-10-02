@@ -18,13 +18,20 @@ function toIsoDate(d: string | Date | null | undefined): string {
     return String(d).slice(0, 10)
 }
 
+import { CoachEventsBrowser } from '@/components/events/coach-events-browser'
+
 export default async function EventsPage({
     searchParams,
 }: {
     searchParams?: Promise<{ page?: string }>
 }) {
-    const { user } = await requireRole(['organizer', 'admin'], { redirectTo: '/dashboard' })
+    const { user, role } = await requireRole(['coach', 'organizer', 'admin'], { redirectTo: '/dashboard' })
     const sp = await searchParams
+
+    if (role === 'coach') {
+        return <CoachEventsBrowser user={user} searchParams={sp} />
+    }
+
     const page = Math.max(1, Number(sp?.page) || 1)
     const limit = 50
     const offset = (page - 1) * limit

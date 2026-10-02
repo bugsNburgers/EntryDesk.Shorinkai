@@ -32,7 +32,16 @@ export function DashboardNavLink({ children, className, icon, ...props }: Props)
     const hrefString = typeof props.href === 'string' ? props.href : undefined
     const hrefPath = hrefString ? hrefString.split('?')[0]?.split('#')[0] : undefined
 
-    const actualIsActive = !!hrefPath && (hrefPath === '/dashboard' ? pathname === '/dashboard' : pathname === hrefPath || pathname.startsWith(`${hrefPath}/`))
+    const actualIsActive =
+        !!hrefPath &&
+        (hrefPath === '/dashboard'
+            ? pathname === '/dashboard'
+            : hrefPath === '/dashboard/events'
+            ? pathname === '/dashboard/events' ||
+              pathname.startsWith('/dashboard/events/') ||
+              pathname.startsWith('/dashboard/events-browser') ||
+              pathname.startsWith('/dashboard/entries')
+            : pathname === hrefPath || pathname.startsWith(`${hrefPath}/`))
     const isPending = !!hrefPath && pendingPath === hrefPath
 
     // If a link was just clicked (pendingPath set), optimistically highlight ONLY the clicked link!

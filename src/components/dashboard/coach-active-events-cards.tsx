@@ -95,7 +95,7 @@ export function CoachActiveEventsCards({
                                     Details
                                 </Button>
                                 {status === 'approved' ? (
-                                    <Link href={`/dashboard/entries/${event.id}`} className="w-full">
+                                    <Link href={`/dashboard/events/${event.id}/entries`} className="w-full">
                                         <Button className="w-full rounded-xl">
                                             Entries
                                             <ArrowRight className="ml-1 h-3.5 w-3.5" />

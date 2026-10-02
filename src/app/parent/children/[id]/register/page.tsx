@@ -137,6 +137,55 @@ export default async function RegisterTournamentPage({
         entryMap.set(entry.event_id, { id: entry.id, status: entry.status })
     }
 
+    // Fetch event days for all available tournaments
+    const eventIds = eventRows.map((e) => e.id)
+    const eventDaysRows = eventIds.length > 0 ? await sql<{
+        id: string
+        event_id: string
+        date: string | Date
+        name: string | null
+    }[]>`
+        SELECT id, event_id, date, name
+        FROM event_days
+        WHERE event_id = ANY(${eventIds})
+        ORDER BY date ASC
+    ` : []
+
+    const eventDaysMap = new Map<string, { id: string; date: string; name: string }[]>()
+    for (const d of eventDaysRows) {
+        const list = eventDaysMap.get(d.event_id) || []
+        const isoDate = d.date instanceof Date ? d.date.toISOString().slice(0, 10) : String(d.date).slice(0, 10)
+        list.push({
+            id: d.id,
+            date: isoDate,
+            name: d.name || `Day ${list.length + 1}`,
+        })
+        eventDaysMap.set(d.event_id, list)
+    }
+
+    // Ensure event days exist for any multi-day or single-day events that didn't have rows
+    for (const ev of eventRows) {
+        const existingDays = eventDaysMap.get(ev.id) || []
+        if (existingDays.length === 0) {
+            const start = ev.start_date instanceof Date ? ev.start_date.toISOString().slice(0, 10) : String(ev.start_date).slice(0, 10)
+            const end = ev.end_date instanceof Date ? ev.end_date.toISOString().slice(0, 10) : String(ev.end_date).slice(0, 10)
+            const inserted = await sql<{ id: string; date: string | Date; name: string | null }[]>`
+                INSERT INTO event_days (event_id, date, name)
+                SELECT 
+                    ${ev.id},
+                    d::date,
+                    'Day ' || ROW_NUMBER() OVER (ORDER BY d)
+                FROM generate_series(${start}::date, ${end}::date, '1 day'::interval) AS d
+                RETURNING id, date, name
+            `
+            eventDaysMap.set(ev.id, inserted.map((d, idx) => ({
+                id: d.id,
+                date: d.date instanceof Date ? d.date.toISOString().slice(0, 10) : String(d.date).slice(0, 10),
+                name: d.name || `Day ${idx + 1}`,
+            })))
+        }
+    }
+
     const tournaments = eventRows.map((e) => {
         const existing = entryMap.get(e.id)
         return {
@@ -150,6 +199,7 @@ export default async function RegisterTournamentPage({
                 : null,
             existing_entry_id: existing?.id ?? null,
             existing_entry_status: existing?.status ?? null,
+            days: eventDaysMap.get(e.id) || [],
         }
     })
 

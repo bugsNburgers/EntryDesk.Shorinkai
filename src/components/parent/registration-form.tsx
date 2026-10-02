@@ -22,6 +22,12 @@ import { submitParentEntry } from '@/app/parent/entry-actions'
 import { PhotoUploadDialog } from '@/components/ui/photo-upload-dialog'
 import { formatDateRangeStable, formatDateStable } from '@/lib/date'
 
+export interface EventDayOption {
+    id: string
+    date: string | Date
+    name: string | null
+}
+
 export interface TournamentOption {
     id: string
     title: string
@@ -34,6 +40,7 @@ export interface TournamentOption {
     coach_checks_each_entry: boolean
     existing_entry_id?: string | null
     existing_entry_status?: string | null
+    days?: EventDayOption[]
 }
 
 export interface ChildData {
@@ -70,6 +77,24 @@ export function RegistrationForm({
     const [selectedEventId, setSelectedEventId] = useState<string>(
         preselectedEventId || (tournaments.length === 1 ? tournaments[0].id : '')
     )
+
+    const selectedTournament = tournaments.find((t) => t.id === selectedEventId)
+
+    const [selectedDayId, setSelectedDayId] = useState<string>(() => {
+        const initT = tournaments.find((t) => t.id === (preselectedEventId || (tournaments.length === 1 ? tournaments[0].id : '')))
+        return initT?.days?.[0]?.id || ''
+    })
+
+    const handleSelectTournament = (eventId: string) => {
+        setSelectedEventId(eventId)
+        const t = tournaments.find((x) => x.id === eventId)
+        if (t?.days && t.days.length > 0) {
+            setSelectedDayId(t.days[0].id)
+        } else {
+            setSelectedDayId('')
+        }
+    }
+
     const [individualType, setIndividualType] = useState<'both' | 'kata' | 'kumite'>('both')
     const [teamKata, setTeamKata] = useState(false)
     const [teamKumite, setTeamKumite] = useState(false)
@@ -77,10 +102,8 @@ export function RegistrationForm({
         child.weight ? String(child.weight) : ''
     )
 
-    const selectedTournament = tournaments.find((t) => t.id === selectedEventId)
     const parsedWeight = parseFloat(weightStr)
     const currentWeight = !isNaN(parsedWeight) && parsedWeight > 0 ? parsedWeight : child.weight
-
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -89,6 +112,11 @@ export function RegistrationForm({
 
         if (!selectedEventId) {
             setError('Please select a tournament.')
+            return
+        }
+
+        if (selectedTournament?.days && selectedTournament.days.length > 0 && !selectedDayId) {
+            setError('Please choose which day you will be participating in.')
             return
         }
 
@@ -110,6 +138,7 @@ export function RegistrationForm({
                 event_id: selectedEventId,
                 participation_type: finalParticipationType,
                 declared_weight_kg: currentWeight ?? null,
+                event_day_id: selectedDayId || null,
             })
 
             if (res.error) {
@@ -201,7 +230,7 @@ export function RegistrationForm({
                                     key={t.id}
                                     onClick={() => {
                                         if (!isAlreadyRegistered) {
-                                            setSelectedEventId(t.id)
+                                            handleSelectTournament(t.id)
                                         }
                                     }}
                                     className={`relative rounded-xl border p-4 transition-all ${
@@ -285,11 +314,79 @@ export function RegistrationForm({
                 )}
             </div>
 
-            {/* Step 2: Events to Enter */}
+            {/* Step 2: Choose Participation Day (Organiser Date Range) */}
+            {selectedTournament?.days && selectedTournament.days.length > 0 && (
+                <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                        <Label className="text-sm font-semibold flex items-center gap-1.5">
+                            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground">
+                                2
+                            </span>
+                            Choose Participation Day
+                        </Label>
+                        <span className="text-xs text-muted-foreground">
+                            {selectedTournament.days.length === 1
+                                ? 'Single-day event'
+                                : `${selectedTournament.days.length} days scheduled — select your day`}
+                        </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+                        {selectedTournament.days.map((day) => {
+                            const isSelected = selectedDayId === day.id
+                            const dateObj = new Date(day.date)
+                            const dateFormatted = isNaN(dateObj.getTime())
+                                ? String(day.date)
+                                : dateObj.toLocaleDateString(undefined, {
+                                      weekday: 'short',
+                                      month: 'short',
+                                      day: 'numeric',
+                                  })
+
+                            return (
+                                <div
+                                    key={day.id}
+                                    onClick={() => setSelectedDayId(day.id)}
+                                    className={`rounded-xl border p-3.5 text-left transition-all cursor-pointer flex flex-col justify-between select-none ${
+                                        isSelected
+                                            ? 'border-[#0d9488] dark:border-[#2dd4b4] ring-2 ring-[#0d9488]/20 bg-[#0d9488]/5 dark:bg-[#2dd4b4]/10 shadow-xs'
+                                            : 'border-border bg-card hover:border-[#0d9488]/40 dark:hover:border-[#2dd4b4]/40 hover:bg-muted/30'
+                                    }`}
+                                >
+                                    <div className="flex items-center justify-between w-full">
+                                        <div className="flex items-center gap-2">
+                                            <Calendar className={`h-4 w-4 ${isSelected ? 'text-[#0d9488] dark:text-[#2dd4b4]' : 'text-muted-foreground'}`} />
+                                            <span className="text-sm font-bold text-[#1c1917] dark:text-[#e8eef5]">
+                                                {day.name}
+                                            </span>
+                                        </div>
+                                        <div
+                                            className={`h-4 w-4 rounded-full border flex items-center justify-center shrink-0 ${
+                                                isSelected
+                                                    ? 'border-[#0d9488] bg-[#0d9488] dark:border-[#2dd4b4] dark:bg-[#2dd4b4]'
+                                                    : 'border-muted-foreground/40'
+                                            }`}
+                                        >
+                                            {isSelected && (
+                                                <div className="h-1.5 w-1.5 rounded-full bg-white dark:bg-[#04231e]" />
+                                            )}
+                                        </div>
+                                    </div>
+                                    <p className="text-xs font-medium text-muted-foreground mt-2">
+                                        {dateFormatted}
+                                    </p>
+                                </div>
+                            )
+                        })}
+                    </div>
+                </div>
+            )}
+
+            {/* Step 3: Events to Enter */}
             <div className="space-y-4">
                 <Label className="text-sm font-semibold flex items-center gap-1.5">
                     <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground">
-                        2
+                        {selectedTournament?.days && selectedTournament.days.length > 0 ? 3 : 2}
                     </span>
                     Events to Enter
                 </Label>
@@ -389,11 +486,11 @@ export function RegistrationForm({
                 </div>
             </div>
 
-            {/* Step 3: Competition Weight */}
+            {/* Step 4: Competition Weight */}
             <div className="space-y-3">
                 <Label className="text-sm font-semibold flex items-center gap-1.5">
                     <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground">
-                        3
+                        {selectedTournament?.days && selectedTournament.days.length > 0 ? 4 : 3}
                     </span>
                     Competition Weight (Optional)
                 </Label>

@@ -143,7 +143,13 @@ function getAthleteAge(dob: string | null | undefined): string {
     if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
         age--
     }
-    return age > 0 ? `${age} yrs` : '—'
+    return age > 0 ? String(age) : '—'
+}
+
+function formatBelt(rank: string | null | undefined): string {
+    if (!rank) return 'White'
+    const cleaned = rank.replace(/\bbelts?\b/gi, '').replace(/\s+/g, ' ').trim()
+    return cleaned || 'White'
 }
 
 function getAppliedTags(entry: OrganiserEntryItem): string[] {
@@ -193,6 +199,47 @@ export function OrganiserEntriesList({
     const [activeTab, setActiveTab] = useState<'pending' | 'all' | 'approved' | 'rejected'>(
         counts.pending > 0 ? 'pending' : 'all'
     )
+
+    // Dynamic Heading & Subtitle that updates as slider switches
+    const headingInfo = useMemo(() => {
+        switch (activeTab) {
+            case 'pending':
+                return {
+                    title: `Pending Approvals (${counts.pending})`,
+                    subtitle: 'Review and verify athlete entries submitted by coaches awaiting acceptance.',
+                }
+            case 'all':
+                return {
+                    title: `All Entries (${counts.all})`,
+                    subtitle: 'All tournament entries across coaches and dojos.',
+                }
+            case 'approved':
+                return {
+                    title: `Accepted Entries (${counts.approved})`,
+                    subtitle: 'Athletes approved, verified, and cleared for tournament participation.',
+                }
+            case 'rejected':
+                return {
+                    title: `Rejected Entries (${counts.rejected})`,
+                    subtitle: 'Athletes whose entries were declined or rejected.',
+                }
+            default:
+                return {
+                    title: `Pending Approvals (${counts.pending})`,
+                    subtitle: 'Review and verify athlete entries submitted by coaches awaiting acceptance.',
+                }
+        }
+    }, [activeTab, counts])
+
+    // Dynamic Heading Color: Pending Approvals is RED if > 0, GREEN if 0
+    const headingColor = useMemo(() => {
+        if (activeTab === 'pending') {
+            return counts.pending > 0
+                ? 'text-rose-600 dark:text-rose-400'
+                : 'text-emerald-600 dark:text-emerald-400'
+        }
+        return 'text-[#1c1917] dark:text-[#f8fafc]'
+    }, [activeTab, counts.pending])
 
     // Dialog states
     const [rejectDialogOpen, setRejectDialogOpen] = useState(false)
@@ -337,6 +384,21 @@ export function OrganiserEntriesList({
         })
     }
 
+    // Bulk Approve All Pending
+    const handleApproveAllPending = () => {
+        const pendingIds = entries.filter((e) => e.status === 'submitted').map((e) => e.id)
+        if (pendingIds.length === 0) return
+        startTransition(async () => {
+            try {
+                await bulkUpdateEntryStatus(pendingIds, 'approved')
+                setSelectedIds(new Set())
+                toast.success(`${pendingIds.length} pending entries accepted!`)
+            } catch (err: any) {
+                toast.error(err.message || 'Failed to approve entries')
+            }
+        })
+    }
+
     // Open chest # dialog
     const handleOpenChestDialog = (entry: OrganiserEntryItem) => {
         setTargetEntryForChest(entry)
@@ -365,144 +427,165 @@ export function OrganiserEntriesList({
     }
 
     return (
-        <div className="space-y-4">
-            {/* Unified Card Container */}
+        <div className="w-full text-[#1c1917] dark:text-[#e8eef5] select-text font-['Google_Sans','Product_Sans',system-ui,sans-serif] space-y-4 pb-44 md:pb-28">
+            {/* ========================================================================= */}
+            {/* 1. SEARCH BAR & ACTION BUTTONS (IN LINE)                                  */}
+            {/* ========================================================================= */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                {/* Single white search box (stretches to fill available space until buttons) */}
+                <div className="relative flex-1 min-w-[200px]">
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#78716c] dark:text-[#8a99ab]" />
+                    <input
+                        type="text"
+                        placeholder="Search student, dojo, coach, belt..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full h-11 pl-10 pr-9 text-xs sm:text-sm rounded-xl bg-white dark:bg-[#111a2b] border border-[#ded8cb] dark:border-[#1f2b40] text-[#1c1917] dark:text-[#f8fafc] placeholder:text-[#a8a29e] dark:placeholder:text-[#6b7b8f] focus:outline-none focus:border-[#0d9488] dark:focus:border-[#2dd4b4] shadow-xs transition"
+                    />
+                    {searchQuery && (
+                        <button
+                            type="button"
+                            onClick={() => setSearchQuery('')}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#78716c] hover:text-[#1c1917] dark:text-[#8a99ab] dark:hover:text-[#e8eef5] p-1 cursor-pointer"
+                        >
+                            <X className="h-3.5 w-3.5" />
+                        </button>
+                    )}
+                </div>
+
+                {/* Print ID Cards in line on the right */}
+                {counts.approved > 0 && eventId && (
+                    <div className="flex items-center gap-2.5 shrink-0 w-full sm:w-auto">
+                        <Link href={`/dashboard/events/${eventId}/print`} target="_blank" className="flex-1 sm:flex-initial">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="w-full sm:w-auto h-11 px-4 gap-1.5 rounded-xl font-semibold border-[#0d9488]/40 dark:border-[#2dd4b4]/40 text-[#0d9488] dark:text-[#2dd4b4] hover:bg-[#0d9488]/5 bg-white dark:bg-[#111a2b] shadow-xs cursor-pointer"
+                            >
+                                <Printer className="h-4 w-4" />
+                                <span>Print ID Cards ({counts.approved})</span>
+                            </Button>
+                        </Link>
+                    </div>
+                )}
+            </div>
+
+            {/* ========================================================================= */}
+            {/* 2. UNIFIED ATHLETE ENTRIES CARD (HEADER + ATHLETES TABLE JOINED)          */}
+            {/* ========================================================================= */}
             <div className="rounded-2xl border border-[#ded8cb] bg-white shadow-xs overflow-hidden dark:border-[#1f2b40] dark:bg-[#111a2b]">
-                {/* Header with Search and Status Filter Tabs */}
-                <div className="border-b border-[#ded8cb] bg-[#faf8f3] px-4 py-3 sm:px-5 sm:py-3.5 dark:border-[#1f2b40] dark:bg-[#0d1624]">
-                    <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                        <div>
-                            <h3 className="text-base font-bold text-[#1c1917] dark:text-[#f8fafc] tracking-tight">
-                                Tournament Entries
-                            </h3>
-                            <p className="text-xs text-[#78716c] dark:text-[#8a99ab]">
-                                Review, verify, and accept athlete entries submitted by coaches.
-                            </p>
-                        </div>
+                {/* Upper Section: Pending Approvals text & Segmented Slider with curvy top arc */}
+                <div className="p-4 sm:p-5 bg-white dark:bg-[#111a2b] border-b border-[#ded8cb] dark:border-[#1f2b40] flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+                    <div>
+                        <h3 className={`text-xl font-bold tracking-tight ${headingColor}`}>
+                            {headingInfo.title}
+                        </h3>
+                        <p className="text-xs text-[#78716c] dark:text-[#8a99ab] mt-0.5">
+                            {headingInfo.subtitle}
+                        </p>
+                    </div>
 
-                        {/* Search + Tabs Unified */}
-                        <div className="flex flex-wrap items-center gap-2">
-                            {/* Search */}
-                            <div className="relative w-full sm:w-56">
-                                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                                <Input
-                                    placeholder="Search entries..."
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="h-8.5 pl-8 pr-7 text-xs rounded-lg bg-white dark:bg-[#0f1828] border-[#ded8cb] dark:border-[#1f2b40] text-[#1c1917] dark:text-[#f8fafc] placeholder:text-muted-foreground focus:ring-1 focus:ring-[#0d9488]"
-                                />
-                                {searchQuery && (
+                    <div className="flex items-center gap-2.5 flex-wrap">
+                        {/* Segmented Slider Switcher */}
+                        <div className="p-1 rounded-xl bg-[#ede8dc]/80 dark:bg-[#070e1b] border border-[#ded8cb] dark:border-[#1f2b40] inline-flex items-center gap-1 overflow-x-auto max-w-full">
+                            {[
+                                { key: 'pending' as const, label: 'Pending Approvals', count: counts.pending, isPending: true },
+                                { key: 'all' as const, label: 'All', count: counts.all },
+                                { key: 'approved' as const, label: 'Accepted', count: counts.approved },
+                                { key: 'rejected' as const, label: 'Rejected', count: counts.rejected },
+                            ].map((tab) => {
+                                const isActive = activeTab === tab.key
+                                const isPending = tab.isPending
+                                const hasPendingItems = tab.count > 0
+
+                                let buttonClasses = ''
+                                let badgeClasses = ''
+
+                                if (isPending) {
+                                    if (hasPendingItems) {
+                                        // RED if > 0
+                                        buttonClasses = isActive
+                                            ? 'bg-rose-500 text-white font-bold shadow-sm'
+                                            : 'text-rose-600 dark:text-rose-400 hover:bg-rose-500/10'
+                                        badgeClasses = isActive
+                                            ? 'bg-white/25 text-white'
+                                            : 'bg-rose-500/20 text-rose-700 dark:text-rose-300'
+                                    } else {
+                                        // GREEN if 0
+                                        buttonClasses = isActive
+                                            ? 'bg-emerald-600 dark:bg-emerald-500 text-white font-bold shadow-sm'
+                                            : 'text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10'
+                                        badgeClasses = isActive
+                                            ? 'bg-white/25 text-white'
+                                            : 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300'
+                                    }
+                                } else {
+                                    buttonClasses = isActive
+                                        ? 'bg-white dark:bg-[#17243c] text-[#1c1917] dark:text-[#f8fafc] font-bold shadow-sm'
+                                        : 'text-[#57534e] dark:text-[#8a99ab] hover:text-[#1c1917] dark:hover:text-[#e8eef5] hover:bg-black/5 dark:hover:bg-white/5'
+                                    badgeClasses = isActive
+                                        ? 'bg-[#0d9488]/15 text-[#0d9488] dark:bg-[#2dd4b4]/20 dark:text-[#2dd4b4]'
+                                        : 'bg-black/5 dark:bg-white/10 text-[#57534e] dark:text-[#8a99ab]'
+                                }
+
+                                return (
                                     <button
-                                        type="button"
-                                        onClick={() => setSearchQuery('')}
-                                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+                                        key={tab.key}
+                                        onClick={() => setActiveTab(tab.key)}
+                                        className={`h-9 px-3.5 rounded-lg text-xs font-semibold inline-flex items-center gap-2 transition-all duration-200 whitespace-nowrap cursor-pointer select-none ${buttonClasses}`}
                                     >
-                                        <X className="h-3.5 w-3.5" />
+                                        <span>{tab.label}</span>
+                                        <span className={`px-1.5 py-0.5 rounded-full text-[10.5px] font-bold ${badgeClasses}`}>
+                                            {tab.count}
+                                        </span>
                                     </button>
-                                )}
-                            </div>
-
-                            {/* Status Tabs */}
-                            <div className="flex items-center gap-1 overflow-x-auto pb-0.5 sm:pb-0">
-                                <button
-                                    onClick={() => setActiveTab('pending')}
-                                    className={`h-8 px-2.5 rounded-lg text-xs font-semibold inline-flex items-center gap-1.5 transition cursor-pointer shrink-0 ${
-                                        activeTab === 'pending'
-                                            ? 'bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/40 font-bold'
-                                            : 'bg-white dark:bg-[#0f1828] text-[#57534e] dark:text-[#8a99ab] border border-[#ded8cb] dark:border-[#1f2b40] hover:bg-[#f5f0e6] dark:hover:bg-[#16233a]'
-                                    }`}
-                                >
-                                    <span>Pending</span>
-                                    <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-500/20 text-amber-900 dark:text-amber-200">
-                                        {counts.pending}
-                                    </span>
-                                </button>
-
-                                <button
-                                    onClick={() => setActiveTab('all')}
-                                    className={`h-8 px-2.5 rounded-lg text-xs font-semibold inline-flex items-center gap-1.5 transition cursor-pointer shrink-0 ${
-                                        activeTab === 'all'
-                                            ? 'bg-[#0d9488]/15 text-[#0d9488] dark:bg-[#2dd4b4]/15 dark:text-[#2dd4b4] border border-[#0d9488]/40 dark:border-[#2dd4b4]/40 font-bold'
-                                            : 'bg-white dark:bg-[#0f1828] text-[#57534e] dark:text-[#8a99ab] border border-[#ded8cb] dark:border-[#1f2b40] hover:bg-[#f5f0e6] dark:hover:bg-[#16233a]'
-                                    }`}
-                                >
-                                    <span>All</span>
-                                    <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-black/5 dark:bg-white/10">
-                                        {counts.all}
-                                    </span>
-                                </button>
-
-                                <button
-                                    onClick={() => setActiveTab('approved')}
-                                    className={`h-8 px-2.5 rounded-lg text-xs font-semibold inline-flex items-center gap-1.5 transition cursor-pointer shrink-0 ${
-                                        activeTab === 'approved'
-                                            ? 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border border-emerald-500/40 font-bold'
-                                            : 'bg-white dark:bg-[#0f1828] text-[#57534e] dark:text-[#8a99ab] border border-[#ded8cb] dark:border-[#1f2b40] hover:bg-[#f5f0e6] dark:hover:bg-[#16233a]'
-                                    }`}
-                                >
-                                    <span>Accepted</span>
-                                    <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-900 dark:text-emerald-200">
-                                        {counts.approved}
-                                    </span>
-                                </button>
-
-                                <button
-                                    onClick={() => setActiveTab('rejected')}
-                                    className={`h-8 px-2.5 rounded-lg text-xs font-semibold inline-flex items-center gap-1.5 transition cursor-pointer shrink-0 ${
-                                        activeTab === 'rejected'
-                                            ? 'bg-rose-500/15 text-rose-800 dark:text-rose-300 border border-rose-500/40 font-bold'
-                                            : 'bg-white dark:bg-[#0f1828] text-[#57534e] dark:text-[#8a99ab] border border-[#ded8cb] dark:border-[#1f2b40] hover:bg-[#f5f0e6] dark:hover:bg-[#16233a]'
-                                    }`}
-                                >
-                                    <span>Rejected</span>
-                                    <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-rose-500/20 text-rose-900 dark:text-rose-200">
-                                        {counts.rejected}
-                                    </span>
-                                </button>
-                            </div>
+                                )
+                            })}
                         </div>
                     </div>
                 </div>
 
-                {/* 1. DESKTOP / LAPTOP TABLE */}
+                {/* ========================================================================= */}
+                {/* 1. DESKTOP / LAPTOP TABLE                                                 */}
+                {/* ========================================================================= */}
                 <div className="hidden lg:block overflow-x-auto">
                     {/* Table Header */}
                     <div
                         style={{
                             display: 'grid',
-                            gridTemplateColumns: '28px 50px 185px 48px 80px 95px 60px 52px 1fr 115px 125px',
-                            columnGap: '10px',
+                            gridTemplateColumns: '36px 60px minmax(160px, 1.2fr) 42px 85px 95px minmax(130px, 0.8fr) 65px 150px 125px 120px',
                             alignItems: 'center',
-                            padding: '0 16px',
-                            height: '42px',
+                            height: '48px',
                         }}
                         className="bg-[#f5f0e6] dark:bg-[#0f1828] border-b border-[#ded8cb] dark:border-[#1f2b40] text-[#78716c] dark:text-[#8a99ab] text-[11px] font-bold uppercase tracking-wider"
                     >
                         {/* Select All Checkbox */}
-                        <span
-                            onClick={handleToggleSelectAll}
-                            className={`w-4 h-4 rounded border-2 flex items-center justify-center cursor-pointer transition ${
-                                isAllSelected
-                                    ? 'bg-[#0d9488] dark:bg-[#2dd4b4] border-[#0d9488] dark:border-[#2dd4b4]'
-                                    : 'border-[#ded8cb] dark:border-[#34455f] bg-white dark:bg-transparent'
-                            }`}
-                        >
-                            {isAllSelected && <CheckmarkSvg />}
-                        </span>
+                        <div className="h-full flex items-center justify-center border-r border-dotted border-[#ded8cb] dark:border-[#223552] px-2">
+                            <span
+                                onClick={handleToggleSelectAll}
+                                className={`w-5 h-5 rounded-[6px] border-2 flex items-center justify-center cursor-pointer transition ${
+                                    isAllSelected
+                                        ? 'bg-[#0d9488] dark:bg-[#2dd4b4] border-[#0d9488] dark:border-[#2dd4b4]'
+                                        : 'border-[#ded8cb] dark:border-[#34455f] bg-white dark:bg-transparent'
+                                }`}
+                            >
+                                {isAllSelected && <CheckmarkSvg />}
+                            </span>
+                        </div>
 
-                        <span>Chest</span>
-                        <span>Athlete</span>
-                        <span>Age</span>
-                        <span>Dojo</span>
-                        <span>Coach</span>
-                        <span>Belt</span>
-                        <span>Weight</span>
-                        <span>Events applied</span>
-                        <span>Status</span>
-                        <span className="text-right">Action</span>
+                        <div className="h-full flex items-center px-2.5 border-r border-dotted border-[#ded8cb] dark:border-[#223552]">Chest</div>
+                        <div className="h-full flex items-center px-2.5 border-r border-dotted border-[#ded8cb] dark:border-[#223552]">Athlete</div>
+                        <div className="h-full flex items-center justify-center px-1 border-r border-dotted border-[#ded8cb] dark:border-[#223552]">Age</div>
+                        <div className="h-full flex items-center px-2.5 border-r border-dotted border-[#ded8cb] dark:border-[#223552]">Dojo</div>
+                        <div className="h-full flex items-center px-2.5 border-r border-dotted border-[#ded8cb] dark:border-[#223552]">Coach</div>
+                        <div className="h-full flex items-center px-2.5 border-r border-dotted border-[#ded8cb] dark:border-[#223552]">Belt</div>
+                        <div className="h-full flex items-center px-2.5 border-r border-dotted border-[#ded8cb] dark:border-[#223552]">Weight</div>
+                        <div className="h-full flex items-center px-2 border-r border-dotted border-[#ded8cb] dark:border-[#223552]">Events applied</div>
+                        <div className="h-full flex items-center px-2.5 border-r border-dotted border-[#ded8cb] dark:border-[#223552]">Status</div>
+                        <div className="h-full flex items-center justify-start px-4 text-left">Action</div>
                     </div>
 
-                    {/* Table Body Rows */}
+                    {/* Table Body Rows (82px spacious height with light dotted column divider lines) */}
                     {filteredEntries.length === 0 ? (
                         <div className="py-12 text-center text-[#78716c] dark:text-[#8a99ab] text-sm">
                             No tournament entries found in this view.
@@ -517,7 +600,7 @@ export function OrganiserEntriesList({
                             const age = getAthleteAge(entry.student_dob)
                             const dojo = entry.dojo_name || '—'
                             const coach = entry.coach_name || entry.coach_email.split('@')[0] || '—'
-                            const rank = entry.student_rank || 'White'
+                            const rank = formatBelt(entry.student_rank)
                             const weight = entry.declared_weight_kg || entry.student_weight || '—'
 
                             return (
@@ -525,48 +608,48 @@ export function OrganiserEntriesList({
                                     key={entry.id}
                                     style={{
                                         display: 'grid',
-                                        gridTemplateColumns: '28px 50px 185px 48px 80px 95px 60px 52px 1fr 115px 125px',
-                                        columnGap: '10px',
+                                        gridTemplateColumns: '36px 60px minmax(160px, 1.2fr) 42px 85px 95px minmax(130px, 0.8fr) 65px 150px 125px 120px',
                                         alignItems: 'center',
-                                        padding: '0 16px',
-                                        height: '58px',
+                                        height: '82px',
                                     }}
-                                    className={`border-b border-[#ded8cb]/80 dark:border-[#1f2b40] transition-colors ${
+                                    className={`border-b border-[#ded8cb] dark:border-[#1f2b40] transition-colors ${
                                         isSelected
-                                            ? 'bg-[#0d9488]/10 dark:bg-[#2dd4b4]/10'
-                                            : 'hover:bg-[#faf8f3] dark:hover:bg-[#15233c]'
+                                            ? 'bg-[#0d9488]/10 dark:bg-[rgba(45,212,180,0.07)]'
+                                            : 'bg-white dark:bg-[#111a2b] hover:bg-[#faf8f3] dark:hover:bg-[#15233c]'
                                     }`}
                                 >
-                                    {/* Row Checkbox */}
-                                    <span
-                                        onClick={() => handleToggleSelectOne(entry.id)}
-                                        className={`w-4 h-4 rounded border-2 cursor-pointer flex items-center justify-center transition ${
-                                            isSelected
-                                                ? 'bg-[#0d9488] dark:bg-[#2dd4b4] border-[#0d9488] dark:border-[#2dd4b4]'
-                                                : 'border-[#ded8cb] dark:border-[#34455f] bg-white dark:bg-transparent hover:border-[#0d9488]/60'
-                                        }`}
-                                    >
-                                        {isSelected && <CheckmarkSvg />}
-                                    </span>
+                                    {/* Col 1: Checkbox */}
+                                    <div className="h-full flex items-center justify-center border-r border-dotted border-[#ded8cb] dark:border-[#223552] px-2">
+                                        <span
+                                            onClick={() => handleToggleSelectOne(entry.id)}
+                                            className={`w-5 h-5 rounded-[6px] border-2 cursor-pointer flex items-center justify-center transition ${
+                                                isSelected
+                                                    ? 'bg-[#0d9488] dark:bg-[#2dd4b4] border-[#0d9488] dark:border-[#2dd4b4]'
+                                                    : 'border-[#ded8cb] dark:border-[#34455f] bg-white dark:bg-transparent hover:border-[#0d9488]/60'
+                                            }`}
+                                        >
+                                            {isSelected && <CheckmarkSvg />}
+                                        </span>
+                                    </div>
 
-                                    {/* Chest # */}
-                                    <div className="flex items-center">
+                                    {/* Col 2: Chest # */}
+                                    <div className="h-full flex items-center px-2.5 border-r border-dotted border-[#ded8cb] dark:border-[#223552]">
                                         {entry.chest_no ? (
-                                            <span className="text-xs font-bold text-[#0d9488] dark:text-[#2dd4b4] tracking-tight">
+                                            <span className="text-[16px] font-bold text-[#0d9488] dark:text-[#2dd4b4] tracking-tight">
                                                 #{String(entry.chest_no).padStart(3, '0')}
                                             </span>
                                         ) : (
-                                            <span className="text-[#a8a29e] dark:text-[#6b7b8f] text-xs">—</span>
+                                            <span className="text-[#a8a29e] dark:text-[#8a99ab] text-[17px]">—</span>
                                         )}
                                     </div>
 
-                                    {/* Athlete Avatar + Name */}
-                                    <div className="flex items-center gap-2.5 min-w-0">
+                                    {/* Col 3: Athlete Avatar + Name (46px avatar) */}
+                                    <div className="h-full flex items-center gap-3 px-2.5 border-r border-dotted border-[#ded8cb] dark:border-[#223552] min-w-0">
                                         <AthletePfp
                                             photoUrl={entry.student_photo}
                                             name={entry.student_name}
                                             subtitle={entry.dojo_name || entry.student_registration_no}
-                                            size={36}
+                                            size={46}
                                             extraDetails={{
                                                 dojo: entry.dojo_name,
                                                 chestNo: entry.chest_no,
@@ -577,84 +660,87 @@ export function OrganiserEntriesList({
                                                 email: entry.coach_email,
                                             }}
                                         />
-                                        <div className="min-w-0">
-                                            <div className="text-sm font-bold text-[#1c1917] dark:text-[#e8eef5] truncate">
+                                        <div className="min-w-0 flex-1">
+                                            <div className="text-[15.5px] font-bold text-[#1c1917] dark:text-[#e8eef5] truncate">
                                                 {entry.student_name}
                                             </div>
-                                            <div className="text-[11px] text-[#78716c] dark:text-[#8a99ab] truncate">
+                                            <div className="text-[12.5px] text-[#78716c] dark:text-[#8a99ab] truncate mt-0.5">
                                                 {entry.student_registration_no || entry.student_gender || 'Athlete'}
                                             </div>
                                         </div>
                                     </div>
 
-                                    {/* Age */}
-                                    <span className="text-xs font-semibold text-[#1c1917] dark:text-[#e8eef5]">
+                                    {/* Col 4: Age (No yrs, shrunk) */}
+                                    <div className="h-full flex items-center justify-center px-1 border-r border-dotted border-[#ded8cb] dark:border-[#223552] text-[15px] font-bold text-[#1c1917] dark:text-[#e8eef5]">
                                         {age}
-                                    </span>
-
-                                    {/* Dojo */}
-                                    <span className="text-xs text-[#1c1917] dark:text-[#e8eef5] truncate" title={dojo}>
-                                        {dojo}
-                                    </span>
-
-                                    {/* Coach */}
-                                    <span className="text-xs text-[#78716c] dark:text-[#8a99ab] truncate" title={coach}>
-                                        {coach}
-                                    </span>
-
-                                    {/* Belt */}
-                                    <span className="text-xs font-semibold text-[#1c1917] dark:text-[#e8eef5] truncate">
-                                        {rank}
-                                    </span>
-
-                                    {/* Weight */}
-                                    <span className="text-xs text-[#1c1917] dark:text-[#e8eef5]">
-                                        {weight !== '—' ? `${weight} kg` : '—'}
-                                    </span>
-
-                                    {/* Events Applied Tags */}
-                                    <div className="flex gap-1 flex-wrap">
-                                        {tags.map((t, idx) => (
-                                            <span
-                                                key={idx}
-                                                className="text-[10.5px] font-semibold bg-[#f2eee5] dark:bg-[#1a2a44] text-[#44403c] dark:text-[#c9d3df] border border-[#ded8cb] dark:border-transparent rounded-full px-2 py-0.5 whitespace-nowrap"
-                                            >
-                                                {t}
-                                            </span>
-                                        ))}
                                     </div>
 
-                                    {/* Status Pill */}
-                                    <div>
+                                    {/* Col 5: Dojo */}
+                                    <div className="h-full flex items-center px-2.5 border-r border-dotted border-[#ded8cb] dark:border-[#223552] text-[14.5px] text-[#1c1917] dark:text-[#e8eef5] truncate" title={dojo}>
+                                        {dojo}
+                                    </div>
+
+                                    {/* Col 6: Coach */}
+                                    <div className="h-full flex items-center px-2.5 border-r border-dotted border-[#ded8cb] dark:border-[#223552] text-[14.5px] text-[#78716c] dark:text-[#8a99ab] truncate" title={coach}>
+                                        {coach}
+                                    </div>
+
+                                    {/* Col 7: Belt */}
+                                    <div className="h-full flex items-center px-2.5 border-r border-dotted border-[#ded8cb] dark:border-[#223552] text-[14.5px] font-semibold text-[#1c1917] dark:text-[#e8eef5] truncate">
+                                        {rank}
+                                    </div>
+
+                                    {/* Col 8: Weight */}
+                                    <div className="h-full flex items-center px-2.5 border-r border-dotted border-[#ded8cb] dark:border-[#223552] text-[14.5px] font-semibold text-[#1c1917] dark:text-[#e8eef5]">
+                                        {weight !== '—' ? `${weight} kg` : '—'}
+                                    </div>
+
+                                    {/* Col 9: Events Applied Tags (2 rows up and down) */}
+                                    <div className="h-full flex items-center px-2 border-r border-dotted border-[#ded8cb] dark:border-[#223552] overflow-hidden">
+                                        <div className="grid grid-cols-2 gap-1 w-full max-w-[155px]">
+                                            {tags.map((t, idx) => (
+                                                <span
+                                                    key={idx}
+                                                    className="text-[10px] sm:text-[10.5px] font-semibold bg-[#f5f0e6] dark:bg-[#1a2a44] text-[#57534e] dark:text-[#c9d3df] border border-[#ded8cb] dark:border-transparent rounded-md px-1 py-0.5 text-center truncate leading-tight whitespace-nowrap"
+                                                    title={t}
+                                                >
+                                                    {t}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Col 10: Status Pill */}
+                                    <div className="h-full flex items-center px-2.5 border-r border-dotted border-[#ded8cb] dark:border-[#223552]">
                                         {isApproved && (
-                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-300 dark:bg-emerald-500/15 dark:text-emerald-300 dark:border-emerald-500/35">
+                                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-300 dark:bg-emerald-500/15 dark:text-emerald-300 dark:border-emerald-500/35">
                                                 <Check className="h-3 w-3" />
                                                 Accepted ✓
                                             </span>
                                         )}
                                         {isPending && (
-                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-bold bg-amber-50 text-amber-700 border border-amber-300 dark:bg-amber-500/15 dark:text-amber-300 dark:border-amber-500/35">
+                                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-300 dark:bg-amber-500/15 dark:text-amber-300 dark:border-amber-500/35">
                                                 <Clock className="h-3 w-3" />
                                                 Pending Review
                                             </span>
                                         )}
                                         {isRejected && (
-                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-bold bg-rose-50 text-rose-700 border border-rose-300 dark:bg-rose-500/15 dark:text-rose-300 dark:border-rose-500/35">
+                                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-300 dark:bg-rose-500/15 dark:text-rose-300 dark:border-rose-500/35">
                                                 <X className="h-3 w-3" />
                                                 Rejected
                                             </span>
                                         )}
                                     </div>
 
-                                    {/* Quick Actions & 3-Dot Row Menu */}
-                                    <div className="flex items-center justify-end gap-1.5">
+                                    {/* Col 11: Quick Actions & 3-Dot Row Menu */}
+                                    <div className="h-full flex items-center justify-start gap-2 px-4">
                                         {isPending && (
                                             <>
                                                 <Button
                                                     size="sm"
                                                     disabled={isActionPending}
                                                     onClick={() => handleApproveSingle(entry)}
-                                                    className="h-7 px-2.5 rounded-lg bg-[#0d9488] hover:bg-[#0f766e] dark:bg-[#2dd4b4] dark:hover:bg-[#26bfa2] text-white dark:text-[#04231e] font-bold text-xs cursor-pointer shadow-xs"
+                                                    className="h-8 px-3 rounded-lg bg-[#0d9488] hover:bg-[#0f766e] dark:bg-[#2dd4b4] dark:hover:bg-[#26bfa2] text-white dark:text-[#04231e] font-bold text-xs cursor-pointer shadow-xs"
                                                 >
                                                     <Check className="h-3 w-3 mr-1" />
                                                     Approve
@@ -664,7 +750,7 @@ export function OrganiserEntriesList({
                                                     variant="ghost"
                                                     disabled={isActionPending}
                                                     onClick={() => handleOpenRejectSingle(entry)}
-                                                    className="h-7 w-7 p-0 rounded-lg text-rose-600 dark:text-rose-400 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-500/15 cursor-pointer"
+                                                    className="h-8 w-8 p-0 rounded-lg text-rose-600 dark:text-rose-400 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-500/15 cursor-pointer"
                                                     title="Reject entry"
                                                 >
                                                     <X className="h-3.5 w-3.5" />
@@ -676,7 +762,7 @@ export function OrganiserEntriesList({
                                             <Link
                                                 href={`/parent/entries/${entry.id}/id-card`}
                                                 target="_blank"
-                                                className="h-7 px-2 rounded-lg border border-[#0d9488]/40 dark:border-[#2dd4b4]/40 text-[#0d9488] dark:text-[#2dd4b4] hover:bg-[#0d9488]/10 text-xs font-semibold inline-flex items-center gap-1 transition"
+                                                className="h-8 px-2.5 rounded-lg border border-[#0d9488]/40 dark:border-[#2dd4b4]/40 text-[#0d9488] dark:text-[#2dd4b4] hover:bg-[#0d9488]/10 text-xs font-semibold inline-flex items-center gap-1 transition"
                                                 title="View official ID pass"
                                             >
                                                 <Eye className="h-3 w-3" />
@@ -690,7 +776,7 @@ export function OrganiserEntriesList({
                                                 variant="outline"
                                                 disabled={isActionPending}
                                                 onClick={() => handleApproveSingle(entry)}
-                                                className="h-7 px-2.5 rounded-lg border-[#0d9488]/40 dark:border-[#2dd4b4]/40 text-[#0d9488] dark:text-[#2dd4b4] hover:bg-[#0d9488]/10 text-xs font-semibold"
+                                                className="h-8 px-2.5 rounded-lg border-[#0d9488]/40 dark:border-[#2dd4b4]/40 text-[#0d9488] dark:text-[#2dd4b4] hover:bg-[#0d9488]/10 text-xs font-semibold"
                                             >
                                                 Re-approve
                                             </Button>
@@ -700,7 +786,7 @@ export function OrganiserEntriesList({
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
                                                 <button
-                                                    className="w-7 h-7 rounded-lg border border-[#ded8cb] dark:border-[#2a3b57] text-[#78716c] dark:text-[#8a99ab] hover:text-[#1c1917] dark:hover:text-[#e8eef5] hover:border-border inline-flex items-center justify-center text-xs transition cursor-pointer"
+                                                    className="w-10 h-10 rounded-[10px] border border-[#ded8cb] dark:border-[#2a3b57] text-[#78716c] dark:text-[#8a99ab] hover:text-[#1c1917] dark:hover:text-[#e8eef5] hover:border-[#0d9488] dark:hover:border-[#2dd4b4] inline-flex items-center justify-center text-lg font-bold tracking-widest transition cursor-pointer shrink-0"
                                                 >
                                                     ···
                                                 </button>
@@ -791,55 +877,10 @@ export function OrganiserEntriesList({
                         })
                     )}
                 </div>
-
-                {/* Desktop Card Footer Actions (In-flow, clean) */}
-                <div className="hidden lg:flex border-t border-[#ded8cb] dark:border-[#1f2b40] bg-[#faf8f3] dark:bg-[#0f1828] px-4 py-2.5 items-center justify-between text-xs text-[#78716c] dark:text-[#8a99ab]">
-                    {selectedIds.size > 0 ? (
-                        <>
-                            <div className="flex items-center gap-3">
-                                <span>
-                                    <strong className="text-[#1c1917] dark:text-[#e8eef5] font-bold">{selectedIds.size}</strong> entries selected
-                                </span>
-                                <button
-                                    onClick={() => setSelectedIds(new Set())}
-                                    className="text-xs text-[#0d9488] dark:text-[#2dd4b4] hover:underline font-semibold cursor-pointer"
-                                >
-                                    Deselect all
-                                </button>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <Button
-                                    size="sm"
-                                    disabled={isActionPending}
-                                    onClick={handleBulkApprove}
-                                    className="h-8 px-3 rounded-lg bg-[#0d9488] hover:bg-[#0f766e] dark:bg-[#2dd4b4] dark:hover:bg-[#25c4a5] text-white dark:text-[#04231e] font-bold text-xs shadow-xs"
-                                >
-                                    {isActionPending ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Check className="h-3.5 w-3.5 mr-1" />}
-                                    Approve selected ({selectedIds.size})
-                                </Button>
-                                <Button
-                                    size="sm"
-                                    variant="outline"
-                                    disabled={isActionPending}
-                                    onClick={handleOpenRejectBulk}
-                                    className="h-8 px-3 rounded-lg border-rose-300 dark:border-rose-500/40 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 text-xs font-semibold"
-                                >
-                                    <X className="h-3.5 w-3.5 mr-1" />
-                                    Reject selected ({selectedIds.size})
-                                </Button>
-                            </div>
-                        </>
-                    ) : (
-                        <div className="flex items-center justify-between w-full">
-                            <span>Showing {filteredEntries.length} of {entries.length} entries</span>
-                            <span className="text-[11px] opacity-75">Click checkbox to select entries for bulk actions</span>
-                        </div>
-                    )}
-                </div>
             </div>
 
             {/* ========================================================================= */}
-            {/* 2. MOBILE CARD VIEW (Responsive Light & Dark Modes)                       */}
+            {/* 4. MOBILE CARD VIEW (Responsive Light & Dark Modes)                       */}
             {/* ========================================================================= */}
             <div className="lg:hidden space-y-3 pb-8">
                 {/* Mobile Select All */}
@@ -881,7 +922,7 @@ export function OrganiserEntriesList({
                         const age = getAthleteAge(entry.student_dob)
                         const dojo = entry.dojo_name || '—'
                         const coach = entry.coach_name || entry.coach_email.split('@')[0] || '—'
-                        const rank = entry.student_rank || 'White'
+                        const rank = formatBelt(entry.student_rank)
                         const weight = entry.declared_weight_kg || entry.student_weight || '—'
 
                         return (
@@ -1080,33 +1121,106 @@ export function OrganiserEntriesList({
                     })
                 )}
 
-                {/* Mobile In-flow Action Bar (NO fixed overlay) */}
-                {selectedIds.size > 0 && (
-                    <div className="p-3.5 bg-[#faf8f3] dark:bg-[#0d1626] border border-[#ded8cb] dark:border-[#1f2b40] rounded-2xl shadow-xs flex items-center justify-between">
-                        <span className="text-xs text-[#1c1917] dark:text-[#e8eef5] font-bold">
-                            {selectedIds.size} selected
-                        </span>
-                        <div className="flex gap-2">
-                            <Button
-                                size="sm"
-                                disabled={isActionPending}
+            </div>
+
+            {/* ========================================================================= */}
+            {/* FIXED FOOTER (Desktop & Mobile) — Fixed above mobile nav on mobile        */}
+            {/* ========================================================================= */}
+            <div className="fixed bottom-16 md:bottom-0 left-0 right-0 z-40 bg-[#faf8f3]/95 dark:bg-[#0d1626]/95 backdrop-blur-md border-t border-[#ded8cb] dark:border-[#1f2b40] shadow-[0_-12px_28px_rgba(0,0,0,0.08)] dark:shadow-[0_-16px_30px_rgba(10,18,32,0.95)]">
+                {/* Desktop View */}
+                <div className="hidden lg:flex max-w-7xl mx-auto px-6 py-3.5 items-center justify-between">
+                    {selectedIds.size > 0 ? (
+                        <>
+                            <div className="text-[15px] text-[#1c1917] dark:text-[#e8eef5]">
+                                <b className="font-bold">{selectedIds.size} selected</b> &nbsp;·&nbsp;
+                                <button
+                                    onClick={() => setSelectedIds(new Set())}
+                                    className="text-[#0d9488] dark:text-[#2dd4b4] font-semibold cursor-pointer hover:underline ml-1"
+                                >
+                                    Deselect all
+                                </button>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <button
+                                    onClick={handleBulkApprove}
+                                    disabled={isActionPending}
+                                    className="h-[46px] px-5 rounded-xl font-bold text-[15px] bg-[#0d9488] hover:bg-[#0f766e] dark:bg-[#2dd4b4] dark:hover:bg-[#25c4a5] text-white dark:text-[#04231e] inline-flex items-center gap-2 transition disabled:opacity-40 cursor-pointer shadow-md"
+                                >
+                                    {isActionPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Check className="h-4 w-4 mr-1" />}
+                                    Approve selected ({selectedIds.size})
+                                </button>
+                                <button
+                                    onClick={handleOpenRejectBulk}
+                                    disabled={isActionPending}
+                                    className="h-[46px] px-5 rounded-xl font-bold text-[15px] border-[1.5px] border-rose-400 dark:border-rose-500/50 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition disabled:opacity-40 cursor-pointer"
+                                >
+                                    <X className="h-4 w-4 mr-1 inline" />
+                                    Reject selected ({selectedIds.size})
+                                </button>
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <div className="text-[14.5px] text-[#78716c] dark:text-[#8a99ab]">
+                                <b className="text-[#1c1917] dark:text-[#e8eef5] font-bold">{counts.pending}</b> pending review &nbsp;·&nbsp; {counts.approved} accepted &nbsp;·&nbsp; {counts.rejected} rejected
+                            </div>
+                            <button
+                                onClick={handleApproveAllPending}
+                                disabled={isActionPending || counts.pending === 0}
+                                className="h-[46px] px-5 rounded-xl font-bold text-[15px] bg-[#0d9488] hover:bg-[#0f766e] dark:bg-[#2dd4b4] dark:hover:bg-[#25c4a5] text-white dark:text-[#04231e] inline-flex items-center gap-2 transition disabled:opacity-40 cursor-pointer shadow-md"
+                            >
+                                {isActionPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Check className="h-4 w-4 mr-1" />}
+                                Accept all pending ({counts.pending})
+                            </button>
+                        </>
+                    )}
+                </div>
+
+                {/* Mobile View */}
+                <div className="block lg:hidden px-4 py-3 space-y-2">
+                    {selectedIds.size > 0 ? (
+                        <>
+                            <div className="flex justify-between items-center text-[14px] text-[#1c1917] dark:text-[#e8eef5]">
+                                <b className="font-bold">{selectedIds.size} selected</b>
+                                <button
+                                    onClick={() => setSelectedIds(new Set())}
+                                    className="text-[#0d9488] dark:text-[#2dd4b4] font-semibold cursor-pointer hover:underline"
+                                >
+                                    Deselect all
+                                </button>
+                            </div>
+                            <button
                                 onClick={handleBulkApprove}
-                                className="h-8 rounded-xl bg-[#0d9488] hover:bg-[#0f766e] dark:bg-[#2dd4b4] text-white dark:text-[#04231e] font-bold text-xs"
-                            >
-                                Approve ({selectedIds.size})
-                            </Button>
-                            <Button
-                                size="sm"
-                                variant="outline"
                                 disabled={isActionPending}
-                                onClick={handleOpenRejectBulk}
-                                className="h-8 rounded-xl border-rose-300 dark:border-rose-500/40 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 text-xs"
+                                className="h-[48px] w-full text-[15px] font-bold bg-[#0d9488] hover:bg-[#0f766e] dark:bg-[#2dd4b4] dark:hover:bg-[#25c4a5] text-white dark:text-[#04231e] rounded-xl inline-flex items-center justify-center gap-2 transition disabled:opacity-40 cursor-pointer shadow-md"
                             >
-                                Reject
-                            </Button>
-                        </div>
-                    </div>
-                )}
+                                {isActionPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Check className="h-4 w-4 mr-1" />}
+                                Approve selected ({selectedIds.size})
+                            </button>
+                            <button
+                                onClick={handleOpenRejectBulk}
+                                disabled={isActionPending}
+                                className="h-[42px] w-full text-[14px] font-bold border-[1.5px] border-rose-400 dark:border-rose-500/50 text-rose-600 dark:text-rose-400 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-500/10 transition disabled:opacity-40 cursor-pointer"
+                            >
+                                Reject selected ({selectedIds.size})
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            <div className="text-[13.5px] text-[#78716c] dark:text-[#8a99ab]">
+                                <b className="text-[#1c1917] dark:text-[#e8eef5] font-bold">{counts.pending}</b> pending review · {counts.approved} accepted
+                            </div>
+                            <button
+                                onClick={handleApproveAllPending}
+                                disabled={isActionPending || counts.pending === 0}
+                                className="h-[48px] w-full text-[15.5px] font-bold bg-[#0d9488] hover:bg-[#0f766e] dark:bg-[#2dd4b4] dark:hover:bg-[#25c4a5] text-white dark:text-[#04231e] rounded-xl inline-flex items-center justify-center gap-2 transition disabled:opacity-40 cursor-pointer shadow-md"
+                            >
+                                {isActionPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Check className="h-4 w-4 mr-1" />}
+                                Accept all pending ({counts.pending})
+                            </button>
+                        </>
+                    )}
+                </div>
             </div>
 
             {/* ========================================================================= */}

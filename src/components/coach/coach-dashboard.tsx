@@ -1,7 +1,7 @@
 'use client'
 
 import { CoachOverview } from "./coach-overview"
-import { CoachEntriesList } from "./coach-entries-list"
+import { CoachEntriesList, normalizeCoachStatus } from "./coach-entries-list"
 import { CoachAddStudentDialog } from "./coach-add-student-dialog"
 import { useCallback, useMemo, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
@@ -20,17 +20,30 @@ interface CoachDashboardProps {
     dojos: any[]
     isPastEvent?: boolean
     isRegistrationClosed?: boolean
+    initialStatus?: string
 }
 
-export function CoachDashboard({ event, eventType, stats, entries, students, eventDays, dojos, isPastEvent = false, isRegistrationClosed = false }: CoachDashboardProps) {
+export function CoachDashboard({
+    event,
+    eventType,
+    stats,
+    entries,
+    students,
+    eventDays,
+    dojos,
+    isPastEvent = false,
+    isRegistrationClosed = false,
+    initialStatus,
+}: CoachDashboardProps) {
     const existingStudentIds = useMemo(() => new Set(entries.map(e => e.student_id)), [entries])
 
-    const [currentStatus, setCurrentStatus] = useState<string>('pending_submission')
+    const [currentStatus, setCurrentStatus] = useState<string>(() => normalizeCoachStatus(initialStatus))
     const [addStudentOpen, setAddStudentOpen] = useState(false)
     const entriesRef = useRef<HTMLDivElement | null>(null)
 
     const selectStatus = useCallback((nextStatus: string) => {
-        setCurrentStatus(nextStatus)
+        const mapped = normalizeCoachStatus(nextStatus)
+        setCurrentStatus(mapped)
         // Jump user straight to the entries table.
         entriesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }, [])
@@ -61,38 +74,13 @@ export function CoachDashboard({ event, eventType, stats, entries, students, eve
                     </div>
                     <div className="flex flex-col items-end gap-2">
                         <RegistrationDeadline event={event} className="animate-pulse-gentle text-sm hidden sm:flex" />
-                        <div className="flex items-center gap-2">
-                            {!isPastEvent && !isRegistrationClosed && (
-                                <Button
-                                    onClick={() => setAddStudentOpen(true)}
-                                    className="gap-2 font-semibold shadow-sm rounded-xl"
-                                >
-                                    <UserPlus className="h-4 w-4" />
-                                    Add Student
-                                </Button>
-                            )}
-                        </div>
                     </div>
                 </div>
             </div>
 
             <CoachOverview stats={stats} entries={entries} onSelectStatus={selectStatus} />
 
-            <div ref={entriesRef} className="space-y-4">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                        <h3 className="text-xl font-bold tracking-tight">Entries</h3>
-                        <p className="text-xs text-muted-foreground">Filter, review, and manage your team athletes.</p>
-                    </div>
-                    {stats.approved > 0 && (
-                        <Link href={`/dashboard/entries/${event.id}/print`} target="_blank">
-                            <Button variant="outline" size="sm" className="gap-1.5 rounded-xl font-semibold border-primary/30 text-primary hover:bg-primary/5">
-                                <Printer className="h-4 w-4" />
-                                Print Team Cards ({stats.approved})
-                            </Button>
-                        </Link>
-                    )}
-                </div>
+            <div ref={entriesRef}>
                 <CoachEntriesList
                     entries={entries}
                     eventDays={eventDays}
@@ -101,6 +89,10 @@ export function CoachDashboard({ event, eventType, stats, entries, students, eve
                     statusPreset={currentStatus}
                     onStatusChange={setCurrentStatus}
                     isReadOnly={isPastEvent}
+                    isRegistrationClosed={isRegistrationClosed}
+                    eventId={event.id}
+                    approvedCount={stats.approved}
+                    onAddStudent={() => setAddStudentOpen(true)}
                 />
             </div>
 

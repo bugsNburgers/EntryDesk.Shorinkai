@@ -1,6 +1,6 @@
 import { requireRole } from '@/lib/auth/require-role'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Users, UserCheck, Shield, Swords, Medal, Building2, XCircle, Settings } from "lucide-react"
+import { Users, UserCheck, Shield, Medal, Building2, XCircle, Settings } from "lucide-react"
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import sql from '@/lib/db'
@@ -276,202 +276,128 @@ export default async function EventOverviewPage({ params }: { params: Promise<{ 
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-                {/* Main Stats Area */}
-                <Card className="col-span-4 border border-[#ded8cb] bg-white shadow-xs transition-all hover:shadow-md dark:border-[#1f2b40] dark:bg-[#111a2b] dark:shadow-black/40">
-                    <CardHeader className="flex flex-row items-center justify-between pb-3">
-                        <div>
-                            <CardTitle className="text-base font-bold">Overview</CardTitle>
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                                Total {totalEntries} {totalEntries === 1 ? 'athlete' : 'athletes'} registered
-                            </p>
-                        </div>
-                        <span className="text-xs font-bold px-2.5 py-1 rounded-lg bg-primary/10 text-primary border border-primary/25">
-                            {totalEntries} Total
-                        </span>
+                {/* Main Stats Area - Clean & Minimalist */}
+                <Card className="col-span-4 border border-[#ded8cb] bg-white shadow-xs dark:border-[#1f2b40] dark:bg-[#111a2b]">
+                    <CardHeader className="pb-3 border-b border-[#ded8cb]/80 dark:border-[#1f2b40]">
+                        <CardTitle className="text-base font-bold text-foreground">Overview</CardTitle>
+                        <p className="text-xs text-muted-foreground">
+                            {totalEntries} {totalEntries === 1 ? 'athlete' : 'athletes'} registered across {distinctDojosCount} {distinctDojosCount === 1 ? 'dojo' : 'dojos'}
+                        </p>
                     </CardHeader>
-                    <CardContent className="space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* Column 1: Participation & Disciplines */}
-                            <div className="space-y-4">
-                                <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                                    <Swords className="h-3.5 w-3.5 text-primary" /> Participation Disciplines
-                                </h4>
+                    <CardContent className="pt-3 space-y-4">
+                        {/* Disciplines Minimalist Strip */}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pb-3 border-b border-[#ded8cb]/80 dark:border-[#1f2b40]">
+                            <div>
+                                <div className="text-xs text-muted-foreground font-medium">Total Kata</div>
+                                <div className="text-2xl font-bold tracking-tight text-foreground mt-0.5">{totalKata}</div>
+                            </div>
+                            <div>
+                                <div className="text-xs text-muted-foreground font-medium">Total Kumite</div>
+                                <div className="text-2xl font-bold tracking-tight text-foreground mt-0.5">{totalKumite}</div>
+                            </div>
+                            <div>
+                                <div className="text-xs text-muted-foreground font-medium">Team Kata</div>
+                                <div className="text-2xl font-bold tracking-tight text-foreground mt-0.5">{teamKata}</div>
+                            </div>
+                            <div>
+                                <div className="text-xs text-muted-foreground font-medium">Team Kumite</div>
+                                <div className="text-2xl font-bold tracking-tight text-foreground mt-0.5">{teamKumite}</div>
+                            </div>
+                        </div>
 
-                                {/* 4-Box Discipline Counter Grid */}
-                                <div className="grid grid-cols-2 gap-2">
-                                    <div className="rounded-xl border border-[#ded8cb] bg-[#faf8f3] dark:border-[#1f2b40] dark:bg-[#0f1828] p-2.5 flex flex-col justify-between">
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-xs font-semibold text-muted-foreground">Total Kata</span>
-                                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-600 dark:text-amber-400">Kata</span>
-                                        </div>
-                                        <div className="text-xl font-bold mt-1 text-foreground">{totalKata}</div>
-                                    </div>
-
-                                    <div className="rounded-xl border border-[#ded8cb] bg-[#faf8f3] dark:border-[#1f2b40] dark:bg-[#0f1828] p-2.5 flex flex-col justify-between">
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-xs font-semibold text-muted-foreground">Total Kumite</span>
-                                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-600 dark:text-blue-400">Kumite</span>
-                                        </div>
-                                        <div className="text-xl font-bold mt-1 text-foreground">{totalKumite}</div>
-                                    </div>
-
-                                    <div className="rounded-xl border border-[#ded8cb] bg-[#faf8f3] dark:border-[#1f2b40] dark:bg-[#0f1828] p-2.5 flex flex-col justify-between">
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-xs font-semibold text-muted-foreground">Team Kata</span>
-                                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">Team</span>
-                                        </div>
-                                        <div className="text-xl font-bold mt-1 text-foreground">{teamKata}</div>
-                                    </div>
-
-                                    <div className="rounded-xl border border-[#ded8cb] bg-[#faf8f3] dark:border-[#1f2b40] dark:bg-[#0f1828] p-2.5 flex flex-col justify-between">
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-xs font-semibold text-muted-foreground">Team Kumite</span>
-                                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-500/15 text-purple-600 dark:text-purple-400">Team</span>
-                                        </div>
-                                        <div className="text-xl font-bold mt-1 text-foreground">{teamKumite}</div>
-                                    </div>
+                        {/* Breakdown Sub-grid: Participation Mix & Demographics */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-1">
+                            {/* Participation Breakdown */}
+                            <div className="space-y-2">
+                                <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                                    Participation Mix
                                 </div>
-
-                                {/* Selection Breakdown Bars (Opted for Both, Only Kata, Only Kumite) */}
-                                <div className="space-y-3 pt-1">
-                                    <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block">
-                                        Opted Distribution
-                                    </span>
-
-                                    {/* Both */}
-                                    <div className="space-y-1">
-                                        <div className="flex items-center justify-between text-xs">
-                                            <span className="font-medium flex items-center gap-1.5">
-                                                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                                                Both (Kata &amp; Kumite)
-                                            </span>
-                                            <span className="font-bold text-foreground">
-                                                {optedBoth} <span className="text-muted-foreground font-normal">({bothPct.toFixed(0)}%)</span>
-                                            </span>
-                                        </div>
-                                        <div className="h-1.5 overflow-hidden rounded-full bg-secondary/60">
-                                            <div className="h-full bg-emerald-500 rounded-full transition-all" style={{ width: `${bothPct}%` }} />
-                                        </div>
+                                <div className="space-y-1.5 text-xs">
+                                    <div className="flex items-center justify-between py-1 border-b border-[#ded8cb]/40 dark:border-[#1f2b40]/40">
+                                        <span className="text-foreground">Both (Kata &amp; Kumite)</span>
+                                        <span className="font-semibold text-foreground">
+                                            {optedBoth} <span className="text-muted-foreground font-normal">({bothPct.toFixed(0)}%)</span>
+                                        </span>
                                     </div>
-
-                                    {/* Only Kata */}
-                                    <div className="space-y-1">
-                                        <div className="flex items-center justify-between text-xs">
-                                            <span className="font-medium flex items-center gap-1.5">
-                                                <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-                                                Only Kata
-                                            </span>
-                                            <span className="font-bold text-foreground">
-                                                {optedOnlyKata} <span className="text-muted-foreground font-normal">({onlyKataPct.toFixed(0)}%)</span>
-                                            </span>
-                                        </div>
-                                        <div className="h-1.5 overflow-hidden rounded-full bg-secondary/60">
-                                            <div className="h-full bg-amber-500 rounded-full transition-all" style={{ width: `${onlyKataPct}%` }} />
-                                        </div>
+                                    <div className="flex items-center justify-between py-1 border-b border-[#ded8cb]/40 dark:border-[#1f2b40]/40">
+                                        <span className="text-foreground">Only Kata</span>
+                                        <span className="font-semibold text-foreground">
+                                            {optedOnlyKata} <span className="text-muted-foreground font-normal">({onlyKataPct.toFixed(0)}%)</span>
+                                        </span>
                                     </div>
-
-                                    {/* Only Kumite */}
-                                    <div className="space-y-1">
-                                        <div className="flex items-center justify-between text-xs">
-                                            <span className="font-medium flex items-center gap-1.5">
-                                                <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                                                Only Kumite
-                                            </span>
-                                            <span className="font-bold text-foreground">
-                                                {optedOnlyKumite} <span className="text-muted-foreground font-normal">({onlyKumitePct.toFixed(0)}%)</span>
-                                            </span>
-                                        </div>
-                                        <div className="h-1.5 overflow-hidden rounded-full bg-secondary/60">
-                                            <div className="h-full bg-blue-500 rounded-full transition-all" style={{ width: `${onlyKumitePct}%` }} />
-                                        </div>
+                                    <div className="flex items-center justify-between py-1 border-b border-[#ded8cb]/40 dark:border-[#1f2b40]/40">
+                                        <span className="text-foreground">Only Kumite</span>
+                                        <span className="font-semibold text-foreground">
+                                            {optedOnlyKumite} <span className="text-muted-foreground font-normal">({onlyKumitePct.toFixed(0)}%)</span>
+                                        </span>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Column 2: Demographics */}
-                            <div className="space-y-4">
-                                <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                                    <Users className="h-3.5 w-3.5 text-primary" /> Demographics &amp; Gender
-                                </h4>
-
-                                <div className="space-y-4 pt-1">
-                                    {/* Female */}
-                                    <div className="space-y-2 p-3 rounded-xl border border-pink-500/20 bg-pink-500/5">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2.5">
-                                                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-pink-500/20 text-pink-500 font-bold text-sm">
-                                                    F
-                                                </div>
-                                                <div>
-                                                    <span className="text-sm font-semibold text-foreground">Female</span>
-                                                    <p className="text-[11px] text-muted-foreground">
-                                                        {femalePct.toFixed(0)}% of total athletes
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <span className="text-xl font-bold text-pink-500">{genderStats.female}</span>
-                                        </div>
-                                        <div className="h-2 overflow-hidden rounded-full bg-pink-500/10">
-                                            <div className="h-full bg-pink-500 rounded-full transition-all" style={{ width: `${femalePct}%` }} />
-                                        </div>
+                            {/* Demographics & Gender */}
+                            <div className="space-y-2">
+                                <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                                    Demographics
+                                </div>
+                                <div className="space-y-1.5 text-xs">
+                                    <div className="flex items-center justify-between py-1 border-b border-[#ded8cb]/40 dark:border-[#1f2b40]/40">
+                                        <span className="text-foreground">Male</span>
+                                        <span className="font-semibold text-foreground">
+                                            {genderStats.male} <span className="text-muted-foreground font-normal">({malePct.toFixed(0)}%)</span>
+                                        </span>
                                     </div>
-
-                                    {/* Male */}
-                                    <div className="space-y-2 p-3 rounded-xl border border-blue-500/20 bg-blue-500/5">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2.5">
-                                                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/20 text-blue-500 font-bold text-sm">
-                                                    M
-                                                </div>
-                                                <div>
-                                                    <span className="text-sm font-semibold text-foreground">Male</span>
-                                                    <p className="text-[11px] text-muted-foreground">
-                                                        {malePct.toFixed(0)}% of total athletes
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <span className="text-xl font-bold text-blue-500">{genderStats.male}</span>
-                                        </div>
-                                        <div className="h-2 overflow-hidden rounded-full bg-blue-500/10">
-                                            <div className="h-full bg-blue-500 rounded-full transition-all" style={{ width: `${malePct}%` }} />
-                                        </div>
-                                    </div>
-
-                                    {/* Total Athletes Summary Card */}
-                                    <div className="rounded-xl border border-[#ded8cb] bg-[#faf8f3] dark:border-[#1f2b40] dark:bg-[#0f1828] p-3 flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                            <Users className="h-4 w-4 text-muted-foreground" />
-                                            <span className="text-xs font-semibold text-muted-foreground">Total Athletes</span>
-                                        </div>
-                                        <span className="text-base font-bold text-foreground">{totalEntries}</span>
+                                    <div className="flex items-center justify-between py-1 border-b border-[#ded8cb]/40 dark:border-[#1f2b40]/40">
+                                        <span className="text-foreground">Female</span>
+                                        <span className="font-semibold text-foreground">
+                                            {genderStats.female} <span className="text-muted-foreground font-normal">({femalePct.toFixed(0)}%)</span>
+                                        </span>
                                     </div>
                                 </div>
+
+                                {/* Clean single subtle proportion bar */}
+                                {totalEntries > 0 && (
+                                    <div className="pt-2">
+                                        <div className="h-1.5 w-full rounded-full bg-[#ded8cb]/60 dark:bg-[#1f2b40] overflow-hidden flex">
+                                            <div
+                                                className="h-full bg-blue-500/80 transition-all"
+                                                style={{ width: `${malePct}%` }}
+                                                title={`Male: ${malePct.toFixed(0)}%`}
+                                            />
+                                            <div
+                                                className="h-full bg-pink-500/80 transition-all"
+                                                style={{ width: `${femalePct}%` }}
+                                                title={`Female: ${femalePct.toFixed(0)}%`}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </CardContent>
                 </Card>
 
-                {/* Top Dojos */}
-                <Card className="col-span-3 border border-[#ded8cb] bg-white shadow-xs transition-all hover:shadow-md dark:border-[#1f2b40] dark:bg-[#111a2b] dark:shadow-black/40">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <Building2 className="h-5 w-5" /> Top Dojos
+                {/* Top Dojos - Clean & Minimalist */}
+                <Card className="col-span-3 border border-[#ded8cb] bg-white shadow-xs dark:border-[#1f2b40] dark:bg-[#111a2b]">
+                    <CardHeader className="pb-3 border-b border-[#ded8cb]/80 dark:border-[#1f2b40]">
+                        <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
+                            <Building2 className="h-4 w-4 text-muted-foreground" /> Top Dojos
                         </CardTitle>
+                        <p className="text-xs text-muted-foreground">
+                            {distinctDojosCount} {distinctDojosCount === 1 ? 'dojo' : 'dojos'} participating
+                        </p>
                     </CardHeader>
-                    <CardContent>
-                        <div className="space-y-4">
+                    <CardContent className="pt-3">
+                        <div className="space-y-2">
                             {topDojos.length > 0 ? topDojos.map(([name, count], i) => (
-                                <div key={name} className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#f2eee5] dark:bg-[#16233a] text-xs font-bold text-foreground">
-                                            {i + 1}
-                                        </div>
-                                        <div className="font-semibold text-sm">{name}</div>
+                                <div key={name} className="flex items-center justify-between text-xs py-1 border-b border-[#ded8cb]/40 dark:border-[#1f2b40]/40 last:border-0">
+                                    <div className="flex items-center gap-2 min-w-0">
+                                        <span className="text-muted-foreground font-mono text-[11px] w-4">{i + 1}.</span>
+                                        <span className="font-medium text-foreground truncate">{name}</span>
                                     </div>
-                                    <div className="text-sm font-bold">{count}</div>
+                                    <span className="font-semibold text-foreground ml-2 shrink-0">{count} {count === 1 ? 'entry' : 'entries'}</span>
                                 </div>
                             )) : (
-                                <p className="text-sm text-muted-foreground">No data yet.</p>
+                                <p className="text-xs text-muted-foreground py-4 text-center">No dojo entries recorded yet.</p>
                             )}
                         </div>
                     </CardContent>

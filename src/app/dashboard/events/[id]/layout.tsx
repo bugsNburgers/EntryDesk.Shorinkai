@@ -11,17 +11,22 @@ export default async function EventLayout({
     params: Promise<{ id: string }>
 }) {
     const { id } = await params
-    const { user, role } = await requireRole(['organizer', 'admin'], { redirectTo: '/dashboard' })
+    const { user, role } = await requireRole(['organizer', 'admin', 'coach'], { redirectTo: '/dashboard' })
 
     const events = await sql<Event[]>`
         SELECT * FROM events
         WHERE id = ${id}
-          ${role !== 'admin' ? sql`AND organizer_id = ${user.id}` : sql``}
+          ${role === 'coach' ? sql`` : role !== 'admin' ? sql`AND organizer_id = ${user.id}` : sql``}
         LIMIT 1
     `
 
     if (events.length === 0) {
         notFound()
+    }
+
+    // For coaches, CoachDashboard already provides its own complete header and toolbar
+    if (role === 'coach') {
+        return <>{children}</>
     }
 
     const event = events[0]

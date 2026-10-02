@@ -18,6 +18,7 @@ import {
 import { isRegistrationClosed } from '@/lib/events/registration'
 import { AthleteIdActions } from '@/components/id-card/athlete-id-actions'
 import { EntryWithdrawSection } from '@/components/parent/entry-withdraw-dialog'
+import { EntryDaySelector } from '@/components/parent/entry-day-selector'
 import { QrCode, Smartphone } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { IdCardDownload } from '@/components/id-card/id-card-download'
@@ -71,6 +72,9 @@ export default async function ParentEntryDetailPage({ params }: EntryPageProps) 
         status: string
         participation_type: string | null
         declared_weight_kg: number | null
+        event_day_id: string | null
+        event_day_name: string | null
+        event_day_date: string | Date | null
         category_name: string | null
         coach_notes: string | null
         rejection_reason: string | null
@@ -101,6 +105,9 @@ export default async function ParentEntryDetailPage({ params }: EntryPageProps) 
             e.status,
             e.participation_type,
             e.declared_weight_kg,
+            e.event_day_id,
+            ed.name AS event_day_name,
+            ed.date AS event_day_date,
             COALESCE(c.name, e.category_snapshot->>'displayName') AS category_name,
             e.coach_notes,
             e.rejection_reason,
@@ -129,6 +136,7 @@ export default async function ParentEntryDetailPage({ params }: EntryPageProps) 
         LEFT JOIN users u ON d.coach_id = u.id
         JOIN events ev ON e.event_id = ev.id
         LEFT JOIN categories c ON e.category_id = c.id
+        LEFT JOIN event_days ed ON e.event_day_id = ed.id
         WHERE e.id = ${id}
           AND s.parent_id = ${user.id}
         LIMIT 1
@@ -139,6 +147,20 @@ export default async function ParentEntryDetailPage({ params }: EntryPageProps) 
     }
 
     const entry = rows[0]
+
+    // Fetch all event days for this event so user can view/change
+    const eventDaysRows = await sql<{ id: string; date: string | Date; name: string | null }[]>`
+        SELECT id, date, name
+        FROM event_days
+        WHERE event_id = ${entry.event_id}
+        ORDER BY date ASC
+    `
+    const eventDays = eventDaysRows.map((d, idx) => ({
+        id: d.id,
+        date: d.date instanceof Date ? d.date.toISOString().slice(0, 10) : String(d.date).slice(0, 10),
+        name: d.name || `Day ${idx + 1}`,
+    }))
+
     const applied = parseAppliedEvents(entry.participation_type)
     const datesFormatted = formatTournamentDateRangeLong(entry.start_date, entry.end_date)
     const submittedFormatted = formatSubmittedTimestamp(entry.created_at)
@@ -652,6 +674,16 @@ export default async function ParentEntryDetailPage({ params }: EntryPageProps) 
                             {entry.declared_weight_kg ? `${entry.declared_weight_kg} kg` : '—'}
                         </b>
                     </div>
+
+                    {/* Participation Day Selector */}
+                    <EntryDaySelector
+                        entryId={entry.id}
+                        currentEventDayId={entry.event_day_id}
+                        currentEventDayName={entry.event_day_name}
+                        currentEventDayDate={entry.event_day_date ? (entry.event_day_date instanceof Date ? entry.event_day_date.toISOString().slice(0, 10) : String(entry.event_day_date).slice(0, 10)) : null}
+                        eventDays={eventDays}
+                        isEditable={!isApproved && !isWithdrawn && !isDeclined && !isRejected}
+                    />
 
                     <div className="flex justify-between items-baseline gap-3.5 py-3">
                         <span className="text-[14px] text-[#57534e] dark:text-[#8a99ab] shrink-0">Submitted</span>

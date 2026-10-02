@@ -21,7 +21,6 @@ import {
     CheckCircle2,
     Building2,
     Users,
-    FileText,
     LogOut,
     ChevronDown,
 } from 'lucide-react'
@@ -133,14 +132,21 @@ export function ResponsiveDashboardFrame({
               ]
             : [
                   { href: '/dashboard', label: 'Home', icon: LayoutDashboard },
-                  { href: '/dashboard/events-browser', label: 'Events', icon: Calendar },
+                  { href: '/dashboard/events', label: 'Events', icon: Calendar },
                   { href: '/dashboard/dojos', label: 'My Dojos', icon: Building2 },
                   { href: '/dashboard/students', label: 'Athletes', icon: Users },
-                  { href: '/dashboard/entries', label: 'My Entries', icon: FileText },
               ]
 
     const isLinkActive = (href: string) => {
         if (href === '/dashboard') return pathname === '/dashboard'
+        if (href === '/dashboard/events') {
+            return (
+                pathname === '/dashboard/events' ||
+                pathname.startsWith('/dashboard/events/') ||
+                pathname.startsWith('/dashboard/events-browser') ||
+                pathname.startsWith('/dashboard/entries')
+            )
+        }
         return pathname === href || pathname.startsWith(`${href}/`)
     }
 

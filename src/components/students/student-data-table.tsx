@@ -33,7 +33,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { StudentActions } from './student-actions'
-import { Search, ChevronDown, ArrowUpDown, UserCheck, MessageCircle, Copy } from 'lucide-react'
+import { Search, ChevronDown, ArrowUpDown, UserCheck, MessageCircle } from 'lucide-react'
 import Image from 'next/image'
 import Fuse from 'fuse.js'
 import { normalizeDobToIso } from '@/lib/date'
@@ -232,7 +232,7 @@ export function StudentDataTable({ data, dojos, initialDojoFilter }: StudentData
                             {parent.phone && (
                                 <span className="text-[10px] text-muted-foreground font-mono">{parent.phone}</span>
                             )}
-                            {phoneClean ? (
+                            {phoneClean && (
                                 <a
                                     href={`https://wa.me/${phoneClean.startsWith('91') ? phoneClean : '91' + phoneClean}?text=${encodeURIComponent(loginHelpMsg)}`}
                                     target="_blank"
@@ -243,19 +243,6 @@ export function StudentDataTable({ data, dojos, initialDojoFilter }: StudentData
                                     <MessageCircle className="h-3 w-3 text-[#25D366]" />
                                     WhatsApp Help
                                 </a>
-                            ) : (
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        navigator.clipboard.writeText(loginHelpMsg)
-                                        toast.success('Login help message copied to clipboard!')
-                                    }}
-                                    className="inline-flex items-center gap-1 text-[10px] font-medium text-muted-foreground hover:text-foreground bg-muted px-2 py-0.5 rounded-full transition-colors"
-                                    title="Copy login help message to clipboard"
-                                >
-                                    <Copy className="h-3 w-3" />
-                                    Copy Help
-                                </button>
                             )}
                         </div>
                     </div>

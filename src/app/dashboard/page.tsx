@@ -312,7 +312,7 @@ export default async function DashboardPage() {
                             </div>
                         </Link>
 
-                        <Link href="/dashboard/entries" className="group">
+                        <Link href="/dashboard/events-browser" className="group">
                             <div className="dashboard-surface dashboard-list-item p-5 h-full">
                                 <div className="flex items-start justify-between gap-3">
                                     <div>
@@ -354,7 +354,7 @@ export default async function DashboardPage() {
                     <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                     <p className="text-sm text-emerald-800 dark:text-emerald-300">
                         You&apos;re approved for {approvedCount} event{approvedCount !== 1 ? 's' : ''}!{' '}
-                        <Link href="/dashboard/entries" className="font-semibold underline underline-offset-2">Submit your entries now</Link>.
+                        <Link href="/dashboard/events-browser" className="font-semibold underline underline-offset-2">Browse approved events</Link>.
                     </p>
                 </div>
             )}
@@ -511,7 +511,7 @@ export default async function DashboardPage() {
                                 <h2 className="text-base font-semibold tracking-tight">Approved Events</h2>
                             </div>
                             <Button variant="outline" size="sm" className="h-8 text-xs" asChild>
-                                <Link href="/dashboard/entries">View Entries</Link>
+                                <Link href="/dashboard/events-browser">View Events</Link>
                             </Button>
                         </div>
 
@@ -521,7 +521,7 @@ export default async function DashboardPage() {
                                     {approvedEvents.map((event) => (
                                         <Link
                                             key={event.id}
-                                            href={`/dashboard/entries/${event.id}`}
+                                            href={`/dashboard/events/${event.id}/entries`}
                                             className="dashboard-list-item group flex items-center justify-between gap-4 p-3.5"
                                         >
                                             <div className="flex items-center gap-3 min-w-0">

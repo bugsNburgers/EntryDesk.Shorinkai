@@ -157,6 +157,9 @@ export default async function ChildDetailPage({ params }: ChildPageProps) {
             end_date: string
             location: string | null
             status: string
+            event_day_id: string | null
+            event_day_name: string | null
+            event_day_date: string | Date | null
             category_name: string | null
             coach_notes: string | null
             rejection_reason: string | null
@@ -171,6 +174,9 @@ export default async function ChildDetailPage({ params }: ChildPageProps) {
                 ev.end_date,
                 ev.location,
                 e.status,
+                e.event_day_id,
+                ed.name AS event_day_name,
+                ed.date AS event_day_date,
                 COALESCE(c.name, e.category_snapshot->>'displayName') AS category_name,
                 e.coach_notes,
                 e.rejection_reason,
@@ -179,6 +185,7 @@ export default async function ChildDetailPage({ params }: ChildPageProps) {
             FROM entries e
             JOIN events ev ON e.event_id = ev.id
             LEFT JOIN categories c ON e.category_id = c.id
+            LEFT JOIN event_days ed ON e.event_day_id = ed.id
             WHERE e.student_id = ${child.id}
             ORDER BY ev.start_date DESC
         `,
@@ -443,6 +450,20 @@ export default async function ChildDetailPage({ params }: ChildPageProps) {
                                                         <span className="truncate">
                                                             {[entry.category_name, entry.location].filter(Boolean).join(', ')}
                                                         </span>
+                                                    </span>
+                                                )}
+                                                {entry.event_day_name && (
+                                                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-[#2dd4b4] border border-emerald-500/20 text-xs font-semibold shrink-0">
+                                                        <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" className="shrink-0">
+                                                            <rect x="1.5" y="2.5" width="11" height="10" rx="2" />
+                                                            <path d="M1.5 6h11M4.5 1v3M9.5 1v3" />
+                                                        </svg>
+                                                        <span>{entry.event_day_name}</span>
+                                                        {entry.event_day_date && (
+                                                            <span className="opacity-80">
+                                                                ({new Date(entry.event_day_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })})
+                                                            </span>
+                                                        )}
                                                     </span>
                                                 )}
                                             </div>

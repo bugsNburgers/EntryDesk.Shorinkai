@@ -17,7 +17,6 @@ import {
     CheckCircle2,
     Building2,
     Users,
-    FileText,
     Inbox,
 } from "lucide-react"
 import { DashboardNavLink } from "@/components/dashboard/nav-link"
@@ -117,7 +116,7 @@ export function MobileNav({ role, profile, userEmail }: MobileNavProps) {
                             </>
                         ) : (
                             <>
-                                <DashboardNavLink href="/dashboard/events-browser">
+                                <DashboardNavLink href="/dashboard/events">
                                     <Calendar className="h-4 w-4" />
                                     Events
                                 </DashboardNavLink>
@@ -128,10 +127,6 @@ export function MobileNav({ role, profile, userEmail }: MobileNavProps) {
                                 <DashboardNavLink href="/dashboard/students">
                                     <Users className="h-4 w-4" />
                                     Athletes
-                                </DashboardNavLink>
-                                <DashboardNavLink href="/dashboard/entries">
-                                    <FileText className="h-4 w-4" />
-                                    My Entries
                                 </DashboardNavLink>
                             </>
                         )}
