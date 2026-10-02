@@ -117,6 +117,24 @@ export async function bulkUpdateEntryStatus(entryIds: string[], status: 'approve
     return { success: true }
 }
 
+export async function updateEntryChestNo(entryId: string, chestNo: number | null) {
+    const { user, role } = await requireRole(['organizer', 'admin'])
+    const updated = await sql<{ event_id: string }[]>`
+        UPDATE entries e
+        SET chest_no = ${chestNo},
+            updated_at = NOW()
+        FROM events ev
+        WHERE e.id = ${entryId}
+          AND e.event_id = ev.id
+          ${role !== 'admin' ? sql`AND (ev.organizer_id = ${user.id} OR EXISTS (SELECT 1 FROM event_collaborators ec WHERE ec.event_id = ev.id AND ec.user_id = ${user.id} AND ec.permission = 'write'))` : sql``}
+        RETURNING e.event_id
+    `
+    if (updated.length === 0) throw new Error('Unauthorized or entry not found')
+    revalidatePath(`/dashboard/events/${updated[0].event_id}`)
+    revalidatePath(`/dashboard/events/${updated[0].event_id}/entries`)
+    return { success: true }
+}
+
 export async function exportEventEntries(
     eventId: string,
     searchParams: { q?: string; status?: string; coach?: string; day?: string }

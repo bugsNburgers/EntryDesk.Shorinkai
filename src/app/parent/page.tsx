@@ -147,6 +147,7 @@ export default async function ParentHome({ searchParams }: ParentHomeProps) {
                                               label: statusLabel,
                                               bgClass: statusBg,
                                               eventTitle: latest.event_title,
+                                              status: latest.status,
                                           }
                                         : null
                                 }

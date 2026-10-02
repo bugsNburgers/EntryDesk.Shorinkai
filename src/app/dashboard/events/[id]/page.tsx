@@ -4,6 +4,7 @@ import { Users, UserCheck, Shield, Swords, Medal, Building2, AlertCircle, XCircl
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import sql from '@/lib/db'
+import { OrganiserEntriesList } from "@/components/events/organiser-entries-list"
 
 export default async function EventOverviewPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params
@@ -22,33 +23,68 @@ export default async function EventOverviewPage({ params }: { params: Promise<{ 
     const [entries, appCounts] = await Promise.all([
         sql<
             {
+                id: string
                 entry_id: string
                 event_id: string
                 status: string
                 participation_type: string | null
+                chest_no: number | null
+                declared_weight_kg: number | null
+                coach_notes: string | null
+                rejection_reason: string | null
+                created_at: string
                 coach_id: string
                 coach_name: string | null
                 coach_email: string
+                student_id: string
+                student_name: string
                 student_gender: string
+                student_rank: string | null
+                student_weight: number | null
+                student_dob: string | null
+                student_photo: string | null
+                student_registration_no: string | null
+                dojo_id: string | null
                 dojo_name: string | null
+                category_name: string | null
+                event_day_name: string | null
             }[]
         >`
             SELECT 
+                e.id,
                 e.id AS entry_id,
                 e.event_id,
                 e.status,
                 e.participation_type,
+                e.chest_no,
+                e.declared_weight_kg,
+                e.coach_notes,
+                e.rejection_reason,
+                e.created_at::text,
                 e.coach_id,
                 p.full_name AS coach_name,
                 p.email AS coach_email,
+                s.id AS student_id,
+                s.name AS student_name,
                 s.gender AS student_gender,
-                d.name AS dojo_name
+                s.rank AS student_rank,
+                s.weight AS student_weight,
+                s.date_of_birth::text AS student_dob,
+                s.photo_url AS student_photo,
+                s.registration_no AS student_registration_no,
+                d.id AS dojo_id,
+                d.name AS dojo_name,
+                c.name AS category_name,
+                ed.name AS event_day_name
             FROM entries e
             JOIN students s ON e.student_id = s.id
             LEFT JOIN dojos d ON s.dojo_id = d.id
+            LEFT JOIN categories c ON e.category_id = c.id
+            LEFT JOIN event_days ed ON e.event_day_id = ed.id
             JOIN users p ON e.coach_id = p.id
             WHERE e.event_id = ${id}
               AND e.status != 'draft'
+            ORDER BY e.created_at DESC
         `,
         sql<{ status: string; count: number }[]>`
             SELECT status, count(*)::int AS count
@@ -90,18 +126,90 @@ export default async function EventOverviewPage({ params }: { params: Promise<{ 
             ? `Coaches: ${submittedCoachPreview.join(', ')}${submittedCoachMore > 0 ? ` +${submittedCoachMore} more` : ''}`
             : 'No submissions yet'
 
-    const typeStats = {
-        kata: entries.filter((e) => e.participation_type === 'kata').length,
-        kumite: entries.filter((e) => e.participation_type === 'kumite').length,
-        both: entries.filter((e) => e.participation_type === 'both').length,
-    }
+    // =========================================================================
+    // Disciplines & Participation Breakdown
+    // =========================================================================
+    let totalKata = 0
+    let totalKumite = 0
+    let teamKata = 0
+    let teamKumite = 0
+    let optedBoth = 0
+    let optedOnlyKata = 0
+    let optedOnlyKumite = 0
+
+    entries.forEach((e) => {
+        const rawType = (e.participation_type || '').toLowerCase().trim()
+        const catName = (e.category_name || '').toLowerCase().trim()
+        const typeParts = rawType.split(',').map((s) => s.trim())
+
+        // Check Team Events
+        const isTeamKata =
+            typeParts.includes('team_kata') ||
+            typeParts.includes('team kata') ||
+            catName.includes('team kata')
+
+        const isTeamKumite =
+            typeParts.includes('team_kumite') ||
+            typeParts.includes('team kumite') ||
+            catName.includes('team kumite')
+
+        if (isTeamKata) teamKata++
+        if (isTeamKumite) teamKumite++
+
+        // Check Individual Events
+        const isBothExplicit =
+            typeParts.includes('both') ||
+            rawType === 'both' ||
+            (typeParts.includes('kata') && typeParts.includes('kumite')) ||
+            (catName.includes('kata') && catName.includes('kumite'))
+
+        const hasIndividualKata =
+            isBothExplicit ||
+            typeParts.includes('kata') ||
+            rawType.includes('kata') ||
+            (catName.includes('kata') && !isTeamKata) ||
+            (!rawType && !catName) // fallback default for traditional karate
+
+        const hasIndividualKumite =
+            isBothExplicit ||
+            typeParts.includes('kumite') ||
+            rawType.includes('kumite') ||
+            (catName.includes('kumite') && !isTeamKumite) ||
+            (!rawType && !catName) // fallback default for traditional karate
+
+        // Total participation across any form
+        if (hasIndividualKata || isTeamKata) totalKata++
+        if (hasIndividualKumite || isTeamKumite) totalKumite++
+
+        // Opted Distribution Breakdown
+        if (hasIndividualKata && hasIndividualKumite) {
+            optedBoth++
+        } else if (hasIndividualKata && !hasIndividualKumite && !isTeamKumite) {
+            optedOnlyKata++
+        } else if (hasIndividualKumite && !hasIndividualKata && !isTeamKata) {
+            optedOnlyKumite++
+        } else if (isBothExplicit) {
+            optedBoth++
+        } else if (hasIndividualKata) {
+            optedOnlyKata++
+        } else if (hasIndividualKumite) {
+            optedOnlyKumite++
+        } else if (isTeamKata) {
+            optedOnlyKata++
+        } else if (isTeamKumite) {
+            optedOnlyKumite++
+        }
+    })
 
     const genderStats = {
-        male: entries.filter((e) => e.student_gender === 'male').length,
-        female: entries.filter((e) => e.student_gender === 'female').length,
+        male: entries.filter((e) => (e.student_gender || '').toLowerCase() === 'male').length,
+        female: entries.filter((e) => (e.student_gender || '').toLowerCase() === 'female').length,
     }
     const femalePct = totalEntries ? (genderStats.female / totalEntries) * 100 : 0
     const malePct = totalEntries ? (genderStats.male / totalEntries) * 100 : 0
+    const bothPct = totalEntries ? (optedBoth / totalEntries) * 100 : 0
+    const onlyKataPct = totalEntries ? (optedOnlyKata / totalEntries) * 100 : 0
+    const onlyKumitePct = totalEntries ? (optedOnlyKumite / totalEntries) * 100 : 0
 
     // Top Dojos
     const dojoCounts: Record<string, number> = {}
@@ -202,75 +310,172 @@ export default async function EventOverviewPage({ params }: { params: Promise<{ 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
                 {/* Main Stats Area */}
                 <Card className="col-span-4 border border-black/10 bg-gradient-to-b from-background/90 to-background/50 shadow-md shadow-black/5 transition-all hover:-translate-y-0.5 hover:bg-background/70 hover:shadow-lg hover:shadow-black/10 dark:border-white/10 dark:shadow-black/40">
-                    <CardHeader>
-                        <CardTitle>Overview</CardTitle>
+                    <CardHeader className="flex flex-row items-center justify-between pb-3">
+                        <div>
+                            <CardTitle className="text-base font-bold">Overview</CardTitle>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                                Total {totalEntries} {totalEntries === 1 ? 'athlete' : 'athletes'} registered
+                            </p>
+                        </div>
+                        <span className="text-xs font-bold px-2.5 py-1 rounded-lg bg-primary/10 text-primary border border-primary/25">
+                            {totalEntries} Total
+                        </span>
                     </CardHeader>
-                    <CardContent>
-                        <div className="grid grid-cols-2 gap-8">
-                            <div>
-                                <h4 className="text-sm font-semibold mb-4 flex items-center gap-2">
-                                    <Swords className="h-4 w-4" /> Participation
+                    <CardContent className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Column 1: Participation & Disciplines */}
+                            <div className="space-y-4">
+                                <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                                    <Swords className="h-3.5 w-3.5 text-primary" /> Participation Disciplines
                                 </h4>
-                                <div className="space-y-4">
-                                    <div className="space-y-1">
-                                        <div className="flex items-center justify-between text-sm">
-                                            <span>Both</span>
-                                            <span className="font-medium">{typeStats.both}</span>
+
+                                {/* 4-Box Discipline Counter Grid */}
+                                <div className="grid grid-cols-2 gap-2">
+                                    <div className="rounded-xl border border-border/60 bg-muted/20 p-2.5 flex flex-col justify-between">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-xs font-medium text-muted-foreground">Total Kata</span>
+                                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-500">Kata</span>
                                         </div>
-                                        <div className="h-2 overflow-hidden rounded-full bg-secondary/70">
-                                            <div className="h-full bg-primary/80" style={{ width: `${totalEntries ? (typeStats.both / totalEntries) * 100 : 0}%` }} />
+                                        <div className="text-xl font-bold mt-1 text-foreground">{totalKata}</div>
+                                    </div>
+
+                                    <div className="rounded-xl border border-border/60 bg-muted/20 p-2.5 flex flex-col justify-between">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-xs font-medium text-muted-foreground">Total Kumite</span>
+                                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-500">Kumite</span>
+                                        </div>
+                                        <div className="text-xl font-bold mt-1 text-foreground">{totalKumite}</div>
+                                    </div>
+
+                                    <div className="rounded-xl border border-border/60 bg-muted/20 p-2.5 flex flex-col justify-between">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-xs font-medium text-muted-foreground">Team Kata</span>
+                                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-500">Team</span>
+                                        </div>
+                                        <div className="text-xl font-bold mt-1 text-foreground">{teamKata}</div>
+                                    </div>
+
+                                    <div className="rounded-xl border border-border/60 bg-muted/20 p-2.5 flex flex-col justify-between">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-xs font-medium text-muted-foreground">Team Kumite</span>
+                                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-500">Team</span>
+                                        </div>
+                                        <div className="text-xl font-bold mt-1 text-foreground">{teamKumite}</div>
+                                    </div>
+                                </div>
+
+                                {/* Selection Breakdown Bars (Opted for Both, Only Kata, Only Kumite) */}
+                                <div className="space-y-3 pt-1">
+                                    <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block">
+                                        Opted Distribution
+                                    </span>
+
+                                    {/* Both */}
+                                    <div className="space-y-1">
+                                        <div className="flex items-center justify-between text-xs">
+                                            <span className="font-medium flex items-center gap-1.5">
+                                                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                                Both (Kata &amp; Kumite)
+                                            </span>
+                                            <span className="font-bold text-foreground">
+                                                {optedBoth} <span className="text-muted-foreground font-normal">({bothPct.toFixed(0)}%)</span>
+                                            </span>
+                                        </div>
+                                        <div className="h-1.5 overflow-hidden rounded-full bg-secondary/60">
+                                            <div className="h-full bg-emerald-500 rounded-full transition-all" style={{ width: `${bothPct}%` }} />
                                         </div>
                                     </div>
+
+                                    {/* Only Kata */}
                                     <div className="space-y-1">
-                                        <div className="flex items-center justify-between text-sm">
-                                            <span>Kata</span>
-                                            <span className="font-medium">{typeStats.kata}</span>
+                                        <div className="flex items-center justify-between text-xs">
+                                            <span className="font-medium flex items-center gap-1.5">
+                                                <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                                                Only Kata
+                                            </span>
+                                            <span className="font-bold text-foreground">
+                                                {optedOnlyKata} <span className="text-muted-foreground font-normal">({onlyKataPct.toFixed(0)}%)</span>
+                                            </span>
                                         </div>
-                                        <div className="h-2 overflow-hidden rounded-full bg-secondary/70">
-                                            <div className="h-full bg-primary/70" style={{ width: `${totalEntries ? (typeStats.kata / totalEntries) * 100 : 0}%` }} />
+                                        <div className="h-1.5 overflow-hidden rounded-full bg-secondary/60">
+                                            <div className="h-full bg-amber-500 rounded-full transition-all" style={{ width: `${onlyKataPct}%` }} />
                                         </div>
                                     </div>
+
+                                    {/* Only Kumite */}
                                     <div className="space-y-1">
-                                        <div className="flex items-center justify-between text-sm">
-                                            <span>Kumite</span>
-                                            <span className="font-medium">{typeStats.kumite}</span>
+                                        <div className="flex items-center justify-between text-xs">
+                                            <span className="font-medium flex items-center gap-1.5">
+                                                <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                                                Only Kumite
+                                            </span>
+                                            <span className="font-bold text-foreground">
+                                                {optedOnlyKumite} <span className="text-muted-foreground font-normal">({onlyKumitePct.toFixed(0)}%)</span>
+                                            </span>
                                         </div>
-                                        <div className="h-2 overflow-hidden rounded-full bg-secondary/70">
-                                            <div className="h-full bg-primary/60" style={{ width: `${totalEntries ? (typeStats.kumite / totalEntries) * 100 : 0}%` }} />
+                                        <div className="h-1.5 overflow-hidden rounded-full bg-secondary/60">
+                                            <div className="h-full bg-blue-500 rounded-full transition-all" style={{ width: `${onlyKumitePct}%` }} />
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div>
-                                <h4 className="text-sm font-semibold mb-4 flex items-center gap-2">
-                                    <Users className="h-4 w-4" /> Demographics
+                            {/* Column 2: Demographics */}
+                            <div className="space-y-4">
+                                <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                                    <Users className="h-3.5 w-3.5 text-primary" /> Demographics &amp; Gender
                                 </h4>
-                                <div className="space-y-4">
-                                    <div className="space-y-2">
+
+                                <div className="space-y-4 pt-1">
+                                    {/* Female */}
+                                    <div className="space-y-2 p-3 rounded-xl border border-pink-500/20 bg-pink-500/5">
                                         <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2">
-                                                <div className="flex h-8 w-8 items-center justify-center rounded bg-pink-500/15 text-pink-500 font-bold">F</div>
-                                                <span className="text-sm">Female</span>
+                                            <div className="flex items-center gap-2.5">
+                                                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-pink-500/20 text-pink-500 font-bold text-sm">
+                                                    F
+                                                </div>
+                                                <div>
+                                                    <span className="text-sm font-semibold text-foreground">Female</span>
+                                                    <p className="text-[11px] text-muted-foreground">
+                                                        {femalePct.toFixed(0)}% of total athletes
+                                                    </p>
+                                                </div>
                                             </div>
-                                            <span className="font-bold">{genderStats.female}</span>
+                                            <span className="text-xl font-bold text-pink-500">{genderStats.female}</span>
                                         </div>
-                                        <div className="h-2 overflow-hidden rounded-full bg-secondary/70">
-                                            <div className="h-full bg-pink-500" style={{ width: `${femalePct}%` }} />
+                                        <div className="h-2 overflow-hidden rounded-full bg-pink-500/10">
+                                            <div className="h-full bg-pink-500 rounded-full transition-all" style={{ width: `${femalePct}%` }} />
                                         </div>
                                     </div>
 
-                                    <div className="space-y-2">
+                                    {/* Male */}
+                                    <div className="space-y-2 p-3 rounded-xl border border-blue-500/20 bg-blue-500/5">
                                         <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2">
-                                                <div className="flex h-8 w-8 items-center justify-center rounded bg-blue-500/15 text-blue-500 font-bold">M</div>
-                                                <span className="text-sm">Male</span>
+                                            <div className="flex items-center gap-2.5">
+                                                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/20 text-blue-500 font-bold text-sm">
+                                                    M
+                                                </div>
+                                                <div>
+                                                    <span className="text-sm font-semibold text-foreground">Male</span>
+                                                    <p className="text-[11px] text-muted-foreground">
+                                                        {malePct.toFixed(0)}% of total athletes
+                                                    </p>
+                                                </div>
                                             </div>
-                                            <span className="font-bold">{genderStats.male}</span>
+                                            <span className="text-xl font-bold text-blue-500">{genderStats.male}</span>
                                         </div>
-                                        <div className="h-2 overflow-hidden rounded-full bg-secondary/70">
-                                            <div className="h-full bg-blue-500" style={{ width: `${malePct}%` }} />
+                                        <div className="h-2 overflow-hidden rounded-full bg-blue-500/10">
+                                            <div className="h-full bg-blue-500 rounded-full transition-all" style={{ width: `${malePct}%` }} />
                                         </div>
+                                    </div>
+
+                                    {/* Total Athletes Summary Card */}
+                                    <div className="rounded-xl border border-border/60 bg-muted/20 p-3 flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <Users className="h-4 w-4 text-muted-foreground" />
+                                            <span className="text-xs font-semibold text-muted-foreground">Total Athletes</span>
+                                        </div>
+                                        <span className="text-base font-bold text-foreground">{totalEntries}</span>
                                     </div>
                                 </div>
                             </div>
@@ -303,6 +508,15 @@ export default async function EventOverviewPage({ params }: { params: Promise<{ 
                         </div>
                     </CardContent>
                 </Card>
+            </div>
+
+            {/* Organiser Tournament Entries Table Matching Coach View */}
+            <div className="pt-2">
+                <OrganiserEntriesList
+                    entries={entries}
+                    eventId={id}
+                    eventTitle={eventRows[0].title}
+                />
             </div>
 
             <div className="flex justify-end pt-4">

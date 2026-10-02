@@ -20,6 +20,7 @@ interface ChildCardItemProps {
         label: string
         bgClass: string
         eventTitle?: string
+        status?: string
     } | null
 }
 
@@ -114,22 +115,34 @@ export function ChildCardItem({ child, latestStatus }: ChildCardItemProps) {
                     </div>
 
                     {/* Latest status pill */}
-                    {latestStatus && (
-                        <div className="mt-2.5">
-                            <span className={`inline-flex items-center rounded-md px-2.5 py-0.5 text-[11px] font-semibold ${
-                                latestStatus.label.toLowerCase().includes('approved')
-                                    ? 'bg-[#dcfce7] text-[#14532d] border border-[#86efac] dark:bg-[#2dd4b4] dark:text-[#04231e]'
-                                    : 'bg-amber-100 text-amber-800 border border-amber-300 dark:bg-amber-500/20 dark:text-amber-300 dark:border-amber-500/30'
-                            }`}>
-                                {latestStatus.label}
-                                {latestStatus.eventTitle && (
-                                    <span className="ml-1 opacity-80 truncate max-w-[140px]">
-                                        · {latestStatus.eventTitle}
-                                    </span>
-                                )}
-                            </span>
-                        </div>
-                    )}
+                    {latestStatus && (() => {
+                        const statusKey = latestStatus.status?.toLowerCase() || ''
+                        const labelLower = latestStatus.label.toLowerCase()
+                        const isAccepted = statusKey === 'approved' || labelLower.includes('accept') || labelLower.includes('approved')
+                        const isRejected = statusKey === 'rejected' || statusKey === 'coach_declined' || labelLower.includes('reject') || labelLower.includes('declined') || labelLower.includes('not accept')
+                        const isCorrection = statusKey === 'correction_needed' || labelLower.includes('correct')
+
+                        const badgeColorClasses = isAccepted
+                            ? 'bg-[#dcfce7] text-[#14532d] border border-[#86efac] dark:text-[#2dd4b4] dark:bg-[#2dd4b4]/12 dark:border-[#2dd4b4]/35'
+                            : isRejected
+                            ? 'bg-rose-100 text-rose-800 border border-rose-300 dark:text-[#f87171] dark:bg-[#f87171]/12 dark:border-[#f87171]/35'
+                            : isCorrection
+                            ? 'bg-orange-100 text-orange-800 border border-orange-300 dark:text-[#fb923c] dark:bg-[#fb923c]/12 dark:border-[#fb923c]/35'
+                            : 'bg-amber-100 text-amber-800 border border-amber-300 dark:text-[#f5c542] dark:bg-[#f5c542]/12 dark:border-[#f5c542]/35'
+
+                        return (
+                            <div className="mt-2.5">
+                                <span className={`inline-flex items-center rounded-md px-2.5 py-0.5 text-[11px] font-semibold ${badgeColorClasses}`}>
+                                    {latestStatus.label}
+                                    {latestStatus.eventTitle && (
+                                        <span className="ml-1 opacity-80 truncate max-w-[140px]">
+                                            · {latestStatus.eventTitle}
+                                        </span>
+                                    )}
+                                </span>
+                            </div>
+                        )
+                    })()}
                 </div>
             </div>
         </Link>
