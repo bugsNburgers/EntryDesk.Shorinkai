@@ -1,6 +1,6 @@
 import { requireRole } from '@/lib/auth/require-role'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Users, UserCheck, Shield, Swords, Medal, Building2, AlertCircle, XCircle, Settings } from "lucide-react"
+import { Users, UserCheck, Shield, Swords, Medal, Building2, XCircle, Settings } from "lucide-react"
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import sql from '@/lib/db'
@@ -104,27 +104,8 @@ export default async function EventOverviewPage({ params }: { params: Promise<{ 
 
     const statusStats = {
         approved: entries.filter((e) => e.status === 'approved').length,
-        submitted: entries.filter((e) => e.status === 'submitted').length,
         rejected: entries.filter((e) => e.status === 'rejected').length,
     }
-
-    const submittedCoachesMap = new Map<string, string>()
-    entries
-        .filter((e) => e.status === 'submitted')
-        .forEach((e) => {
-            const coachId = e.coach_id
-            const email = e.coach_email || ''
-            const name = e.coach_name || email.split('@')?.[0] || email || '—'
-            if (coachId && !submittedCoachesMap.has(coachId)) submittedCoachesMap.set(coachId, name)
-        })
-
-    const submittedCoachNames = Array.from(submittedCoachesMap.values())
-    const submittedCoachPreview = submittedCoachNames.slice(0, 3)
-    const submittedCoachMore = submittedCoachNames.length - submittedCoachPreview.length
-    const submittedCoachSummary =
-        submittedCoachPreview.length > 0
-            ? `Coaches: ${submittedCoachPreview.join(', ')}${submittedCoachMore > 0 ? ` +${submittedCoachMore} more` : ''}`
-            : 'No submissions yet'
 
     // =========================================================================
     // Disciplines & Participation Breakdown
@@ -227,9 +208,9 @@ export default async function EventOverviewPage({ params }: { params: Promise<{ 
     return (
         <div className="space-y-6">
             {/* Top-level Key Metrics */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
+            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
                 <Link href={`/dashboard/events/${id}/entries`} className="group block h-full focus:outline-none">
-                    <Card className="h-full cursor-pointer border border-black/10 bg-gradient-to-b from-background/90 to-background/50 shadow-md shadow-black/5 transition-all group-hover:-translate-y-1 group-hover:bg-background/70 group-hover:shadow-lg group-hover:shadow-black/10 dark:border-white/10 dark:shadow-black/40">
+                    <Card className="h-full cursor-pointer border border-[#ded8cb] bg-white shadow-xs transition-all group-hover:-translate-y-1 group-hover:bg-[#faf8f3] group-hover:shadow-md group-hover:border-[#0d9488]/40 dark:border-[#1f2b40] dark:bg-[#111a2b] dark:shadow-black/40 dark:group-hover:border-[#2dd4b4]/40 dark:group-hover:bg-[#15233c]">
                         <CardHeader className="flex min-h-[52px] flex-row items-start justify-between gap-2 space-y-0 pb-2">
                             <CardTitle className="min-w-0 whitespace-normal text-sm font-medium leading-snug">Total Entries</CardTitle>
                             <Users className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -242,7 +223,7 @@ export default async function EventOverviewPage({ params }: { params: Promise<{ 
                 </Link>
 
                 <Link href={`/dashboard/events/${id}/approvals?status=pending`} className="group block h-full focus:outline-none">
-                    <Card className="h-full cursor-pointer border border-black/10 bg-gradient-to-b from-background/90 to-background/50 shadow-md shadow-black/5 transition-all group-hover:-translate-y-1 group-hover:bg-background/70 group-hover:shadow-lg group-hover:shadow-black/10 dark:border-white/10 dark:shadow-black/40">
+                    <Card className="h-full cursor-pointer border border-[#ded8cb] bg-white shadow-xs transition-all group-hover:-translate-y-1 group-hover:bg-[#faf8f3] group-hover:shadow-md group-hover:border-[#0d9488]/40 dark:border-[#1f2b40] dark:bg-[#111a2b] dark:shadow-black/40 dark:group-hover:border-[#2dd4b4]/40 dark:group-hover:bg-[#15233c]">
                         <CardHeader className="flex min-h-[52px] flex-row items-start justify-between gap-2 space-y-0 pb-2">
                             <CardTitle className="min-w-0 whitespace-normal text-sm font-medium leading-snug">Pending Approvals</CardTitle>
                             <UserCheck className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -255,7 +236,7 @@ export default async function EventOverviewPage({ params }: { params: Promise<{ 
                 </Link>
 
                 <Link href={`/dashboard/events/${id}/approvals?status=approved`} className="group block h-full focus:outline-none">
-                    <Card className="h-full cursor-pointer border border-black/10 bg-gradient-to-b from-background/90 to-background/50 shadow-md shadow-black/5 transition-all group-hover:-translate-y-1 group-hover:bg-background/70 group-hover:shadow-lg group-hover:shadow-black/10 dark:border-white/10 dark:shadow-black/40">
+                    <Card className="h-full cursor-pointer border border-[#ded8cb] bg-white shadow-xs transition-all group-hover:-translate-y-1 group-hover:bg-[#faf8f3] group-hover:shadow-md group-hover:border-[#0d9488]/40 dark:border-[#1f2b40] dark:bg-[#111a2b] dark:shadow-black/40 dark:group-hover:border-[#2dd4b4]/40 dark:group-hover:bg-[#15233c]">
                         <CardHeader className="flex min-h-[52px] flex-row items-start justify-between gap-2 space-y-0 pb-2">
                             <CardTitle className="min-w-0 whitespace-normal text-sm font-medium leading-snug">Approved Coaches</CardTitle>
                             <Shield className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -268,7 +249,7 @@ export default async function EventOverviewPage({ params }: { params: Promise<{ 
                 </Link>
 
                 <Link href={`/dashboard/events/${id}/entries?status=approved`} className="group block h-full focus:outline-none">
-                    <Card className="h-full cursor-pointer border border-black/10 bg-gradient-to-b from-background/90 to-background/50 shadow-md shadow-black/5 transition-all group-hover:-translate-y-1 group-hover:bg-background/70 group-hover:shadow-lg group-hover:shadow-black/10 dark:border-white/10 dark:shadow-black/40">
+                    <Card className="h-full cursor-pointer border border-[#ded8cb] bg-white shadow-xs transition-all group-hover:-translate-y-1 group-hover:bg-[#faf8f3] group-hover:shadow-md group-hover:border-[#0d9488]/40 dark:border-[#1f2b40] dark:bg-[#111a2b] dark:shadow-black/40 dark:group-hover:border-[#2dd4b4]/40 dark:group-hover:bg-[#15233c]">
                         <CardHeader className="flex min-h-[52px] flex-row items-start justify-between gap-2 space-y-0 pb-2">
                             <CardTitle className="min-w-0 whitespace-normal text-sm font-medium leading-snug">Approved Entries</CardTitle>
                             <Medal className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -280,21 +261,8 @@ export default async function EventOverviewPage({ params }: { params: Promise<{ 
                     </Card>
                 </Link>
 
-                <Link href={`/dashboard/events/${id}/entries?status=submitted`} className="group block h-full focus:outline-none">
-                    <Card className="h-full cursor-pointer border border-black/10 bg-gradient-to-b from-background/90 to-background/50 shadow-md shadow-black/5 transition-all group-hover:-translate-y-1 group-hover:bg-background/70 group-hover:shadow-lg group-hover:shadow-black/10 dark:border-white/10 dark:shadow-black/40">
-                        <CardHeader className="flex min-h-[52px] flex-row items-start justify-between gap-2 space-y-0 pb-2">
-                            <CardTitle className="min-w-0 whitespace-normal text-sm font-medium leading-snug">Submitted</CardTitle>
-                            <AlertCircle className="h-4 w-4 shrink-0 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-blue-600">{statusStats.submitted}</div>
-                            <p className="text-xs text-muted-foreground truncate">{submittedCoachSummary}</p>
-                        </CardContent>
-                    </Card>
-                </Link>
-
                 <Link href={`/dashboard/events/${id}/entries?status=rejected`} className="group block h-full focus:outline-none">
-                    <Card className="h-full cursor-pointer border border-black/10 bg-gradient-to-b from-background/90 to-background/50 shadow-md shadow-black/5 transition-all group-hover:-translate-y-1 group-hover:bg-background/70 group-hover:shadow-lg group-hover:shadow-black/10 dark:border-white/10 dark:shadow-black/40">
+                    <Card className="h-full cursor-pointer border border-[#ded8cb] bg-white shadow-xs transition-all group-hover:-translate-y-1 group-hover:bg-[#faf8f3] group-hover:shadow-md group-hover:border-[#0d9488]/40 dark:border-[#1f2b40] dark:bg-[#111a2b] dark:shadow-black/40 dark:group-hover:border-[#2dd4b4]/40 dark:group-hover:bg-[#15233c]">
                         <CardHeader className="flex min-h-[52px] flex-row items-start justify-between gap-2 space-y-0 pb-2">
                             <CardTitle className="min-w-0 whitespace-normal text-sm font-medium leading-snug">Rejected Entries</CardTitle>
                             <XCircle className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -309,7 +277,7 @@ export default async function EventOverviewPage({ params }: { params: Promise<{ 
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
                 {/* Main Stats Area */}
-                <Card className="col-span-4 border border-black/10 bg-gradient-to-b from-background/90 to-background/50 shadow-md shadow-black/5 transition-all hover:-translate-y-0.5 hover:bg-background/70 hover:shadow-lg hover:shadow-black/10 dark:border-white/10 dark:shadow-black/40">
+                <Card className="col-span-4 border border-[#ded8cb] bg-white shadow-xs transition-all hover:shadow-md dark:border-[#1f2b40] dark:bg-[#111a2b] dark:shadow-black/40">
                     <CardHeader className="flex flex-row items-center justify-between pb-3">
                         <div>
                             <CardTitle className="text-base font-bold">Overview</CardTitle>
@@ -331,34 +299,34 @@ export default async function EventOverviewPage({ params }: { params: Promise<{ 
 
                                 {/* 4-Box Discipline Counter Grid */}
                                 <div className="grid grid-cols-2 gap-2">
-                                    <div className="rounded-xl border border-border/60 bg-muted/20 p-2.5 flex flex-col justify-between">
+                                    <div className="rounded-xl border border-[#ded8cb] bg-[#faf8f3] dark:border-[#1f2b40] dark:bg-[#0f1828] p-2.5 flex flex-col justify-between">
                                         <div className="flex items-center justify-between">
-                                            <span className="text-xs font-medium text-muted-foreground">Total Kata</span>
-                                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-500">Kata</span>
+                                            <span className="text-xs font-semibold text-muted-foreground">Total Kata</span>
+                                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-600 dark:text-amber-400">Kata</span>
                                         </div>
                                         <div className="text-xl font-bold mt-1 text-foreground">{totalKata}</div>
                                     </div>
 
-                                    <div className="rounded-xl border border-border/60 bg-muted/20 p-2.5 flex flex-col justify-between">
+                                    <div className="rounded-xl border border-[#ded8cb] bg-[#faf8f3] dark:border-[#1f2b40] dark:bg-[#0f1828] p-2.5 flex flex-col justify-between">
                                         <div className="flex items-center justify-between">
-                                            <span className="text-xs font-medium text-muted-foreground">Total Kumite</span>
-                                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-500">Kumite</span>
+                                            <span className="text-xs font-semibold text-muted-foreground">Total Kumite</span>
+                                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-600 dark:text-blue-400">Kumite</span>
                                         </div>
                                         <div className="text-xl font-bold mt-1 text-foreground">{totalKumite}</div>
                                     </div>
 
-                                    <div className="rounded-xl border border-border/60 bg-muted/20 p-2.5 flex flex-col justify-between">
+                                    <div className="rounded-xl border border-[#ded8cb] bg-[#faf8f3] dark:border-[#1f2b40] dark:bg-[#0f1828] p-2.5 flex flex-col justify-between">
                                         <div className="flex items-center justify-between">
-                                            <span className="text-xs font-medium text-muted-foreground">Team Kata</span>
-                                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-500">Team</span>
+                                            <span className="text-xs font-semibold text-muted-foreground">Team Kata</span>
+                                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">Team</span>
                                         </div>
                                         <div className="text-xl font-bold mt-1 text-foreground">{teamKata}</div>
                                     </div>
 
-                                    <div className="rounded-xl border border-border/60 bg-muted/20 p-2.5 flex flex-col justify-between">
+                                    <div className="rounded-xl border border-[#ded8cb] bg-[#faf8f3] dark:border-[#1f2b40] dark:bg-[#0f1828] p-2.5 flex flex-col justify-between">
                                         <div className="flex items-center justify-between">
-                                            <span className="text-xs font-medium text-muted-foreground">Team Kumite</span>
-                                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-500">Team</span>
+                                            <span className="text-xs font-semibold text-muted-foreground">Team Kumite</span>
+                                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-500/15 text-purple-600 dark:text-purple-400">Team</span>
                                         </div>
                                         <div className="text-xl font-bold mt-1 text-foreground">{teamKumite}</div>
                                     </div>
@@ -470,7 +438,7 @@ export default async function EventOverviewPage({ params }: { params: Promise<{ 
                                     </div>
 
                                     {/* Total Athletes Summary Card */}
-                                    <div className="rounded-xl border border-border/60 bg-muted/20 p-3 flex items-center justify-between">
+                                    <div className="rounded-xl border border-[#ded8cb] bg-[#faf8f3] dark:border-[#1f2b40] dark:bg-[#0f1828] p-3 flex items-center justify-between">
                                         <div className="flex items-center gap-2">
                                             <Users className="h-4 w-4 text-muted-foreground" />
                                             <span className="text-xs font-semibold text-muted-foreground">Total Athletes</span>
@@ -484,7 +452,7 @@ export default async function EventOverviewPage({ params }: { params: Promise<{ 
                 </Card>
 
                 {/* Top Dojos */}
-                <Card className="col-span-3 border border-black/10 bg-gradient-to-b from-background/90 to-background/50 shadow-md shadow-black/5 transition-all hover:-translate-y-0.5 hover:bg-background/70 hover:shadow-lg hover:shadow-black/10 dark:border-white/10 dark:shadow-black/40">
+                <Card className="col-span-3 border border-[#ded8cb] bg-white shadow-xs transition-all hover:shadow-md dark:border-[#1f2b40] dark:bg-[#111a2b] dark:shadow-black/40">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <Building2 className="h-5 w-5" /> Top Dojos
@@ -495,10 +463,10 @@ export default async function EventOverviewPage({ params }: { params: Promise<{ 
                             {topDojos.length > 0 ? topDojos.map(([name, count], i) => (
                                 <div key={name} className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">
-                                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs font-medium">
+                                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#f2eee5] dark:bg-[#16233a] text-xs font-bold text-foreground">
                                             {i + 1}
                                         </div>
-                                        <div className="font-medium text-sm">{name}</div>
+                                        <div className="font-semibold text-sm">{name}</div>
                                     </div>
                                     <div className="text-sm font-bold">{count}</div>
                                 </div>
