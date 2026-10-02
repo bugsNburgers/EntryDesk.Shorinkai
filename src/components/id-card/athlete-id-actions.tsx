@@ -1,9 +1,9 @@
 'use client'
 
-import React, { useState } from 'react'
+import React from 'react'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Smartphone } from 'lucide-react'
-import { ShowIdDialog } from './show-id-dialog'
 import { IdCardDownload } from './id-card-download'
 import type { IdCardData } from './id-card-preview'
 
@@ -22,37 +22,27 @@ export function AthleteIdActions({
     showDownload = true,
     compact = false,
 }: AthleteIdActionsProps) {
-    const [isIdDialogOpen, setIsIdDialogOpen] = useState(false)
-
     return (
         <div className="flex items-center gap-2 flex-wrap">
-            {/* Show ID Modal Trigger */}
-            <ShowIdDialog
-                entryId={entryId}
-                initialData={initialData}
-                open={isIdDialogOpen}
-                onOpenChange={setIsIdDialogOpen}
-                size={size}
-                trigger={
-                    <Button
-                        size={size}
-                        className="gap-2 rounded-xl font-bold bg-[#0e2238] hover:bg-[#163354] text-white shadow-sm transition-all border border-[#0e2238]"
-                    >
-                        <Smartphone className="h-4 w-4 text-[#3fd8c3]" />
-                        Show ID
-                    </Button>
-                }
-            />
+            {/* View Pass Button opens full page directly — No Modal */}
+            <Link href={`/parent/entries/${entryId}/id-card`}>
+                <Button
+                    size={size}
+                    className="gap-2 rounded-xl font-bold bg-[#3fd8c3] hover:bg-[#25c4a5] text-[#04231e] shadow-sm transition-all"
+                >
+                    <Smartphone className="h-4 w-4" />
+                    {compact ? "Pass" : "View Pass"}
+                </Button>
+            </Link>
 
-            {/* Download A4 Pass Trigger with Eco Prompt */}
+            {/* Direct A4 Print Trigger — No Dropdown */}
             {showDownload && (
                 <IdCardDownload
                     entryId={entryId}
                     initialData={initialData}
                     size={size}
                     variant="outline"
-                    label={compact ? "A4 Pass" : "Download A4 Pass"}
-                    onShowPhoneId={() => setIsIdDialogOpen(true)}
+                    label={compact ? "Print A4" : "Print A4 Pass"}
                 />
             )}
         </div>

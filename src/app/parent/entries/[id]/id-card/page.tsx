@@ -1,5 +1,5 @@
 // ============================================================================
-// EntryDesk — Full-Screen Athlete ID Card (Mobile Pass)
+// EntryDesk — Full-Screen Athlete ID Card (Official Digital Pass)
 // Route: /parent/entries/[id]/id-card
 // ============================================================================
 
@@ -9,7 +9,7 @@ import Link from 'next/link'
 import { getCurrentSession } from '@/lib/auth/session'
 import sql from '@/lib/db'
 import { Button } from '@/components/ui/button'
-import { ChevronLeft, Printer, ShieldCheck } from 'lucide-react'
+import { ChevronLeft, X, QrCode } from 'lucide-react'
 import { IdCardPhonePass, type IdCardData } from '@/components/id-card/id-card-preview'
 import { IdCardDownload } from '@/components/id-card/id-card-download'
 import { generateQrToken, qrToDataUrl } from '@/lib/qr'
@@ -121,7 +121,7 @@ export default async function AthleteIdCardFullPage({ params }: PageProps) {
 
     const entry = rows[0]
 
-    // Authorization
+    // Authorization: parent or coach/admin
     if (user.role === 'parent' && entry.parent_id !== user.id) {
         redirect('/parent')
     }
@@ -187,80 +187,71 @@ export default async function AthleteIdCardFullPage({ params }: PageProps) {
     }
 
     return (
-        <div className="min-h-screen bg-[#f7f4ec] text-[#1c1917] dark:bg-[#070e1b] dark:text-[#e8eef5] flex flex-col items-center">
-            {/* Top Bar */}
-            <header className="w-full bg-[#f7f4ec]/90 backdrop-blur border-b border-[#ded8cb] dark:bg-[#0a1220]/90 dark:border-[#1f2b40] px-4 py-3 sticky top-0 z-30">
-                <div className="w-full max-w-5xl 2xl:max-w-6xl mx-auto flex items-center justify-between">
-                    <Link href={`/athlete/entries/${id}`}>
-                        <Button variant="ghost" size="sm" className="gap-1.5 rounded-xl text-[#57534e] hover:text-[#1c1917] hover:bg-[#ded8cb]/40 dark:text-[#8a99ab] dark:hover:text-[#e8eef5] dark:hover:bg-[#111a2b]">
-                            <ChevronLeft className="h-4 w-4" />
-                            Back to Entry
-                        </Button>
-                    </Link>
+        <div className="min-h-screen bg-[#060b14] text-white flex flex-col items-center justify-between">
+            {/* Top Action Bar */}
+            <header className="w-full bg-[#071320]/95 backdrop-blur border-b border-neutral-800 px-4 py-3 sticky top-0 z-30 shadow-md">
+                <div className="w-full max-w-lg mx-auto flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <Link href={`/parent/entries/${id}`}>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 px-2.5 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 text-xs font-semibold gap-1 transition"
+                            >
+                                <ChevronLeft className="h-4 w-4" />
+                                Back
+                            </Button>
+                        </Link>
+                        <div className="flex items-center gap-2 border-l border-neutral-800 pl-3">
+                            <span className="h-2.5 w-2.5 rounded-full bg-[#3fd8c3] animate-pulse" />
+                            <span className="text-xs font-bold tracking-wider uppercase text-neutral-300">
+                                Official Digital Pass
+                            </span>
+                        </div>
+                    </div>
 
                     <div className="flex items-center gap-2">
+                        {/* Direct Print A4 Option — No Dropdown */}
                         <IdCardDownload
                             entryId={id}
                             initialData={cardData}
                             size="sm"
-                            label="Download A4 Pass"
-                            customButtonClass="rounded-xl bg-[#059669] hover:bg-[#047857] text-white dark:bg-[#2dd4b4] dark:hover:bg-[#25c4a5] dark:text-[#04231e] font-bold text-xs gap-1.5 px-3.5 h-9"
+                            variant="outline"
+                            label="Print A4"
+                            customButtonClass="h-8 px-3 rounded-lg border-neutral-700 bg-neutral-800/80 text-neutral-200 hover:bg-neutral-700 hover:text-white text-xs font-semibold gap-1.5"
                         />
+
+                        <Link href={`/parent/entries/${id}`}>
+                            <button
+                                className="h-8 w-8 rounded-lg flex items-center justify-center text-neutral-400 hover:text-white hover:bg-neutral-800 transition cursor-pointer"
+                                aria-label="Close pass"
+                            >
+                                <X className="h-4 w-4" />
+                            </button>
+                        </Link>
                     </div>
                 </div>
             </header>
 
-            {/* Main Pass Viewport */}
-            <main className="w-full max-w-5xl 2xl:max-w-6xl mx-auto flex-1 flex flex-col lg:flex-row items-center lg:items-start justify-center gap-8 py-8 px-4">
-                {/* Phone Pass Preview */}
-                <div className="w-full max-w-[400px] shadow-xl rounded-2xl overflow-hidden border border-[#ded8cb] dark:border-[#1f2b40] bg-white dark:bg-[#111a2b]">
+            {/* Main Pass Viewport — Full Page View */}
+            <main className="w-full max-w-lg mx-auto flex-1 flex flex-col items-center justify-center p-3 sm:p-6 my-auto">
+                <div className="w-full max-w-[400px] shadow-2xl rounded-2xl overflow-hidden border border-neutral-800 bg-[#0a1220]">
                     <IdCardPhonePass data={cardData} />
                 </div>
-
-                {/* Desktop Pass Details & Action Panel */}
-                <div className="hidden lg:flex flex-col gap-4 max-w-sm sticky top-20">
-                    <div className="bg-white border border-[#ded8cb] dark:bg-[#111a2b] dark:border-[#1f2b40] rounded-[20px] p-6 space-y-4 shadow-xs">
-                        <div className="flex items-center gap-2 text-emerald-600 dark:text-[#2dd4b4]">
-                            <ShieldCheck className="w-5 h-5" />
-                            <span className="text-xs font-bold tracking-wider uppercase">Verified Competitor Pass</span>
-                        </div>
-
-                        <div>
-                            <h2 className="text-xl font-bold text-[#1c1917] dark:text-[#e8eef5]">{cardData.student.name}</h2>
-                            <p className="text-sm text-[#57534e] dark:text-[#8a99ab] mt-0.5">{cardData.event.title}</p>
-                        </div>
-
-                        <div className="divide-y divide-[#ded8cb] dark:divide-[#1f2b40] text-xs">
-                            <div className="py-2.5 flex justify-between">
-                                <span className="text-[#57534e] dark:text-[#8a99ab]">Chest Number</span>
-                                <span className="font-mono font-bold text-emerald-600 dark:text-[#2dd4b4]">{cardData.chest_no ? `#${cardData.chest_no}` : 'Assigned on check-in'}</span>
-                            </div>
-                            <div className="py-2.5 flex justify-between">
-                                <span className="text-[#57534e] dark:text-[#8a99ab]">Category</span>
-                                <span className="font-semibold text-[#1c1917] dark:text-[#e8eef5] text-right truncate max-w-[180px]">{entry.category_name || cardData.category_snapshot || 'Standard'}</span>
-                            </div>
-                            <div className="py-2.5 flex justify-between">
-                                <span className="text-[#57534e] dark:text-[#8a99ab]">Dojo / Club</span>
-                                <span className="font-semibold text-[#1c1917] dark:text-[#e8eef5] text-right truncate max-w-[180px]">{cardData.dojo.name}</span>
-                            </div>
-                        </div>
-
-                        <p className="text-xs text-[#57534e] dark:text-[#8a99ab] leading-relaxed pt-1">
-                            Present this digital pass on your phone or print a physical copy for stadium entry and official weigh-in verification.
-                        </p>
-
-                        <div className="pt-2">
-                            <IdCardDownload
-                                entryId={id}
-                                initialData={cardData}
-                                size="default"
-                                label="Download Printable Pass (A4 PDF)"
-                                customButtonClass="w-full rounded-xl bg-[#059669] hover:bg-[#047857] text-white dark:bg-[#2dd4b4] dark:hover:bg-[#25c4a5] dark:text-[#04231e] font-bold text-sm h-11"
-                            />
-                        </div>
-                    </div>
-                </div>
             </main>
+
+            {/* Bottom Info Bar */}
+            <footer className="w-full bg-[#071320] text-neutral-400 text-xs px-4 py-3 border-t border-neutral-800 sticky bottom-0 z-20">
+                <div className="w-full max-w-lg mx-auto flex items-center justify-between font-medium">
+                    <span className="flex items-center gap-1.5 text-neutral-300">
+                        <QrCode className="h-3.5 w-3.5 text-[#3fd8c3]" />
+                        Scan anywhere on tournament day
+                    </span>
+                    <span className="text-[#3fd8c3] font-semibold flex items-center gap-1">
+                        100% Paperless
+                    </span>
+                </div>
+            </footer>
         </div>
     )
 }

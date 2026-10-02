@@ -18,7 +18,9 @@ import {
 import { isRegistrationClosed } from '@/lib/events/registration'
 import { AthleteIdActions } from '@/components/id-card/athlete-id-actions'
 import { EntryWithdrawSection } from '@/components/parent/entry-withdraw-dialog'
-import { QrCode } from 'lucide-react'
+import { QrCode, Smartphone } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { IdCardDownload } from '@/components/id-card/id-card-download'
 
 interface EntryPageProps {
     params: Promise<{ id: string }>
@@ -238,35 +240,55 @@ export default async function ParentEntryDetailPage({ params }: EntryPageProps) 
                 <div className="lg:col-span-7 2xl:col-span-8 lg:row-span-2 order-2 lg:order-2 space-y-4">
                     {/* Official Athlete ID Pass Card (when approved) */}
                     {isApproved && (
-                        <div className="bg-white border border-[#0d9488]/40 dark:bg-[#111a2b] dark:border-[#2dd4b4]/40 rounded-[18px] p-5 sm:p-6 shadow-xs space-y-3.5">
-                            <div className="flex items-center justify-between">
-                                <span className="text-[11.5px] font-bold tracking-[0.14em] uppercase text-[#0d9488] dark:text-[#2dd4b4]">
+                        <div className="relative overflow-hidden rounded-2xl p-5 sm:p-6 border border-emerald-500/40 bg-gradient-to-br from-[#0c2238] via-[#091b2c] to-[#040d18] text-white shadow-xl shadow-emerald-950/40 space-y-4">
+                            {/* Ambient background glow accents */}
+                            <div className="absolute -right-10 -top-10 w-44 h-44 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
+                            <div className="absolute -left-10 -bottom-10 w-44 h-44 bg-[#3fd8c3]/10 rounded-full blur-3xl pointer-events-none" />
+
+                            <div className="relative z-10 flex items-center justify-between gap-2 flex-wrap">
+                                <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-black tracking-wider uppercase bg-emerald-500/20 text-[#3fd8c3] border border-emerald-500/40">
+                                    <span className="h-2 w-2 rounded-full bg-[#3fd8c3] animate-pulse" />
                                     Official ID Pass Ready
                                 </span>
                                 {entry.chest_no && (
-                                    <span className="text-[13px] font-mono font-bold text-[#0d9488] bg-[#0d9488]/10 border border-[#0d9488]/30 dark:text-[#2dd4b4] dark:bg-[#2dd4b4]/10 dark:border-[#2dd4b4]/30 rounded-md px-2 py-0.5">
+                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs sm:text-sm font-mono font-black bg-emerald-400 text-[#04231e] shadow-sm">
                                         Chest #{entry.chest_no}
                                     </span>
                                 )}
                             </div>
 
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-[#0d9488]/10 border border-[#0d9488]/30 flex items-center justify-center shrink-0 text-[#0d9488] dark:bg-[#2dd4b4]/15 dark:border-[#2dd4b4]/30 dark:text-[#2dd4b4]">
-                                    <QrCode className="w-5 h-5" />
+                            <div className="relative z-10 flex items-start gap-3.5">
+                                <div className="w-11 h-11 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center shrink-0 text-[#3fd8c3]">
+                                    <QrCode className="w-6 h-6" />
                                 </div>
-                                <div className="text-[13.5px] text-[#57534e] dark:text-[#8a99ab] leading-[1.4]">
-                                    Show pass on phone for venue &amp; weigh-in scanning, or download the official card.
+                                <div className="space-y-1">
+                                    <h4 className="text-base sm:text-lg font-bold text-white tracking-tight">
+                                        Accreditation Pass Confirmed
+                                    </h4>
+                                    <p className="text-xs sm:text-sm text-neutral-300 leading-relaxed">
+                                        Show pass on phone for venue &amp; weigh-in scanning, or download the official card.
+                                    </p>
                                 </div>
                             </div>
 
-                            <div className="pt-1 flex items-center justify-between gap-2.5 flex-wrap">
-                                <AthleteIdActions entryId={entry.id} size="default" />
-                                <Link
-                                    href={`/parent/entries/${entry.id}/id-card`}
-                                    className="text-[13px] font-semibold text-[#57534e] hover:text-[#1c1917] dark:text-[#8a99ab] dark:hover:text-[#e8eef5] transition-colors ml-auto"
-                                >
-                                    Full Page View →
+                            <div className="relative z-10 pt-1 flex items-center gap-3 flex-wrap">
+                                <Link href={`/parent/entries/${entry.id}/id-card`}>
+                                    <Button
+                                        size="default"
+                                        className="gap-2 rounded-xl font-bold bg-[#3fd8c3] hover:bg-[#25c4a5] text-[#04231e] shadow-lg shadow-[#3fd8c3]/20 h-10 px-5 text-xs sm:text-sm transition-all cursor-pointer"
+                                    >
+                                        <Smartphone className="h-4 w-4" />
+                                        View Pass
+                                    </Button>
                                 </Link>
+
+                                <IdCardDownload
+                                    entryId={entry.id}
+                                    label="Print A4"
+                                    size="default"
+                                    variant="outline"
+                                    customButtonClass="h-10 px-4 rounded-xl border-neutral-700 bg-neutral-800/90 text-neutral-200 hover:bg-neutral-700 hover:text-white font-semibold text-xs sm:text-sm gap-2"
+                                />
                             </div>
                         </div>
                     )}
