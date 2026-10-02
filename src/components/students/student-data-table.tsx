@@ -39,6 +39,7 @@ import Fuse from 'fuse.js'
 import { normalizeDobToIso } from '@/lib/date'
 import { useAppNavigation } from '@/components/app/navigation-provider'
 import { toast } from 'sonner'
+import { AthletePfp } from '@/components/ui/enlarged-pfp-dialog'
 
 interface Student {
     id: string
@@ -117,21 +118,18 @@ export function StudentDataTable({ data, dojos, initialDojoFilter }: StudentData
                 const name = row.getValue("name") as string
                 return (
                     <div className="flex items-center gap-2.5 pl-2">
-                        {photo ? (
-                            <div className="relative h-7 w-7 rounded-full overflow-hidden shrink-0 border border-border">
-                                <Image
-                                    src={photo}
-                                    alt={name}
-                                    fill
-                                    className="object-cover"
-                                    unoptimized
-                                />
-                            </div>
-                        ) : (
-                            <div className="h-7 w-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[11px] font-semibold shrink-0">
-                                {name.slice(0, 1).toUpperCase()}
-                            </div>
-                        )}
+                        <AthletePfp
+                            photoUrl={photo}
+                            name={name}
+                            subtitle={row.original.registration_no}
+                            size={32}
+                            extraDetails={{
+                                dojo: row.original.dojos?.name,
+                                gender: row.original.gender,
+                                rank: row.original.rank,
+                                phone: row.original.parent?.phone || undefined,
+                            }}
+                        />
                         <span className="font-medium">{name}</span>
                     </div>
                 )

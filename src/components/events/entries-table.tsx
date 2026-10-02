@@ -9,6 +9,7 @@ import { bulkUpdateEntryStatus } from "@/app/dashboard/events/[id]/entries/actio
 import { Loader2 } from "lucide-react"
 import { toast } from "sonner" // Assuming we have sonner or use alert for now
 import { getStatusLabel, getStatusBgClass } from "@/lib/status"
+import { AthletePfp } from "@/components/ui/enlarged-pfp-dialog"
 
 interface EntriesTableProps {
     entries: any[]
@@ -121,21 +122,19 @@ export function EntriesTable({ entries }: EntriesTableProps) {
                                 {/* @ts-ignore */}
                                 <td className="p-4 align-middle font-medium">
                                     <div className="flex items-center gap-2.5">
-                                        {entry.students?.photo_url ? (
-                                            <div className="relative h-8 w-8 rounded-full overflow-hidden shrink-0 border border-border">
-                                                <Image
-                                                    src={entry.students.photo_url}
-                                                    alt={entry.students.name || ''}
-                                                    fill
-                                                    className="object-cover"
-                                                    unoptimized
-                                                />
-                                            </div>
-                                        ) : (
-                                            <div className="h-8 w-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-semibold shrink-0">
-                                                {(entry.students?.name || 'A').slice(0, 1).toUpperCase()}
-                                            </div>
-                                        )}
+                                        <AthletePfp
+                                            photoUrl={entry.students?.photo_url}
+                                            name={entry.students?.name || 'Athlete'}
+                                            subtitle={entry.students?.registration_no}
+                                            size={34}
+                                            extraDetails={{
+                                                chestNo: entry.chest_no,
+                                                dojo: entry.dojos?.name,
+                                                category: entry.categories?.name,
+                                                rank: entry.students?.rank,
+                                                gender: entry.students?.gender,
+                                            }}
+                                        />
                                         <div className="min-w-0">
                                             <div className="flex flex-col">
                                                 <span className="truncate">{entry.students?.name}</span>

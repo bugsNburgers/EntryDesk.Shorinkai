@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { Trophy, Loader2 } from 'lucide-react'
+import { AthletePfp } from '@/components/ui/enlarged-pfp-dialog'
 
 interface ChildCardItemProps {
     child: {
@@ -53,24 +54,18 @@ export function ChildCardItem({ child, latestStatus }: ChildCardItemProps) {
             )}
 
             <div className="flex items-center gap-3.5">
-                {/* Avatar matching Portal.dc.html */}
                 <div className="relative shrink-0">
-                    {child.photo_url ? (
-                        <div className="relative h-[54px] w-[54px] rounded-full overflow-hidden border-2 border-[#0d9488] bg-[#f2eee5] dark:border-[#2dd4b4] dark:bg-[#16233a] shadow-2xs">
-                            <Image
-                                src={child.photo_url}
-                                alt={child.name}
-                                fill
-                                className="object-cover"
-                            />
-                        </div>
-                    ) : (
-                        <div className="flex h-[54px] w-[54px] items-center justify-center rounded-full border-2 border-[#0d9488] bg-[#f2eee5] dark:border-[#2dd4b4] dark:bg-[#16233a] shadow-2xs">
-                            <span className="text-xl font-bold text-[#0d9488] dark:text-[#2dd4b4]">
-                                {child.name.charAt(0).toUpperCase()}
-                            </span>
-                        </div>
-                    )}
+                    <AthletePfp
+                        photoUrl={child.photo_url}
+                        name={child.name}
+                        subtitle={child.dojo_name}
+                        size={54}
+                        extraDetails={{
+                            dojo: child.dojo_name,
+                            rank: child.rank,
+                            gender: child.gender,
+                        }}
+                    />
 
                     {/* Instant spinner overlay on avatar when selected */}
                     {(isSelected || isPending) && (

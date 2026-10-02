@@ -33,6 +33,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Search, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { AthletePfp } from '@/components/ui/enlarged-pfp-dialog'
 
 interface CoachEntriesListProps {
     entries: any[]
@@ -618,19 +619,22 @@ export function CoachEntriesList({
 
                                     {/* Athlete Info */}
                                     <div className="flex items-center gap-3 min-w-0">
-                                        <div className="w-[46px] h-[46px] rounded-full bg-[#16233a] border-2 border-[#243349] flex items-center justify-center shrink-0 relative">
-                                            {entry.students?.photo_url ? (
-                                                // eslint-disable-next-line @next/next/no-img-element
-                                                <img
-                                                    src={entry.students.photo_url}
-                                                    alt={entry.students.name || 'Athlete'}
-                                                    className="w-full h-full object-cover rounded-full"
-                                                />
-                                            ) : (
-                                                <AvatarPlaceholderSvg />
-                                            )}
-                                            <AvatarVerifiedBadge />
-                                        </div>
+                                        <AthletePfp
+                                            photoUrl={entry.students?.photo_url}
+                                            name={entry.students?.name || 'Athlete'}
+                                            subtitle={entry.dojos?.name || entry.parent_email || 'Athlete'}
+                                            size={46}
+                                            extraDetails={{
+                                                dojo: entry.dojos?.name,
+                                                chestNo: entry.chest_no,
+                                                age: age !== '—' ? age : undefined,
+                                                rank: entry.students?.rank,
+                                                gender: entry.students?.gender,
+                                                category: [entry.kata_category, entry.kumite_category].filter(Boolean).join(' • ') || undefined,
+                                                email: entry.parent_email,
+                                                phone: entry.students?.phone,
+                                            }}
+                                        />
                                         <div className="min-w-0">
                                             <div className="text-[16px] font-bold text-[#e8eef5] truncate">
                                                 {entry.students?.name || 'Athlete'}
@@ -963,19 +967,22 @@ export function CoachEntriesList({
                                             {isSelected && <CheckmarkSvg />}
                                         </span>
 
-                                        <div className="w-[54px] h-[54px] rounded-full bg-[#16233a] border-2 border-[#243349] flex items-center justify-center shrink-0 relative">
-                                            {entry.students?.photo_url ? (
-                                                // eslint-disable-next-line @next/next/no-img-element
-                                                <img
-                                                    src={entry.students.photo_url}
-                                                    alt={entry.students.name || 'Athlete'}
-                                                    className="w-full h-full object-cover rounded-full"
-                                                />
-                                            ) : (
-                                                <AvatarPlaceholderSvg />
-                                            )}
-                                            <AvatarVerifiedBadge />
-                                        </div>
+                                        <AthletePfp
+                                            photoUrl={entry.students?.photo_url}
+                                            name={entry.students?.name || 'Athlete'}
+                                            subtitle={entry.dojos?.name || entry.parent_email || 'Athlete'}
+                                            size={54}
+                                            extraDetails={{
+                                                dojo: entry.dojos?.name,
+                                                chestNo: entry.chest_no,
+                                                age: age !== '—' ? age : undefined,
+                                                rank: entry.students?.rank,
+                                                gender: entry.students?.gender,
+                                                category: [entry.kata_category, entry.kumite_category].filter(Boolean).join(' • ') || undefined,
+                                                email: entry.parent_email,
+                                                phone: entry.students?.phone,
+                                            }}
+                                        />
 
                                         <div className="min-w-0 flex-1">
                                             <div className="text-[17px] font-bold text-[#e8eef5] truncate">

@@ -37,6 +37,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { AthletePfp } from '@/components/ui/enlarged-pfp-dialog'
 import {
     Search,
     Loader2,
@@ -596,22 +597,21 @@ export function OrganiserEntriesList({
 
                                     {/* Athlete Avatar + Name */}
                                     <div className="flex items-center gap-3 min-w-0">
-                                        <div className="relative w-[46px] h-[46px] rounded-full bg-[#16233a] border-2 border-[#243349] flex items-center justify-center shrink-0">
-                                            {entry.student_photo ? (
-                                                <Image
-                                                    src={entry.student_photo}
-                                                    alt={entry.student_name}
-                                                    width={46}
-                                                    height={46}
-                                                    className="w-full h-full rounded-full object-cover"
-                                                />
-                                            ) : (
-                                                <span className="text-base font-bold text-[#2dd4b4]">
-                                                    {entry.student_name.charAt(0).toUpperCase()}
-                                                </span>
-                                            )}
-                                            {isApproved && <AvatarVerifiedBadge />}
-                                        </div>
+                                        <AthletePfp
+                                            photoUrl={entry.student_photo}
+                                            name={entry.student_name}
+                                            subtitle={entry.dojo_name || entry.student_registration_no}
+                                            size={46}
+                                            extraDetails={{
+                                                dojo: entry.dojo_name,
+                                                chestNo: entry.chest_no,
+                                                age: age !== '—' ? age : undefined,
+                                                rank: entry.student_rank,
+                                                gender: entry.student_gender,
+                                                category: entry.category_name || undefined,
+                                                email: entry.coach_email,
+                                            }}
+                                        />
                                         <div className="min-w-0">
                                             <div className="text-[15.5px] font-bold text-[#e8eef5] truncate">
                                                 {entry.student_name}
@@ -952,22 +952,21 @@ export function OrganiserEntriesList({
                                             {isSelected && <CheckmarkSvg />}
                                         </span>
 
-                                        <div className="relative w-11 h-11 rounded-full bg-[#16233a] border-2 border-[#243349] flex items-center justify-center shrink-0">
-                                            {entry.student_photo ? (
-                                                <Image
-                                                    src={entry.student_photo}
-                                                    alt={entry.student_name}
-                                                    width={44}
-                                                    height={44}
-                                                    className="w-full h-full rounded-full object-cover"
-                                                />
-                                            ) : (
-                                                <span className="text-sm font-bold text-[#2dd4b4]">
-                                                    {entry.student_name.charAt(0).toUpperCase()}
-                                                </span>
-                                            )}
-                                            {isApproved && <AvatarVerifiedBadge />}
-                                        </div>
+                                        <AthletePfp
+                                            photoUrl={entry.student_photo}
+                                            name={entry.student_name}
+                                            subtitle={entry.dojo_name || entry.student_registration_no}
+                                            size={48}
+                                            extraDetails={{
+                                                dojo: entry.dojo_name,
+                                                chestNo: entry.chest_no,
+                                                age: age !== '—' ? age : undefined,
+                                                rank: entry.student_rank,
+                                                gender: entry.student_gender,
+                                                category: entry.category_name || undefined,
+                                                email: entry.coach_email,
+                                            }}
+                                        />
 
                                         <div className="min-w-0">
                                             <div className="font-bold text-base text-[#e8eef5] truncate">
