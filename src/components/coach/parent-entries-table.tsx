@@ -33,6 +33,7 @@ import {
     coachBulkForwardEntries,
     coachRequestCorrection,
     coachDeclineEntry,
+    coachWithdrawEntry,
 } from '@/app/dashboard/parent-entries/actions'
 import { getStatusLabel, getStatusBgClass } from '@/lib/status'
 
@@ -69,7 +70,7 @@ export function ParentEntriesTable({ entries }: ParentEntriesTableProps) {
     const [actionMessage, setActionMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
     // Modal states
-    const [activeDialog, setActiveDialog] = useState<'correction' | 'decline' | null>(null)
+    const [activeDialog, setActiveDialog] = useState<'correction' | 'decline' | 'withdraw' | null>(null)
     const [activeEntry, setActiveEntry] = useState<ParentEntryRow | null>(null)
     const [modalReason, setModalReason] = useState('')
 
@@ -193,6 +194,35 @@ export function ParentEntriesTable({ entries }: ParentEntriesTableProps) {
         })
     }
 
+    const openWithdrawModal = (entry: ParentEntryRow) => {
+        setActiveEntry(entry)
+        setModalReason('')
+        setActiveDialog('withdraw')
+    }
+
+    const handleConfirmWithdraw = () => {
+        if (!activeEntry) return
+        if (!modalReason.trim()) {
+            alert('Please provide a reason for withdrawing.')
+            return
+        }
+        startTransition(async () => {
+            const res = await coachWithdrawEntry(activeEntry.id, modalReason)
+            if (res.error) {
+                alert(res.error)
+            } else {
+                setActiveDialog(null)
+                setActiveEntry(null)
+                setModalReason('')
+                setActionMessage({
+                    type: 'success',
+                    text: `Withdrew ${activeEntry.student_name}'s entry from the organiser.`,
+                })
+                router.refresh()
+            }
+        })
+    }
+
     return (
         <div className="space-y-4">
             {actionMessage && (
@@ -224,7 +254,7 @@ export function ParentEntriesTable({ entries }: ParentEntriesTableProps) {
                             size="sm"
                             onClick={handleBulkForward}
                             disabled={isPending}
-                            className="rounded-xl h-9 text-xs font-semibold gap-1.5"
+                            className="rounded-md h-9 text-xs font-semibold gap-1.5"
                         >
                             {isPending ? (
                                 <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
@@ -238,7 +268,7 @@ export function ParentEntriesTable({ entries }: ParentEntriesTableProps) {
                             variant="ghost"
                             onClick={() => setSelectedIds(new Set())}
                             disabled={isPending}
-                            className="rounded-xl h-9 text-xs text-muted-foreground"
+                            className="rounded-md h-9 text-xs text-muted-foreground"
                         >
                             Deselect all
                         </Button>
@@ -427,7 +457,7 @@ export function ParentEntriesTable({ entries }: ParentEntriesTableProps) {
                                                         size="sm"
                                                         onClick={() => handleSingleForward(entry)}
                                                         disabled={isPending}
-                                                        className="h-8 rounded-lg text-xs gap-1 px-2.5"
+                                                        className="h-8 rounded-md text-xs gap-1 px-2.5"
                                                     >
                                                         <Send className="h-3 w-3" />
                                                         Send
@@ -437,7 +467,7 @@ export function ParentEntriesTable({ entries }: ParentEntriesTableProps) {
                                                         variant="outline"
                                                         onClick={() => openCorrectionModal(entry)}
                                                         disabled={isPending}
-                                                        className="h-8 rounded-lg text-xs gap-1 px-2.5 text-amber-700 border-amber-300 dark:text-amber-400 dark:border-amber-800"
+                                                        className="h-8 rounded-md text-xs gap-1 px-2.5 text-amber-700 border-amber-300 dark:text-amber-400 dark:border-amber-800"
                                                     >
                                                         <RotateCcw className="h-3 w-3" />
                                                         Fix
@@ -447,15 +477,34 @@ export function ParentEntriesTable({ entries }: ParentEntriesTableProps) {
                                                         variant="ghost"
                                                         onClick={() => openDeclineModal(entry)}
                                                         disabled={isPending}
-                                                        className="h-8 rounded-lg text-xs gap-1 px-2 text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30"
+                                                        className="h-8 rounded-md text-xs gap-1 px-2 text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30"
                                                     >
                                                         <XCircle className="h-3.5 w-3.5" />
                                                     </Button>
                                                 </div>
                                             ) : (
-                                                <span className="text-xs text-muted-foreground italic">
-                                                    Processed
-                                                </span>
+                                                <div className="inline-flex items-center gap-1.5 justify-end">
+                                                    <span className="text-xs text-muted-foreground italic">
+                                                        {entry.status === 'approved'
+                                                            ? 'Accepted'
+                                                            : entry.status === 'submitted'
+                                                            ? 'Forwarded'
+                                                            : 'Processed'}
+                                                    </span>
+                                                    {(entry.status === 'submitted' || entry.status === 'approved') && (
+                                                        <Button
+                                                            size="sm"
+                                                            variant="outline"
+                                                            onClick={() => openWithdrawModal(entry)}
+                                                            disabled={isPending}
+                                                            title="Withdraw entry from organiser before deadline"
+                                                            className="h-7 text-[11px] gap-1 px-2 text-rose-600 border-rose-300 hover:bg-rose-50 dark:border-rose-900 dark:hover:bg-rose-950/40"
+                                                        >
+                                                            <XCircle className="h-3 w-3" />
+                                                            <span>Withdraw</span>
+                                                        </Button>
+                                                    )}
+                                                </div>
                                             )}
                                         </td>
                                     </tr>
@@ -569,6 +618,66 @@ export function ParentEntriesTable({ entries }: ParentEntriesTableProps) {
                         >
                             {isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : null}
                             Confirm Decline
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Withdraw from Organiser Dialog (Coach) */}
+            <Dialog
+                open={activeDialog === 'withdraw'}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setActiveDialog(null)
+                        setActiveEntry(null)
+                    }
+                }}
+            >
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="text-rose-600 dark:text-rose-400">
+                            Withdraw Entry from Organiser
+                        </DialogTitle>
+                        <DialogDescription>
+                            Withdraw{' '}
+                            <span className="font-semibold text-foreground">
+                                {activeEntry?.student_name}
+                            </span>{' '}
+                            from{' '}
+                            <span className="font-semibold text-foreground">
+                                {activeEntry?.event_title}
+                            </span>
+                            . This action is permitted before the tournament registration deadline.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-2 py-2">
+                        <Label htmlFor="withdraw-notes" className="text-xs font-semibold">
+                            Reason for withdrawal *
+                        </Label>
+                        <Input
+                            id="withdraw-notes"
+                            placeholder="e.g. Athlete unavailable / medical reason"
+                            value={modalReason}
+                            onChange={(e) => setModalReason(e.target.value)}
+                        />
+                    </div>
+
+                    <DialogFooter>
+                        <Button
+                            variant="ghost"
+                            onClick={() => setActiveDialog(null)}
+                            disabled={isPending}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            onClick={handleConfirmWithdraw}
+                            disabled={isPending || !modalReason.trim()}
+                        >
+                            {isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : null}
+                            Confirm Withdrawal
                         </Button>
                     </DialogFooter>
                 </DialogContent>

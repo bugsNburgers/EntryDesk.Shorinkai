@@ -219,12 +219,12 @@ export function StudentDataTable({ data, dojos, initialDojoFilter }: StudentData
                     <div className="flex flex-col text-xs space-y-1">
                         <span className="font-medium text-foreground flex items-center gap-1">
                             <UserCheck className="h-3 w-3 text-primary shrink-0" />
-                            <span className="truncate max-w-[120px]">{parent.name || 'Athlete / Parent'}</span>
+                            <span className="truncate max-w-[120px] sm:max-w-[160px] 2xl:max-w-[240px]">{parent.name || 'Athlete / Parent'}</span>
                         </span>
                         {parent.email && (
                             <a
                                 href={`mailto:${parent.email}`}
-                                className="text-[11px] text-muted-foreground hover:text-foreground transition-colors truncate max-w-[130px]"
+                                className="text-[11px] text-muted-foreground hover:text-foreground transition-colors truncate max-w-[130px] sm:max-w-[180px] 2xl:max-w-[260px]"
                                 title={parent.email}
                             >
                                 {parent.email}
@@ -319,7 +319,7 @@ export function StudentDataTable({ data, dojos, initialDojoFilter }: StudentData
                         placeholder="Search students (fuzzy)..."
                         value={globalFilter}
                         onChange={(event) => setGlobalFilter(event.target.value)}
-                        className="h-10 rounded-xl pl-8"
+                        className="h-9 rounded-md pl-8 border-border bg-card shadow-2xs text-foreground focus-visible:ring-1 focus-visible:ring-primary"
                     />
                 </div>
 
@@ -343,10 +343,10 @@ export function StudentDataTable({ data, dojos, initialDojoFilter }: StudentData
                         }}
                     >
                         <SelectTrigger className={cn(
-                            "h-9 w-auto min-w-[110px] max-w-[180px] text-xs font-medium rounded-lg px-2.5 py-1 gap-1.5 transition-all",
+                            "h-9 w-auto min-w-[110px] max-w-[180px] text-xs font-medium rounded-md px-2.5 py-1 gap-1.5 transition-all shadow-2xs",
                             dojoFilter !== 'all'
                                 ? "border-primary/60 bg-primary/10 text-primary font-semibold ring-1 ring-primary/30"
-                                : "border-border/60 bg-background/50 hover:bg-muted/40 text-muted-foreground hover:text-foreground"
+                                : "border-border bg-card hover:bg-accent/60 text-muted-foreground hover:text-foreground"
                         )}>
                             <span className="text-muted-foreground font-normal">Dojo:</span>
                             <span className="font-semibold truncate">{dojoFilter === 'all' ? 'All' : dojoFilter}</span>
@@ -360,7 +360,7 @@ export function StudentDataTable({ data, dojos, initialDojoFilter }: StudentData
                     </Select>
 
                     <Select onValueChange={(val) => setFilter("gender", val)}>
-                        <SelectTrigger className="h-9 w-auto min-w-[95px] text-xs font-medium rounded-lg px-2.5 py-1 gap-1.5 border-border/60 bg-background/50 hover:bg-muted/40 text-muted-foreground hover:text-foreground">
+                        <SelectTrigger className="h-9 w-auto min-w-[95px] text-xs font-medium rounded-md px-2.5 py-1 gap-1.5 border-border bg-card hover:bg-accent/60 text-muted-foreground hover:text-foreground shadow-2xs">
                             <span className="text-muted-foreground font-normal">Gender:</span>
                             <SelectValue placeholder="All" />
                         </SelectTrigger>
@@ -372,7 +372,7 @@ export function StudentDataTable({ data, dojos, initialDojoFilter }: StudentData
                     </Select>
 
                     <Select onValueChange={(val) => setFilter("is_active", val)}>
-                        <SelectTrigger className="h-9 w-auto min-w-[95px] text-xs font-medium rounded-lg px-2.5 py-1 gap-1.5 border-border/60 bg-background/50 hover:bg-muted/40 text-muted-foreground hover:text-foreground">
+                        <SelectTrigger className="h-9 w-auto min-w-[95px] text-xs font-medium rounded-md px-2.5 py-1 gap-1.5 border-border bg-card hover:bg-accent/60 text-muted-foreground hover:text-foreground shadow-2xs">
                             <span className="text-muted-foreground font-normal">Status:</span>
                             <SelectValue placeholder="All" />
                         </SelectTrigger>
@@ -385,7 +385,7 @@ export function StudentDataTable({ data, dojos, initialDojoFilter }: StudentData
 
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="outline" className="ml-auto h-10 rounded-xl">
+                            <Button variant="outline" className="ml-auto h-9 rounded-md border-border bg-card hover:bg-accent shadow-2xs">
                                 Columns <ChevronDown className="ml-2 h-4 w-4" />
                             </Button>
                         </DropdownMenuTrigger>
@@ -413,7 +413,7 @@ export function StudentDataTable({ data, dojos, initialDojoFilter }: StudentData
             </div>
 
             {/* Table */}
-            <div className="overflow-hidden rounded-2xl border border-border/50 bg-background/20 dark:border-white/[0.10] dark:bg-white/[0.02]">
+            <div className="overflow-x-auto rounded-2xl border border-border bg-card shadow-xs dark:border-white/[0.10] dark:bg-white/[0.02]">
                 <Table>
                     <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (

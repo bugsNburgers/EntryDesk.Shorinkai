@@ -185,7 +185,7 @@ export function StudentDialog({ dojos, student, open, onOpenChange, showTrigger 
                                     variant="outline"
                                     size="sm"
                                     onClick={() => setPhotoDialogOpen(true)}
-                                    className="rounded-xl text-xs gap-1.5"
+                                    className="rounded-md text-xs gap-1.5"
                                 >
                                     <Camera className="h-3.5 w-3.5" />
                                     {photoUrl ? 'Change' : 'Upload'}

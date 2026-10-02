@@ -134,14 +134,14 @@ export function CoachStudentRegister({ students, existingStudentIds, eventId, ev
                     <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
                     <Input
                         placeholder="Search name..."
-                        className="h-11 w-full sm:w-[190px] lg:w-[260px] rounded-full"
+                        className="h-10 w-full sm:w-[190px] lg:w-[260px] rounded-md"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                     />
                 </div>
 
                 <Select value={filterGender} onValueChange={setFilterGender}>
-                    <SelectTrigger className="h-10 w-full sm:w-[130px] rounded-xl">
+                    <SelectTrigger className="h-10 w-full sm:w-[130px] rounded-md">
                         <SelectValue placeholder="Gender" />
                     </SelectTrigger>
                     <SelectContent>
@@ -152,7 +152,7 @@ export function CoachStudentRegister({ students, existingStudentIds, eventId, ev
                 </Select>
 
                 <Select value={filterRank} onValueChange={setFilterRank}>
-                    <SelectTrigger className="h-10 w-full sm:w-[150px] rounded-xl">
+                    <SelectTrigger className="h-10 w-full sm:w-[150px] rounded-md">
                         <SelectValue placeholder="Rank" />
                     </SelectTrigger>
                     <SelectContent>
@@ -164,7 +164,7 @@ export function CoachStudentRegister({ students, existingStudentIds, eventId, ev
                 </Select>
 
                 <Select value={filterDojo} onValueChange={setFilterDojo}>
-                    <SelectTrigger className="h-10 w-full sm:w-[160px] rounded-xl">
+                    <SelectTrigger className="h-10 w-full sm:w-[160px] rounded-md">
                         <SelectValue placeholder="Dojo" />
                     </SelectTrigger>
                     <SelectContent>
@@ -176,7 +176,7 @@ export function CoachStudentRegister({ students, existingStudentIds, eventId, ev
                 </Select>
 
                 <Select value={filterStatus} onValueChange={setFilterStatus}>
-                    <SelectTrigger className="h-10 w-full sm:w-[140px] rounded-xl">
+                    <SelectTrigger className="h-10 w-full sm:w-[140px] rounded-md">
                         <SelectValue placeholder="Status" />
                     </SelectTrigger>
                     <SelectContent>
@@ -188,7 +188,7 @@ export function CoachStudentRegister({ students, existingStudentIds, eventId, ev
             </div>
 
             {/* Action Bar */}
-            <div className="flex flex-col justify-between gap-4 rounded-2xl border border-white/[0.10] bg-muted/10 px-3 py-3 md:flex-row md:items-center">
+            <div className="flex flex-col justify-between gap-4 rounded-xl border border-white/[0.10] bg-muted/10 px-3 py-3 md:flex-row md:items-center">
                 <div className="flex items-center justify-between sm:justify-start gap-2">
                     <span className="text-sm font-medium text-muted-foreground">Selection:</span>
                     <div>
@@ -202,7 +202,7 @@ export function CoachStudentRegister({ students, existingStudentIds, eventId, ev
                         {/* Event Day Selector (Conditional) */}
                         {!isSimpleEntryEvent && eventDays.length > 0 && (
                             <Select value={selectedDayId} onValueChange={setSelectedDayId}>
-                                <SelectTrigger className="w-[140px] sm:w-[180px] rounded-xl border-white/[0.12] bg-background/50">
+                                <SelectTrigger className="w-[140px] sm:w-[180px] rounded-md border-white/[0.12] bg-background/50">
                                     <SelectValue placeholder="Select Day (Required)" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -216,7 +216,7 @@ export function CoachStudentRegister({ students, existingStudentIds, eventId, ev
 
                         {!isSimpleEntryEvent && (
                             <Select value={participationType} onValueChange={setParticipationType}>
-                                <SelectTrigger className="w-[110px] sm:w-[140px] rounded-xl">
+                                <SelectTrigger className="w-[110px] sm:w-[140px] rounded-md">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -227,7 +227,7 @@ export function CoachStudentRegister({ students, existingStudentIds, eventId, ev
                             </Select>
                         )}
 
-                        <Button size="sm" onClick={handleAdd} disabled={isAdding || selectedIds.size === 0} className="min-w-[120px] rounded-full bg-emerald-600 hover:bg-emerald-700">
+                        <Button size="sm" onClick={handleAdd} disabled={isAdding || selectedIds.size === 0} className="min-w-[120px] rounded-md bg-emerald-600 hover:bg-emerald-700">
                             {isAdding ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <PlusCircle className="h-4 w-4 mr-2" />}
                             Add
                         </Button>

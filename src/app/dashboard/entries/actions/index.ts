@@ -7,6 +7,7 @@ import { calculateCategory } from '@/lib/category'
 import { auditAsync, AUDIT_ACTIONS } from '@/lib/audit'
 import { randomUUID } from 'crypto'
 import { normalizeDobToIso } from '@/lib/date'
+import { toIsoDate } from '@/lib/events/registration'
 
 /**
  * Checks if an event is currently open for registration.
@@ -42,7 +43,8 @@ async function assertRegistrationOpen(eventId: string) {
     }
 
     const todayIso = now.toISOString().slice(0, 10)
-    if (ev.end_date < todayIso) {
+    const endDateIso = toIsoDate(ev.end_date)
+    if (endDateIso && endDateIso < todayIso) {
         throw new Error('This event has already concluded. Registrations are closed.')
     }
 
@@ -50,7 +52,8 @@ async function assertRegistrationOpen(eventId: string) {
         throw new Error('Registration is closed for this event. No additions or modifications are allowed.')
     }
 
-    if (ev.registration_close_date && ev.registration_close_date < todayIso) {
+    const regCloseDateIso = toIsoDate(ev.registration_close_date)
+    if (regCloseDateIso && regCloseDateIso < todayIso) {
         throw new Error('Registration deadline has passed for this event.')
     }
 }

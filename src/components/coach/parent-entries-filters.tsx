@@ -62,7 +62,7 @@ export function ParentEntriesFilters({ events, pendingCount }: ParentEntriesFilt
                         placeholder="Search athlete or parent..."
                         defaultValue={currentSearch}
                         onChange={(e) => handleSearch(e.target.value)}
-                        className="h-9 pl-9 pr-8 text-xs rounded-xl bg-background/70 border-border/70 focus:border-primary"
+                        className="h-9 pl-9 pr-8 text-xs rounded-md bg-background/70 border-border/70 focus:border-primary"
                     />
                     {currentSearch && (
                         <button
@@ -84,7 +84,7 @@ export function ParentEntriesFilters({ events, pendingCount }: ParentEntriesFilt
                     {/* Status Select */}
                     <Select value={currentStatus} onValueChange={(val) => handleFilter('status', val)}>
                         <SelectTrigger className={cn(
-                            "h-8 w-auto min-w-[105px] text-xs font-medium rounded-lg px-2.5 py-1 gap-1.5 transition-all",
+                            "h-8 w-auto min-w-[105px] text-xs font-medium rounded-md px-2.5 py-1 gap-1.5 transition-all",
                             currentStatus !== 'all'
                                 ? "border-primary/60 bg-primary/10 text-primary font-semibold ring-1 ring-primary/30"
                                 : "border-border/60 bg-background/50 hover:bg-muted/40 text-muted-foreground hover:text-foreground"
@@ -113,7 +113,7 @@ export function ParentEntriesFilters({ events, pendingCount }: ParentEntriesFilt
                     {events.length > 0 && (
                         <Select value={currentEvent} onValueChange={(val) => handleFilter('event_id', val)}>
                             <SelectTrigger className={cn(
-                                "h-8 w-auto min-w-[105px] max-w-[200px] text-xs font-medium rounded-lg px-2.5 py-1 gap-1.5 transition-all",
+                                "h-8 w-auto min-w-[105px] max-w-[200px] text-xs font-medium rounded-md px-2.5 py-1 gap-1.5 transition-all",
                                 currentEvent !== 'all'
                                     ? "border-primary/60 bg-primary/10 text-primary font-semibold ring-1 ring-primary/30"
                                     : "border-border/60 bg-background/50 hover:bg-muted/40 text-muted-foreground hover:text-foreground"

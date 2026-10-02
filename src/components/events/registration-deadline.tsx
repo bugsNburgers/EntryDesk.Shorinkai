@@ -1,26 +1,28 @@
 import { Circle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-import { isRegistrationClosed } from '@/lib/events/registration'
+import { isRegistrationClosed, toIsoDate } from '@/lib/events/registration'
 
 type RegistrationDeadlineProps = {
     event: {
-        end_date?: string | null
+        end_date?: string | Date | null
         is_registration_open?: boolean | null
-        registration_close_date?: string | null
-        temporary_registration_closes_at?: string | null
+        registration_close_date?: string | Date | null
+        temporary_registration_closes_at?: string | Date | null
     }
     todayIso?: string
     isPastEvent?: boolean
     className?: string
 }
 
-function formatDate(dateValue: string) {
-    const iso = dateValue.slice(0, 10)
+function formatDate(dateValue: string | Date | null | undefined) {
+    if (!dateValue) return ''
+    const iso = toIsoDate(dateValue)
+    if (!iso) return String(dateValue)
     const [year, month, day] = iso.split('-')
 
     if (!year || !month || !day) {
-        return dateValue
+        return iso
     }
 
     return `${day}/${month}/${year}`
@@ -32,11 +34,12 @@ export function RegistrationDeadline({
     isPastEvent = false,
     className,
 }: RegistrationDeadlineProps) {
-    if (isPastEvent || (event.end_date && event.end_date < (todayIso ?? new Date().toISOString().slice(0, 10)))) {
+    const today = todayIso ?? new Date().toISOString().slice(0, 10)
+    const endDateIso = toIsoDate(event.end_date)
+    if (isPastEvent || (endDateIso && endDateIso < today)) {
         return null
     }
 
-    const today = todayIso ?? new Date().toISOString().slice(0, 10)
     const isClosed = isRegistrationClosed(event, today)
     const isOpen = !isClosed
 

@@ -288,14 +288,14 @@ export function CoachAddStudentDialog({
 
                     {/* Mode Switcher */}
                     {!successResult && availableRosterStudents.length > 0 && (
-                        <div className="flex items-center p-1 bg-muted/60 border border-border/70 rounded-xl">
+                        <div className="flex items-center p-1 bg-muted/60 border border-border/70 rounded-md">
                             <button
                                 type="button"
                                 onClick={() => {
                                     setMode('manual')
                                     setSelectedStudentId('')
                                 }}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all flex items-center gap-1.5 ${
                                     mode === 'manual'
                                         ? 'bg-background text-foreground shadow-sm'
                                         : 'text-muted-foreground hover:text-foreground'
@@ -307,7 +307,7 @@ export function CoachAddStudentDialog({
                             <button
                                 type="button"
                                 onClick={() => setMode('roster')}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all flex items-center gap-1.5 ${
                                     mode === 'roster'
                                         ? 'bg-background text-foreground shadow-sm'
                                         : 'text-muted-foreground hover:text-foreground'
@@ -359,14 +359,14 @@ export function CoachAddStudentDialog({
                                         <Input
                                             readOnly
                                             value={statusUrl}
-                                            className="text-xs font-mono bg-muted/40 h-9 rounded-xl"
+                                            className="text-xs font-mono bg-muted/40 h-9 rounded-md"
                                         />
                                         <Button
                                             type="button"
                                             variant="outline"
                                             size="sm"
                                             onClick={handleCopyLink}
-                                            className="h-9 rounded-xl shrink-0 gap-1.5 font-medium"
+                                            className="h-9 rounded-md shrink-0 gap-1.5 font-medium"
                                         >
                                             {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
                                             {copied ? 'Copied' : 'Copy'}
@@ -383,7 +383,7 @@ export function CoachAddStudentDialog({
                                     rel="noopener noreferrer"
                                     className="block"
                                 >
-                                    <Button className="w-full bg-[#25D366] hover:bg-[#20b858] text-white font-bold gap-2 h-12 rounded-2xl shadow-lg shadow-emerald-500/15 text-sm transition-all hover:scale-[1.01] active:scale-[0.99]">
+                                    <Button className="w-full bg-[#25D366] hover:bg-[#20b858] text-white font-bold gap-2 h-11 rounded-md shadow-lg shadow-emerald-500/15 text-sm transition-all hover:scale-[1.01] active:scale-[0.99]">
                                         <Share2 className="h-4 w-4" />
                                         Send Digital Pass via WhatsApp
                                     </Button>
@@ -396,14 +396,14 @@ export function CoachAddStudentDialog({
                             <div className="flex gap-3 pt-2">
                                 <Button
                                     variant="outline"
-                                    className="flex-1 rounded-xl h-11 font-medium"
+                                    className="flex-1 rounded-md h-11 font-medium"
                                     onClick={resetForm}
                                 >
                                     <UserPlus className="h-4 w-4 mr-2" />
                                     Add Another Athlete
                                 </Button>
                                 <Button
-                                    className="flex-1 rounded-xl h-11 font-bold"
+                                    className="flex-1 rounded-md h-11 font-bold"
                                     onClick={() => onOpenChange(false)}
                                 >
                                     Done
@@ -415,7 +415,7 @@ export function CoachAddStudentDialog({
                         <div className="space-y-6">
                             {/* Roster Selector (if in roster mode) */}
                             {mode === 'roster' && (
-                                <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20 space-y-2">
+                                <div className="p-4 rounded-xl bg-primary/5 border border-primary/20 space-y-2">
                                     <div className="flex items-center justify-between">
                                         <Label className="text-xs font-bold text-primary uppercase tracking-wider">
                                             Select Athlete from Roster
@@ -425,7 +425,7 @@ export function CoachAddStudentDialog({
                                         </span>
                                     </div>
                                     <Select value={selectedStudentId} onValueChange={handleSelectRosterStudent}>
-                                        <SelectTrigger className="h-11 rounded-xl bg-background border-primary/30">
+                                        <SelectTrigger className="h-11 rounded-md bg-background border-primary/30">
                                             <SelectValue placeholder="Choose athlete..." />
                                         </SelectTrigger>
                                         <SelectContent className="max-h-64">
@@ -458,7 +458,7 @@ export function CoachAddStudentDialog({
                                     {dojos.length > 1 && (
                                         <div className="w-44">
                                             <Select value={selectedDojoId} onValueChange={setSelectedDojoId}>
-                                                <SelectTrigger className="h-8 text-xs rounded-lg">
+                                                <SelectTrigger className="h-8 text-xs rounded-md">
                                                     <SelectValue placeholder="Dojo" />
                                                 </SelectTrigger>
                                                 <SelectContent>
@@ -482,7 +482,7 @@ export function CoachAddStudentDialog({
                                             placeholder="e.g. Rahul Sharma"
                                             value={name}
                                             onChange={(e) => setName(e.target.value)}
-                                            className="pl-10 h-11 rounded-xl text-sm font-medium focus-visible:ring-primary/30"
+                                            className="pl-10 h-11 rounded-md text-sm font-medium focus-visible:ring-primary/30"
                                             required
                                         />
                                     </div>
@@ -506,7 +506,7 @@ export function CoachAddStudentDialog({
                                                 type="date"
                                                 value={dob}
                                                 onChange={(e) => setDob(e.target.value)}
-                                                className="pl-10 h-11 rounded-xl text-sm font-medium"
+                                                className="pl-10 h-11 rounded-md text-sm font-medium"
                                                 required
                                             />
                                         </div>
@@ -515,11 +515,11 @@ export function CoachAddStudentDialog({
                                     {/* Gender Segmented Switcher */}
                                     <div className="space-y-1.5">
                                         <Label className="text-xs font-semibold text-foreground/80">Gender *</Label>
-                                        <div className="grid grid-cols-3 gap-1 p-1 bg-muted/60 border border-border/70 rounded-xl h-11">
+                                        <div className="grid grid-cols-3 gap-1 p-1 bg-muted/60 border border-border/70 rounded-md h-11">
                                             <button
                                                 type="button"
                                                 onClick={() => setGender('male')}
-                                                className={`rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 ${
+                                                className={`rounded-md text-xs font-bold transition-all flex items-center justify-center gap-1 ${
                                                     gender === 'male'
                                                         ? 'bg-background text-foreground shadow-sm'
                                                         : 'text-muted-foreground hover:text-foreground'
@@ -530,7 +530,7 @@ export function CoachAddStudentDialog({
                                             <button
                                                 type="button"
                                                 onClick={() => setGender('female')}
-                                                className={`rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 ${
+                                                className={`rounded-md text-xs font-bold transition-all flex items-center justify-center gap-1 ${
                                                     gender === 'female'
                                                         ? 'bg-background text-foreground shadow-sm'
                                                         : 'text-muted-foreground hover:text-foreground'
@@ -541,7 +541,7 @@ export function CoachAddStudentDialog({
                                             <button
                                                 type="button"
                                                 onClick={() => setGender('other')}
-                                                className={`rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 ${
+                                                className={`rounded-md text-xs font-bold transition-all flex items-center justify-center gap-1 ${
                                                     gender === 'other'
                                                         ? 'bg-background text-foreground shadow-sm'
                                                         : 'text-muted-foreground hover:text-foreground'
@@ -559,7 +559,7 @@ export function CoachAddStudentDialog({
                                     <div className="space-y-1.5">
                                         <Label className="text-xs font-semibold text-foreground/80">Belt / Rank</Label>
                                         <Select value={rank} onValueChange={setRank}>
-                                            <SelectTrigger className="h-11 rounded-xl text-sm font-medium">
+                                            <SelectTrigger className="h-11 rounded-md text-sm font-medium">
                                                 <div className="flex items-center gap-2">
                                                     <span
                                                         className="h-3 w-3 rounded-full border border-black/20"
@@ -568,7 +568,7 @@ export function CoachAddStudentDialog({
                                                     <SelectValue />
                                                 </div>
                                             </SelectTrigger>
-                                            <SelectContent className="max-h-60 rounded-xl">
+                                            <SelectContent className="max-h-60 rounded-lg">
                                                 {Object.entries(BELT_CONFIGS).map(([val, conf]) => (
                                                     <SelectItem key={val} value={val} className="py-2 text-xs font-medium">
                                                         <div className="flex items-center gap-2.5">
@@ -594,7 +594,7 @@ export function CoachAddStudentDialog({
                                                 placeholder="e.g. 55"
                                                 value={weight}
                                                 onChange={(e) => setWeight(e.target.value)}
-                                                className="h-11 rounded-xl text-sm font-medium pr-10"
+                                                className="h-11 rounded-md text-sm font-medium pr-10"
                                             />
                                             <span className="absolute right-3.5 top-3 text-xs font-bold text-muted-foreground pointer-events-none">
                                                 kg
@@ -631,7 +631,7 @@ export function CoachAddStudentDialog({
                                                             key={t.id}
                                                             type="button"
                                                             onClick={() => setParticipationType(t.id as any)}
-                                                            className={`p-3 rounded-xl border text-left transition-all flex flex-col gap-1.5 ${
+                                                            className={`p-3 rounded-md border text-left transition-all flex flex-col gap-1.5 ${
                                                                 isSelected
                                                                     ? 'border-primary bg-primary/10 text-foreground ring-1 ring-primary/40'
                                                                     : 'border-border/60 bg-card/60 hover:bg-muted/40 text-muted-foreground'
@@ -659,14 +659,14 @@ export function CoachAddStudentDialog({
                                                                 key={d.id}
                                                                 type="button"
                                                                 onClick={() => setEventDayId(d.id)}
-                                                                className={`p-3 rounded-xl border text-left transition-all flex items-center justify-between gap-2 ${
+                                                                className={`p-3 rounded-md border text-left transition-all flex items-center justify-between gap-2 ${
                                                                     isSelected
                                                                         ? 'border-primary bg-primary/10 text-foreground ring-1 ring-primary/40'
                                                                         : 'border-border/60 bg-card/60 hover:bg-muted/40 text-muted-foreground'
                                                                 }`}
                                                             >
                                                                 <div className="flex items-center gap-2.5 min-w-0">
-                                                                    <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${
+                                                                    <div className={`h-8 w-8 rounded-md flex items-center justify-center shrink-0 ${
                                                                         isSelected ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'
                                                                     }`}>
                                                                         <Calendar className="h-4 w-4" />
@@ -689,7 +689,7 @@ export function CoachAddStudentDialog({
                                                 </div>
                                             ) : (
                                                 <Select value={eventDayId} onValueChange={setEventDayId}>
-                                                    <SelectTrigger className="h-11 rounded-xl text-sm">
+                                                    <SelectTrigger className="h-11 rounded-md text-sm">
                                                         <SelectValue placeholder="Select day" />
                                                     </SelectTrigger>
                                                     <SelectContent>
@@ -767,7 +767,7 @@ export function CoachAddStudentDialog({
                                                 placeholder="+91 98765 43210"
                                                 value={parentPhone}
                                                 onChange={(e) => setParentPhone(e.target.value)}
-                                                className="pl-10 h-11 rounded-xl text-sm font-medium"
+                                                className="pl-10 h-11 rounded-md text-sm font-medium"
                                             />
                                         </div>
                                     </div>
@@ -780,7 +780,7 @@ export function CoachAddStudentDialog({
                                             placeholder="e.g. Ramesh Sharma"
                                             value={parentName}
                                             onChange={(e) => setParentName(e.target.value)}
-                                            className="h-11 rounded-xl text-sm font-medium"
+                                            className="h-11 rounded-md text-sm font-medium"
                                         />
                                     </div>
 
@@ -792,7 +792,7 @@ export function CoachAddStudentDialog({
                                             placeholder="e.g. St. Joseph's / Bengaluru"
                                             value={schoolOrCity}
                                             onChange={(e) => setSchoolOrCity(e.target.value)}
-                                            className="h-11 rounded-xl text-sm font-medium"
+                                            className="h-11 rounded-md text-sm font-medium"
                                         />
                                     </div>
                                 </div>
@@ -814,7 +814,7 @@ export function CoachAddStudentDialog({
                                 variant="ghost"
                                 onClick={() => onOpenChange(false)}
                                 disabled={isSubmitting}
-                                className="flex-1 sm:flex-none h-10 rounded-xl text-xs text-muted-foreground hover:text-foreground"
+                                className="flex-1 sm:flex-none h-10 rounded-md text-xs text-muted-foreground hover:text-foreground"
                             >
                                 Cancel
                             </Button>
@@ -823,7 +823,7 @@ export function CoachAddStudentDialog({
                                 variant="outline"
                                 onClick={() => handleSubmit('draft')}
                                 disabled={isSubmitting}
-                                className="flex-1 sm:flex-none h-10 rounded-xl text-xs font-semibold"
+                                className="flex-1 sm:flex-none h-10 rounded-md text-xs font-semibold"
                             >
                                 Save as Draft
                             </Button>
@@ -831,7 +831,7 @@ export function CoachAddStudentDialog({
                                 type="button"
                                 onClick={() => handleSubmit('submitted')}
                                 disabled={isSubmitting}
-                                className="flex-1 sm:flex-none h-10 rounded-xl font-bold bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5 shadow-md shadow-primary/20 text-xs sm:text-sm"
+                                className="flex-1 sm:flex-none h-10 rounded-md font-bold bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5 shadow-md shadow-primary/20 text-xs sm:text-sm"
                             >
                                 {isSubmitting ? (
                                     <Loader2 className="h-4 w-4 animate-spin" />

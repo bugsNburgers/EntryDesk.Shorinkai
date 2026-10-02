@@ -10,6 +10,7 @@ import { headers } from 'next/headers'
 import { requireRole } from '@/lib/auth/require-role'
 import sql from '@/lib/db'
 import { audit, AUDIT_ACTIONS } from '@/lib/audit'
+import { isRegistrationClosed } from '@/lib/events/registration'
 
 async function getClientIp(): Promise<string> {
     const h = await headers()
@@ -261,6 +262,94 @@ export async function coachDeclineEntry(
             reason: reason.trim(),
             event_id: entry.event_id,
             student_id: entry.student_id,
+        },
+        ipAddress: ip,
+    }).catch(console.error)
+
+    revalidatePath('/dashboard/parent-entries')
+    revalidatePath(`/dashboard/entries/${entry.event_id}`)
+    revalidatePath('/athlete')
+    revalidatePath('/parent')
+    revalidatePath(`/athlete/${entry.student_id}`)
+    revalidatePath(`/parent/children/${entry.student_id}`)
+    revalidatePath(`/athlete/entries/${entryId}`)
+    revalidatePath(`/parent/entries/${entryId}`)
+
+    return { success: true }
+}
+
+/**
+ * Coach withdraws an entry from the organiser before the tournament deadline.
+ * Works even after organiser approval, provided tournament registration deadline has not passed.
+ */
+export async function coachWithdrawEntry(
+    entryId: string,
+    reason: string
+): Promise<{ success?: boolean; error?: string }> {
+    const { user } = await requireRole('coach', { redirectTo: '/login' })
+    const ip = await getClientIp()
+
+    if (!uuidRe.test(entryId)) {
+        return { error: 'Invalid entry ID.' }
+    }
+
+    if (!reason || reason.trim().length < 3) {
+        return { error: 'Please provide a reason for withdrawing this entry.' }
+    }
+
+    const rows = await sql<{
+        id: string
+        student_id: string
+        event_id: string
+        status: string
+        is_registration_open: boolean
+        registration_close_date: string | Date | null
+        end_date: string | Date
+    }[]>`
+        SELECT e.id, e.student_id, e.event_id, e.status,
+               ev.is_registration_open, ev.registration_close_date, ev.end_date
+        FROM entries e
+        JOIN students s ON e.student_id = s.id
+        JOIN dojos d ON s.dojo_id = d.id
+        JOIN events ev ON e.event_id = ev.id
+        WHERE e.id = ${entryId}
+          AND (e.coach_id = ${user.id} OR d.coach_id = ${user.id})
+        LIMIT 1
+    `
+
+    if (!rows.length) {
+        return { error: 'Entry not found or unauthorized.' }
+    }
+
+    const entry = rows[0]
+
+    // Coach can withdraw before the deadline
+    const todayIso = new Date().toISOString().slice(0, 10)
+    if (isRegistrationClosed(entry, todayIso)) {
+        return { error: 'Tournament registration deadline has passed. Entries cannot be withdrawn from the organiser.' }
+    }
+
+    await sql`
+        UPDATE entries
+        SET status = 'withdrawn',
+            qr_token = NULL,
+            coach_notes = ${reason.trim()},
+            rejection_reason = ${reason.trim()},
+            updated_at = NOW()
+        WHERE id = ${entryId}
+    `
+
+    audit({
+        actorType: 'coach',
+        actorId: user.id,
+        action: AUDIT_ACTIONS.ENTRY_WITHDRAWN,
+        entityType: 'entry',
+        entityId: entryId,
+        details: {
+            reason: reason.trim(),
+            event_id: entry.event_id,
+            student_id: entry.student_id,
+            action: 'coach_withdrawn_before_deadline',
         },
         ipAddress: ip,
     }).catch(console.error)

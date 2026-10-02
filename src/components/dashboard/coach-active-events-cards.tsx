@@ -43,32 +43,32 @@ export function CoachActiveEventsCards({
 
     return (
         <>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
                 {events.map((event) => {
                     const status = statusByEventId[event.id]
                     const registrationClosed = isRegistrationClosed(event)
                     return (
-                        <div key={event.id} className="group flex flex-col rounded-2xl border border-black/10 bg-gradient-to-b from-background/90 to-background/50 hover:bg-background/70 transition-colors p-5 shadow-md shadow-black/5 dark:border-white/10 dark:shadow-black/40">
+                        <div key={event.id} className="group flex flex-col rounded-2xl border border-border bg-card hover:border-primary/40 transition-all duration-200 p-5 shadow-xs hover:shadow-md dark:border-white/10 dark:bg-gradient-to-b dark:from-background/90 dark:to-background/50 dark:hover:bg-background/70">
                             <div className="flex items-start justify-between mb-4">
                                 <div className="space-y-1">
-                                    <Badge variant="secondary" className="bg-primary/5 text-primary border-primary/20 hover:bg-primary/10">
+                                    <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/15">
                                         {event.event_type}
                                     </Badge>
                                     {event.event_level ? (
-                                        <Badge variant="outline" className="border-border/60 bg-transparent">
+                                        <Badge variant="outline" className="border-border bg-muted/30">
                                             {formatEventLevelLabel(event.event_level)}
                                         </Badge>
                                     ) : null}
                                 </div>
                                 {status && (
-                                    <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-background border border-border text-[10px] font-medium shadow-sm">
+                                    <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-muted/60 border border-border text-[10px] font-medium shadow-2xs">
                                         {getStatusIcon(status)}
                                         <span>{getStatusText(status)}</span>
                                     </div>
                                 )}
                             </div>
 
-                            <h3 className="font-bold text-lg leading-tight mb-2 group-hover:text-primary transition-colors">{event.title}</h3>
+                            <h3 className="font-bold text-lg leading-tight mb-2 group-hover:text-primary transition-colors text-foreground">{event.title}</h3>
 
                             <div className="space-y-2 mb-6 text-sm text-muted-foreground">
                                 <div className="flex items-center gap-2">
@@ -89,7 +89,7 @@ export function CoachActiveEventsCards({
                             <div className="mt-auto pt-4 flex flex-col gap-2">
                                 <Button
                                     variant="outline"
-                                    className="w-full rounded-xl border-black/10 bg-white/5 hover:bg-white/10 hover:text-foreground dark:border-white/10"
+                                    className="w-full rounded-xl border-border bg-background hover:bg-accent hover:text-foreground dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
                                     onClick={() => setSelectedEvent(event)}
                                 >
                                     Details

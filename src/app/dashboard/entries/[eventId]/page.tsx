@@ -1,7 +1,7 @@
 import { requireRole } from '@/lib/auth/require-role'
 import { CoachDashboard } from '@/components/coach/coach-dashboard'
 import { notFound } from 'next/navigation'
-import { isRegistrationClosed } from '@/lib/events/registration'
+import { isRegistrationClosed, toIsoDate } from '@/lib/events/registration'
 import sql from '@/lib/db'
 import type { Event, EventDay, Dojo } from '@/types/database'
 
@@ -119,8 +119,9 @@ export default async function EventEntriesPage({ params }: { params: Promise<{ e
 
     const event = eventRows[0]
 
-    // Verify coach is approved for this event
-    if (appRows.length === 0 || appRows[0].status !== 'approved') {
+    // Verify coach is approved for this event OR is the event organizer
+    const isOrganizer = event.organizer_id === user.id
+    if (!isOrganizer && (appRows.length === 0 || appRows[0].status !== 'approved')) {
         return (
             <div className="p-8 text-center text-red-600 font-medium">
                 Access Denied: You are not approved to submit entries for this event.
@@ -130,7 +131,8 @@ export default async function EventEntriesPage({ params }: { params: Promise<{ e
 
     const validEntries = entries || []
     const todayIso = new Date().toISOString().slice(0, 10)
-    const isPastEvent = event.end_date ? event.end_date < todayIso : false
+    const endDateIso = toIsoDate(event.end_date)
+    const isPastEvent = endDateIso ? endDateIso < todayIso : false
     const isLocked = isRegistrationClosed(event, todayIso)
 
     const stats = {

@@ -42,7 +42,7 @@ import {
 import { StudentDialog } from "@/components/students/student-dialog"
 import { isSimpleEntryEventType } from '@/lib/events/type'
 import { updateEntryGenericChecked } from "@/app/dashboard/entries/actions"
-import { IdCardDownload } from "@/components/id-card/id-card-download"
+import { AthleteIdActions } from "@/components/id-card/athlete-id-actions"
 
 interface CoachEntriesListProps {
     entries: any[]
@@ -547,7 +547,7 @@ export function CoachEntriesList({
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/70" />
                         <Input
                             placeholder="Search athlete by name..."
-                            className="h-8.5 pl-9 pr-8 text-xs rounded-xl bg-background/70 border-border/70 focus:border-primary"
+                            className="h-8.5 pl-9 pr-8 text-xs rounded-md bg-background/70 border-border/70 focus:border-primary"
                             value={searchQuery}
                             onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
                         />
@@ -568,7 +568,7 @@ export function CoachEntriesList({
                         {!isReadOnly && (
                             <Select value={paymentFilter} onValueChange={(v) => { setPaymentFilter(v); setPage(1); }}>
                                 <SelectTrigger className={cn(
-                                    "h-8 w-auto min-w-[95px] text-xs font-medium rounded-lg px-2.5 py-1 gap-1.5 transition-all",
+                                    "h-8 w-auto min-w-[95px] text-xs font-medium rounded-md px-2.5 py-1 gap-1.5 transition-all",
                                     paymentFilter !== 'all'
                                         ? "border-primary/60 bg-primary/10 text-primary font-semibold ring-1 ring-primary/30"
                                         : "border-border/60 bg-background/50 hover:bg-muted/40 text-muted-foreground hover:text-foreground"
@@ -589,7 +589,7 @@ export function CoachEntriesList({
                         {/* Belt Filter Chip */}
                         <Select value={beltFilter} onValueChange={(v) => { setBeltFilter(v); setPage(1); }}>
                             <SelectTrigger className={cn(
-                                "h-8 w-auto min-w-[95px] text-xs font-medium rounded-lg px-2.5 py-1 gap-1.5 transition-all",
+                                "h-8 w-auto min-w-[95px] text-xs font-medium rounded-md px-2.5 py-1 gap-1.5 transition-all",
                                 beltFilter !== 'all'
                                     ? "border-primary/60 bg-primary/10 text-primary font-semibold ring-1 ring-primary/30"
                                     : "border-border/60 bg-background/50 hover:bg-muted/40 text-muted-foreground hover:text-foreground"
@@ -609,7 +609,7 @@ export function CoachEntriesList({
                         {dojoFilterOptions.length > 1 && (
                             <Select value={dojoFilter} onValueChange={(v) => { setDojoFilter(v); setPage(1); }}>
                                 <SelectTrigger className={cn(
-                                    "h-8 w-auto min-w-[105px] max-w-[180px] text-xs font-medium rounded-lg px-2.5 py-1 gap-1.5 transition-all",
+                                    "h-8 w-auto min-w-[105px] max-w-[180px] text-xs font-medium rounded-md px-2.5 py-1 gap-1.5 transition-all",
                                     dojoFilter !== 'all'
                                         ? "border-primary/60 bg-primary/10 text-primary font-semibold ring-1 ring-primary/30"
                                         : "border-border/60 bg-background/50 hover:bg-muted/40 text-muted-foreground hover:text-foreground"
@@ -632,7 +632,7 @@ export function CoachEntriesList({
                         {!isSimpleEntryEvent && eventDays && eventDays.length > 0 && (
                             <Select value={dayFilter} onValueChange={(v) => { setDayFilter(v); setPage(1); }}>
                                 <SelectTrigger className={cn(
-                                    "h-8 w-auto min-w-[95px] text-xs font-medium rounded-lg px-2.5 py-1 gap-1.5 transition-all",
+                                    "h-8 w-auto min-w-[95px] text-xs font-medium rounded-md px-2.5 py-1 gap-1.5 transition-all",
                                     dayFilter !== 'all'
                                         ? "border-primary/60 bg-primary/10 text-primary font-semibold ring-1 ring-primary/30"
                                         : "border-border/60 bg-background/50 hover:bg-muted/40 text-muted-foreground hover:text-foreground"
@@ -1046,11 +1046,10 @@ export function CoachEntriesList({
                                     {/* ID Card Download */}
                                     <td className="p-4 align-middle">
                                         {entry.status === 'approved' ? (
-                                            <IdCardDownload
+                                            <AthleteIdActions
                                                 entryId={entry.id}
                                                 size="sm"
-                                                variant="ghost"
-                                                label="ID Card"
+                                                compact
                                             />
                                         ) : (
                                             <span className="text-xs text-muted-foreground/40">—</span>

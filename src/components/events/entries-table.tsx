@@ -59,14 +59,14 @@ export function EntriesTable({ entries }: EntriesTableProps) {
     return (
         <div className="space-y-4">
             {selectedIds.size > 0 && (
-                <div className="flex items-center gap-4 rounded-full border border-white/[0.06] bg-muted/25 px-3 py-2">
+                <div className="flex items-center gap-4 rounded-md border border-white/[0.06] bg-muted/25 px-3 py-2">
                     <span className="pl-2 text-sm font-medium">{selectedIds.size} selected</span>
                     <div className="flex gap-2">
-                        <Button size="sm" onClick={() => handleBulkUpdate('approved')} disabled={isBulkUpdating} className="rounded-full bg-emerald-600 hover:bg-emerald-700">
+                        <Button size="sm" onClick={() => handleBulkUpdate('approved')} disabled={isBulkUpdating} className="rounded-md bg-emerald-600 hover:bg-emerald-700">
                             {isBulkUpdating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                             Approve Selected
                         </Button>
-                        <Button size="sm" variant="destructive" className="rounded-full" onClick={() => handleBulkUpdate('rejected')} disabled={isBulkUpdating}>
+                        <Button size="sm" variant="destructive" className="rounded-md" onClick={() => handleBulkUpdate('rejected')} disabled={isBulkUpdating}>
                             {isBulkUpdating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                             Reject Selected
                         </Button>

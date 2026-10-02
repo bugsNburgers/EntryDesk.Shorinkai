@@ -57,7 +57,7 @@ function UnifiedStatusCard({
                 "group cursor-pointer rounded-2xl border p-4 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg flex flex-col justify-between",
                 highlightClass
                     ? highlightClass
-                    : "border-white/[0.08] bg-card/60 hover:bg-card/90 hover:border-primary/30"
+                    : "border-border bg-card hover:bg-card hover:border-primary/40 shadow-xs hover:shadow-md dark:border-white/[0.08] dark:bg-card/60 dark:hover:bg-card/90"
             )}
         >
             {/* Header: Title, Icon, Big Count Number */}

@@ -116,7 +116,7 @@ export default async function DojosPage({
                 }
             />
 
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
                 {dojos && dojos.length > 0 ? (
                     dojos.map((dojo) => {
                         const isOwner = dojo.coach_id === user.id
@@ -172,7 +172,7 @@ export default async function DojosPage({
 
                                 {dojo.slug && (
                                     <div className="relative z-20 mt-3 pt-2.5 border-t border-border/50 flex items-center justify-between text-[11px]">
-                                        <span className="text-muted-foreground font-mono truncate max-w-[170px]">
+                                        <span className="text-muted-foreground font-mono truncate max-w-[170px] 2xl:max-w-[240px]">
                                             /join/{dojo.slug}
                                         </span>
                                         <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium ${

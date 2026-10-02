@@ -84,7 +84,7 @@ export function EntryFilters({ coaches, eventDays }: EntryFiltersProps) {
             placeholder="Search student name..."
             onChange={(e) => handleSearch(e.target.value)}
             defaultValue={currentSearch}
-            className="h-9.5 pl-9 pr-4 text-sm rounded-xl bg-background/70 border-border/70 focus:border-primary"
+            className="h-9.5 pl-9 pr-4 text-sm rounded-md bg-background/70 border-border/70 focus:border-primary"
           />
         </div>
 
@@ -98,7 +98,7 @@ export function EntryFilters({ coaches, eventDays }: EntryFiltersProps) {
             onValueChange={(val) => handleFilter('status', val)}
           >
             <SelectTrigger className={cn(
-              "h-8.5 w-auto min-w-[105px] text-xs font-medium rounded-lg px-2.5 py-1 gap-1.5 transition-all",
+              "h-8.5 w-auto min-w-[105px] text-xs font-medium rounded-md px-2.5 py-1 gap-1.5 transition-all",
               currentStatus !== 'all'
                 ? "border-primary/60 bg-primary/10 text-primary font-semibold ring-1 ring-primary/30"
                 : "border-border/60 bg-background/50 hover:bg-muted/40 text-muted-foreground hover:text-foreground"
@@ -125,7 +125,7 @@ export function EntryFilters({ coaches, eventDays }: EntryFiltersProps) {
               onValueChange={(val) => handleFilter('day', val)}
             >
               <SelectTrigger className={cn(
-                "h-8.5 w-auto min-w-[95px] text-xs font-medium rounded-lg px-2.5 py-1 gap-1.5 transition-all",
+                "h-8.5 w-auto min-w-[95px] text-xs font-medium rounded-md px-2.5 py-1 gap-1.5 transition-all",
                 currentDay !== 'all'
                   ? "border-primary/60 bg-primary/10 text-primary font-semibold ring-1 ring-primary/30"
                   : "border-border/60 bg-background/50 hover:bg-muted/40 text-muted-foreground hover:text-foreground"
@@ -150,7 +150,7 @@ export function EntryFilters({ coaches, eventDays }: EntryFiltersProps) {
               onValueChange={(val) => handleFilter('coach', val)}
             >
               <SelectTrigger className={cn(
-                "h-8.5 w-auto min-w-[105px] max-w-[180px] text-xs font-medium rounded-lg px-2.5 py-1 gap-1.5 transition-all",
+                "h-8.5 w-auto min-w-[105px] max-w-[180px] text-xs font-medium rounded-md px-2.5 py-1 gap-1.5 transition-all",
                 currentCoach !== 'all'
                   ? "border-primary/60 bg-primary/10 text-primary font-semibold ring-1 ring-primary/30"
                   : "border-border/60 bg-background/50 hover:bg-muted/40 text-muted-foreground hover:text-foreground"

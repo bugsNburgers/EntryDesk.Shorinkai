@@ -81,7 +81,7 @@ export function ResponsiveDashboardFrame({
         <NavProvider>
             <div className="dashboard-shell min-h-screen w-full relative">
                 {/* Background grid */}
-                <div className="fixed inset-0 -z-10 h-full w-full bg-background bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]">
+                <div className="fixed inset-0 -z-10 h-full w-full bg-background bg-[linear-gradient(to_right,#00000008_1px,transparent_1px),linear-gradient(to_bottom,#00000008_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]">
                     <div className="absolute left-0 bottom-0 -z-10 h-[300px] w-[300px] rounded-full bg-primary/5 blur-[100px]" />
                 </div>
 
@@ -89,18 +89,18 @@ export function ResponsiveDashboardFrame({
                 {/* ─── Desktop Sidebar ─── */}
                 <aside
                     className={cn(
-                        'hidden flex-col border-r bg-background/60 backdrop-blur-xl px-3 py-5 md:flex sticky top-0 h-screen transition-all duration-200 ease-in-out',
+                        'hidden flex-col border-r border-sidebar-border bg-sidebar/95 backdrop-blur-xl px-3 py-5 md:flex sticky top-0 h-screen transition-all duration-200 ease-in-out dark:bg-background/60 dark:border-white/[0.08]',
                         sidebarOpen ? 'w-64 opacity-100' : 'w-0 px-0 py-0 border-r-0 overflow-hidden opacity-0',
                     )}
                 >
                     {/* Brand header */}
                     <div className="flex items-center justify-between gap-3 mb-6 px-2">
-                        <Link href="/dashboard" className="flex items-center gap-2.5 rounded-lg p-1 transition-colors hover:bg-accent/40">
-                            <div className="relative h-9 w-9 overflow-hidden rounded-xl border border-border/50 bg-background/70 dark:border-white/[0.12] shrink-0">
+                        <Link href="/dashboard" className="flex items-center gap-2.5 rounded-lg p-1 transition-colors hover:bg-accent/60">
+                            <div className="relative h-9 w-9 overflow-hidden rounded-xl border border-border bg-card dark:border-white/[0.12] shrink-0 shadow-2xs">
                                 <Image src="/favicon.ico" alt="EntryDesk logo" fill className="object-cover" sizes="36px" priority />
                             </div>
                             <div className="leading-tight min-w-0">
-                                <div className="text-sm font-bold tracking-tight">EntryDesk</div>
+                                <div className="text-sm font-bold tracking-tight text-foreground">EntryDesk</div>
                                 <div className="text-[11px] text-muted-foreground font-medium capitalize">{roleLabel}</div>
                             </div>
                         </Link>
@@ -207,15 +207,15 @@ export function ResponsiveDashboardFrame({
                 {/* ─── Main content ─── */}
                 <div className="flex min-w-0 flex-1 flex-col">
                     {/* Mobile topbar */}
-                    <div className="sticky top-0 z-[40] border-b border-border/50 bg-background/70 backdrop-blur-xl supports-[backdrop-filter]:bg-background/50 md:hidden dark:border-white/[0.05]">
+                    <div className="sticky top-0 z-[40] border-b border-border/80 bg-sidebar/95 backdrop-blur-xl supports-[backdrop-filter]:bg-sidebar/80 md:hidden dark:bg-background/70 dark:border-white/[0.05]">
                         <div className="flex h-14 items-center justify-between px-4">
                             <div className="flex items-center gap-2">
                                 <MobileNav role={role} profile={{ full_name: profileFullName }} userEmail={userEmail} />
-                                <Link href="/dashboard" className="flex items-center gap-2 rounded-md px-1 py-0.5 hover:bg-accent/30">
-                                    <div className="relative h-7 w-7 overflow-hidden rounded-md border border-border/50 bg-background/70 dark:border-white/[0.12]">
+                                <Link href="/dashboard" className="flex items-center gap-2 rounded-md px-1 py-0.5 hover:bg-accent/50">
+                                    <div className="relative h-7 w-7 overflow-hidden rounded-md border border-border bg-card dark:border-white/[0.12] shadow-2xs">
                                         <Image src="/favicon.ico" alt="EntryDesk logo" fill className="object-cover" sizes="28px" priority />
                                     </div>
-                                    <span className="text-sm font-bold tracking-tight">EntryDesk</span>
+                                    <span className="text-sm font-bold tracking-tight text-foreground">EntryDesk</span>
                                 </Link>
                             </div>
 
@@ -227,7 +227,7 @@ export function ResponsiveDashboardFrame({
                         </div>
                     </div>
 
-                    <main className="flex-1 px-3 py-6 sm:px-5 lg:px-7">
+                    <main className="flex-1 px-3 py-6 sm:px-5 lg:px-7 xl:px-8 2xl:px-10">
                         {/* Open sidebar button when collapsed (desktop) */}
                         {!sidebarOpen ? (
                             <div className="mb-4 hidden md:flex">
@@ -244,7 +244,7 @@ export function ResponsiveDashboardFrame({
                             </div>
                         ) : null}
 
-                        <div className="w-full relative">
+                        <div className="w-full max-w-[1680px] 2xl:max-w-[1800px] mx-auto relative">
                             <DashboardContentShell>{children}</DashboardContentShell>
                         </div>
                     </main>
