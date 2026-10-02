@@ -356,6 +356,31 @@ export async function updateEntryGenericChecked(entryId: string, checked: boolea
     return { success: true }
 }
 
+export async function bulkUpdateEntryGenericChecked(entryIds: string[], checked: boolean, eventId?: string) {
+    const { user } = await requireRole('coach')
+    if (!entryIds.length) return { success: true }
+
+    await sql`
+        UPDATE entries
+        SET generic_checked = ${checked}
+        WHERE id = ANY(${entryIds}::uuid[]) 
+          AND (
+              coach_id = ${user.id}
+              OR EXISTS (
+                  SELECT 1 FROM students s
+                  JOIN dojos d ON s.dojo_id = d.id
+                  JOIN dojo_collaborators dc ON d.id = dc.dojo_id
+                  WHERE s.id = entries.student_id AND dc.user_id = ${user.id} AND dc.permission = 'write'
+              )
+          )
+    `
+
+    if (eventId) {
+        revalidatePath(`/dashboard/entries/${eventId}`)
+    }
+    return { success: true }
+}
+
 export interface CoachAddManualStudentInput {
     eventId: string
     dojoId: string

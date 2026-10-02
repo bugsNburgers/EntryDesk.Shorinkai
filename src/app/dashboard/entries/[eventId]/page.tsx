@@ -83,6 +83,7 @@ export default async function EventEntriesPage({ params }: { params: Promise<{ e
                     'weight', s.weight, 
                     'date_of_birth', s.date_of_birth, 
                     'dojo_id', s.dojo_id, 
+                    'dojo_name', d.name,
                     'registration_no', s.registration_no,
                     'photo_url', s.photo_url,
                     'is_active', s.is_active,
