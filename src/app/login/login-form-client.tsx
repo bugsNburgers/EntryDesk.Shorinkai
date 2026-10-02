@@ -1,3 +1,4 @@
+// EntryDesk — Client-side Login Form Component
 'use client'
 
 import { useState } from 'react'
@@ -7,7 +8,7 @@ import { PendingButton } from '@/components/ui/pending-button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { NavigationOnPending } from '@/components/app/navigation-on-pending'
-import { ArrowRight, ShieldCheck, AlertCircle } from 'lucide-react'
+import { ArrowRight, AlertCircle } from 'lucide-react'
 
 interface LoginFormClientProps {
     initialError?: string | null
@@ -89,11 +90,6 @@ export function LoginFormClient({ initialError, googleClientId, callbackUrl }: L
                 clientId={googleClientId}
                 onError={(err) => setCustomError(err)}
             />
-
-            <div className="mt-6 flex items-center justify-center gap-2 rounded-lg bg-muted/20 py-2.5 px-3 text-xs text-muted-foreground">
-                <ShieldCheck className="h-4 w-4 text-emerald-500" />
-                <span>Zero Public Signup &middot; Strict Role-Based Access Control</span>
-            </div>
         </div>
     )
 }

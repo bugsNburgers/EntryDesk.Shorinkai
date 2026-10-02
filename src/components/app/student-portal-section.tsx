@@ -13,7 +13,7 @@ export function StudentPortalSection() {
                 </p>
             </div>
 
-            <div className="overflow-hidden rounded-3xl border border-border/50 bg-card dark:border-white/[0.10]">
+            <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-sm dark:border-white/[0.10]">
                 <div className="grid gap-8 p-8 lg:grid-cols-[1.35fr_1fr] lg:p-10">
                     <div>
                         <Badge variant="secondary">Integrated student portal</Badge>
@@ -52,13 +52,13 @@ export function StudentPortalSection() {
                         </div>
                     </div>
 
-                    <div className="rounded-2xl bg-background/50 p-5">
+                    <div className="rounded-2xl bg-muted/40 p-5 dark:bg-background/50">
                         <p className="text-sm font-semibold">Mock profile preview</p>
 
-                        <div className="mt-4 overflow-hidden rounded-2xl bg-card/90 shadow-sm ring-1 ring-border/40 dark:ring-white/[0.08]">
+                        <div className="mt-4 overflow-hidden rounded-2xl bg-card shadow-xs ring-1 ring-border dark:ring-white/[0.08]">
                             <div className="h-12 bg-gradient-to-r from-primary/28 via-primary/22 to-primary/16" />
                             <div className="relative p-4 pt-5">
-                                <div className="absolute -top-5 left-4 z-10 grid h-14 w-14 place-items-center rounded-xl bg-card text-lg font-semibold text-foreground shadow-sm ring-1 ring-border/50 dark:ring-white/[0.12]">
+                                <div className="absolute -top-5 left-4 z-10 grid h-14 w-14 place-items-center rounded-xl bg-card text-lg font-semibold text-foreground shadow-sm ring-1 ring-border dark:ring-white/[0.12]">
                                     A
                                 </div>
 
@@ -111,7 +111,7 @@ export function StudentPortalSection() {
 
 function FeaturePoint({ icon, title, description }: { icon: ReactNode; title: string; description: string }) {
     return (
-        <div className="rounded-2xl border border-border/50 bg-background/70 p-4 dark:border-white/[0.10]">
+        <div className="rounded-2xl border border-border bg-card/80 p-4 shadow-2xs dark:border-white/[0.10] dark:bg-background/70">
             <div className="mb-1 flex items-center gap-2 text-sm font-medium">
                 <span className="text-primary">{icon}</span>
                 <span>{title}</span>

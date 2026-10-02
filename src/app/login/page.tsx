@@ -4,7 +4,6 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { HistoryBackIconButton } from '@/components/app/history-back'
 import { ThemeSwitch } from '@/components/app/theme-toggle'
-import { Badge } from '@/components/ui/badge'
 import { LoginFormClient } from './login-form-client'
 
 type SearchParams = {
@@ -46,13 +45,12 @@ export default async function LoginPage({
         redirect(safeCb)
     }
 
-    const features = ['Entry approvals', 'Student registration', 'Event exports', 'Coach workflows']
     const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID || ''
 
     return (
         <div className="min-h-screen bg-background">
             <header className="fixed inset-x-0 top-0 z-50 border-b border-border/40 bg-background/95 backdrop-blur dark:border-white/[0.08]">
-                <div className="mx-auto flex h-16 w-full max-w-[1600px] items-center justify-between px-8">
+                <div className="mx-auto flex h-16 w-full max-w-[1600px] items-center justify-between px-6 sm:px-8">
                     <div className="flex items-center gap-3">
                         <HistoryBackIconButton fallbackHref="/" />
                         <Link href="/" className="flex items-center gap-2">
@@ -66,57 +64,28 @@ export default async function LoginPage({
                 </div>
             </header>
 
-            <main className="grid w-full max-w-[1600px] mx-auto gap-10 px-8 pb-16 pt-28 lg:grid-cols-[1.1fr_460px] lg:items-start">
-                <section>
-                    <Badge variant="secondary" className="mb-5">Secure System</Badge>
-                    <h1 className="text-5xl font-bold tracking-tight md:text-6xl">Sign In to EntryDesk</h1>
-                    <p className="mt-5 max-w-2xl text-lg text-muted-foreground">
-                        Dedicated operations portal for registered coaches and tournament organizers.
-                    </p>
-
-                    <div className="mt-7 flex flex-wrap gap-2">
-                        {features.map((feature) => (
-                            <Badge key={feature} className="border-0 bg-muted/30 text-foreground dark:bg-white/[0.08]">
-                                {feature}
-                            </Badge>
-                        ))}
-                    </div>
-
-                    <div className="mt-8 hidden max-w-2xl rounded-2xl border border-border/50 dark:border-white/[0.10] lg:block">
-                        <div className="grid grid-cols-2 border-b border-border/50 px-5 py-3 text-sm text-muted-foreground dark:border-white/[0.10]">
-                            <span>Role</span>
-                            <span>Main workflow</span>
-                        </div>
-                        <div className="grid grid-cols-2 border-b border-border/50 px-5 py-3 dark:border-white/[0.10]">
-                            <span className="font-medium">Coach</span>
-                            <span className="text-muted-foreground">Register athletes, create and submit entries</span>
-                        </div>
-                        <div className="grid grid-cols-2 px-5 py-3">
-                            <span className="font-medium">Organizer</span>
-                            <span className="text-muted-foreground">Review approvals, manage events, export lists</span>
-                        </div>
-                    </div>
-                </section>
-
-                <section className="rounded-3xl border border-border/50 bg-card/70 p-6 shadow-sm backdrop-blur dark:border-white/[0.10] sm:p-8">
-                    {/* Session-expired notice — shown when redirected from a protected page */}
-                    {callbackUrl && callbackUrl.startsWith('/') && !errorMessage && (
-                        <div className="mb-5 flex items-start gap-3 rounded-xl border border-amber-500/25 bg-amber-500/10 p-4 text-sm text-amber-700 dark:text-amber-300">
-                            <span className="text-base leading-none mt-0.5">⏱</span>
-                            <div>
-                                <p className="font-semibold">Session expired</p>
-                                <p className="text-xs mt-0.5 opacity-80">
-                                    Please sign in again — you&apos;ll be sent right back to where you were.
-                                </p>
+            <main className="flex min-h-[calc(100vh-4rem)] w-full items-center justify-center px-4 pt-20 pb-12 sm:px-6">
+                <div className="w-full max-w-[460px]">
+                    <section className="rounded-3xl border border-border bg-card p-6 shadow-md dark:border-white/[0.10] dark:bg-card/70 sm:p-8">
+                        {/* Session-expired notice — shown when redirected from a protected page */}
+                        {callbackUrl && callbackUrl.startsWith('/') && !errorMessage && (
+                            <div className="mb-5 flex items-start gap-3 rounded-xl border border-amber-500/25 bg-amber-500/10 p-4 text-sm text-amber-700 dark:text-amber-300">
+                                <span className="text-base leading-none mt-0.5">⏱</span>
+                                <div>
+                                    <p className="font-semibold">Session expired</p>
+                                    <p className="text-xs mt-0.5 opacity-80">
+                                        Please sign in again — you&apos;ll be sent right back to where you were.
+                                    </p>
+                                </div>
                             </div>
-                        </div>
-                    )}
-                    <LoginFormClient
-                        initialError={errorMessage}
-                        googleClientId={googleClientId}
-                        callbackUrl={callbackUrl}
-                    />
-                </section>
+                        )}
+                        <LoginFormClient
+                            initialError={errorMessage}
+                            googleClientId={googleClientId}
+                            callbackUrl={callbackUrl}
+                        />
+                    </section>
+                </div>
             </main>
         </div>
     )

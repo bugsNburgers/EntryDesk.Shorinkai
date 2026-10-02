@@ -111,7 +111,7 @@ export function JoinPageClient({ dojoSlug, dojoName, googleClientId }: JoinPageC
             initGoogle()
         } else {
             const script = document.createElement('script')
-            script.src = 'https://accounts.google.com/gsi/client'
+            script.src = 'https://accounts.google.com/gsi/client?hl=en'
             script.onload = initGoogle
             script.async = true
             document.head.appendChild(script)

@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { Calendar, Medal, MapPin } from 'lucide-react'
+import { Calendar, Medal, MapPin, ArrowRight } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { RegistrationDeadline } from '@/components/events/registration-deadline'
@@ -62,7 +62,12 @@ export function PublicEventsSection({
         const allEvents = events ?? []
 
         const getEffectiveEndDate = (event: PublicEvent) => event.end_date || event.start_date
-        const toDateOnly = (dateValue: string) => dateValue.slice(0, 10)
+        const toDateOnly = (dateValue: string | Date | unknown) =>
+            typeof dateValue === 'string'
+                ? dateValue.slice(0, 10)
+                : dateValue instanceof Date
+                ? dateValue.toISOString().slice(0, 10)
+                : String(dateValue ?? '').slice(0, 10)
 
         const upcoming = allEvents
             .filter((event) => toDateOnly(getEffectiveEndDate(event)) >= today)
@@ -197,16 +202,17 @@ function EventSection({
                             return (
                                 <article
                                     key={event.id}
-                                    className="rounded-xl border border-border/50 p-6 transition-colors hover:border-border/70 dark:border-white/[0.10] dark:hover:border-white/[0.16]"
+                                    className="group flex flex-col justify-between rounded-2xl border border-border/70 bg-card p-6 shadow-xs hover:shadow-md transition-all hover:border-emerald-600/40 dark:border-white/[0.10] dark:hover:border-[#2dd4b4]/40"
                                 >
-                                    <div className="mb-4 flex items-center justify-between gap-2">
-                                        <h3 className="text-xl font-semibold leading-tight">{event.title}</h3>
-                                        <div className="flex flex-wrap justify-end gap-2">
-                                            <Badge className="border-0 bg-muted/30 text-foreground dark:bg-white/[0.08]">
-                                                {formatEventTypeLabel(event.event_type)}
-                                            </Badge>
+                                    <div>
+                                        <div className="mb-4 flex items-center justify-between gap-2">
+                                            <h3 className="text-xl font-semibold leading-tight">{event.title}</h3>
+                                            <div className="flex flex-wrap justify-end gap-2">
+                                                <Badge className="border-0 bg-muted/30 text-foreground dark:bg-white/[0.08]">
+                                                    {formatEventTypeLabel(event.event_type)}
+                                                </Badge>
+                                            </div>
                                         </div>
-                                    </div>
 
                                     <div className="space-y-2 text-sm">
                                         <div className="flex items-center gap-2 text-muted-foreground">
@@ -225,13 +231,14 @@ function EventSection({
                                         ) : null}
                                         <RegistrationDeadline event={event} todayIso={todayIso} className="pt-1 text-sm" />
                                     </div>
+                                </div>
 
                                     <Button
-                                        variant="outline"
-                                        className="mt-6 h-11 w-full rounded-md border-border/50 bg-muted/25 dark:border-white/[0.12] dark:bg-white/[0.05] dark:hover:bg-white/[0.08]"
+                                        className="mt-6 h-11 w-full gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white dark:bg-[#2dd4b4] dark:hover:bg-[#25c4a5] dark:text-[#04231e] font-bold text-sm tracking-wide shadow-sm hover:shadow transition-all duration-150 active:scale-[0.99] group/btn"
                                         onClick={() => onViewEvent(event)}
                                     >
-                                        View event
+                                        <span>View event</span>
+                                        <ArrowRight className="h-4 w-4 transition-transform duration-150 group-hover/btn:translate-x-1" />
                                     </Button>
                                 </article>
                             )
@@ -242,7 +249,7 @@ function EventSection({
                         <div className="mt-6 flex justify-center">
                             <Button
                                 variant="outline"
-                                className="h-11 rounded-md px-6"
+                                className="h-11 rounded-xl px-7 font-semibold border-border/60 hover:border-emerald-600 dark:hover:border-emerald-400 transition-colors"
                                 onClick={onToggleViewAll}
                             >
                                 {isShowingAll ? 'Show less' : `View all ${title.toLowerCase()}`}

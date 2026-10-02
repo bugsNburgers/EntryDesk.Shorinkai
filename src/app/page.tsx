@@ -48,12 +48,6 @@ export default function LandingPage() {
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_35%,rgba(2,6,23,0.32)_100%)]" />
 
                 <div className="relative z-10 mx-auto max-w-4xl pt-12 text-center md:max-w-5xl md:pt-0 xl:max-w-6xl">
-                    {/* Pill badge */}
-                    <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-sm text-white/85 backdrop-blur-sm mb-6">
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                        Built for karate tournaments
-                    </div>
-
                     <h1 className="text-5xl font-bold tracking-tight text-white sm:text-6xl md:text-7xl lg:text-8xl leading-[1.05]">
                         Run your tournament.
                         <br />
