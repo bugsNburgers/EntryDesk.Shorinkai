@@ -38,7 +38,7 @@ export function TeamCardsPrintClient({
                 <div className="max-w-6xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
                         <Link href={`/dashboard/entries/${eventId}`}>
-                            <Button variant="ghost" size="sm" className="gap-1.5 rounded-xl">
+                            <Button variant="ghost" size="sm" className="gap-1.5 rounded-md">
                                 <ArrowLeft className="h-4 w-4" />
                                 Back to Event
                             </Button>
@@ -58,7 +58,7 @@ export function TeamCardsPrintClient({
                             variant="outline"
                             size="sm"
                             onClick={() => setShowCutGuides(!showCutGuides)}
-                            className="rounded-xl text-xs gap-1.5"
+                            className="rounded-md text-xs gap-1.5"
                         >
                             <Scissors className="h-3.5 w-3.5" />
                             {showCutGuides ? 'Hide Cut Lines' : 'Show Cut Lines'}
@@ -66,7 +66,7 @@ export function TeamCardsPrintClient({
                         <Button
                             onClick={() => window.print()}
                             size="sm"
-                            className="rounded-xl font-semibold gap-2 bg-primary text-primary-foreground shadow"
+                            className="rounded-md font-semibold gap-2 bg-primary text-primary-foreground shadow"
                         >
                             <Printer className="h-4 w-4" />
                             Print Team Cards ({cards.length})
@@ -77,7 +77,7 @@ export function TeamCardsPrintClient({
 
             {/* Print Help Notice (Hidden when printing) */}
             <div className="no-print max-w-4xl mx-auto mt-4 px-4">
-                <div className="rounded-xl bg-blue-50 border border-blue-200 dark:bg-blue-950/40 dark:border-blue-900 p-3 text-xs text-blue-800 dark:text-blue-300 flex items-center justify-between">
+                <div className="rounded-md bg-blue-50 border border-blue-200 dark:bg-blue-950/40 dark:border-blue-900 p-3 text-xs text-blue-800 dark:text-blue-300 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <Printer className="h-4 w-4 shrink-0 text-blue-600" />
                         <span>
@@ -89,14 +89,14 @@ export function TeamCardsPrintClient({
 
             {/* If no approved cards */}
             {cards.length === 0 ? (
-                <div className="max-w-md mx-auto mt-16 p-8 rounded-2xl bg-card border text-center shadow-sm space-y-3">
+                <div className="max-w-md mx-auto mt-16 p-8 rounded-lg bg-card border text-center shadow-sm space-y-3">
                     <AlertCircle className="h-10 w-10 text-muted-foreground mx-auto" />
                     <h2 className="text-lg font-bold">No approved entries to print</h2>
                     <p className="text-xs text-muted-foreground">
                         ID cards can only be generated for entries that have been approved by the tournament organiser.
                     </p>
                     <Link href={`/dashboard/entries/${eventId}`}>
-                        <Button size="sm" variant="outline" className="mt-2 rounded-xl">
+                        <Button size="sm" variant="outline" className="mt-2 rounded-md">
                             Return to Entries
                         </Button>
                     </Link>

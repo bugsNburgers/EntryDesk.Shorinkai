@@ -49,11 +49,21 @@ export async function GET(
         event_location: string | null
         start_date: string
         end_date: string
+        entry_created_at: string
+        registration_no: string | null
+        student_phone: string | null
+        school_or_city: string | null
+        dojo_city: string | null
+        parent_email: string | null
+        parent_name: string | null
+        category_snapshot: any
     }[]>`
         SELECT
             e.id,
             e.status,
             e.participation_type,
+            e.created_at AS entry_created_at,
+            e.category_snapshot,
             COALESCE(e.declared_weight_kg, s.weight) AS declared_weight_kg,
             COALESCE(c.name, e.category_snapshot->>'displayName') AS category_name,
             e.chest_no,
@@ -64,9 +74,15 @@ export async function GET(
             s.date_of_birth AS student_dob,
             s.rank AS student_rank,
             s.photo_url AS student_photo,
+            s.registration_no,
+            s.phone AS student_phone,
+            s.school_or_city,
             s.parent_id,
             d.name AS dojo_name,
+            d.city AS dojo_city,
             u.full_name AS coach_name,
+            p.email AS parent_email,
+            p.full_name AS parent_name,
             ev.id AS event_id,
             ev.title AS event_title,
             ev.location AS event_location,
@@ -76,6 +92,7 @@ export async function GET(
         JOIN students s ON e.student_id = s.id
         JOIN dojos d ON s.dojo_id = d.id
         LEFT JOIN users u ON d.coach_id = u.id
+        LEFT JOIN users p ON (s.parent_id = p.id OR e.submitted_by = p.id)
         JOIN events ev ON e.event_id = ev.id
         LEFT JOIN categories c ON e.category_id = c.id
         WHERE e.id = ${entryId}
@@ -136,8 +153,11 @@ export async function GET(
         id: entry.id,
         status: entry.status,
         chest_no: entry.chest_no,
+        registration_no: entry.registration_no,
+        created_at: entry.entry_created_at,
         participation_type: entry.participation_type,
         category_name: entry.category_name,
+        category_snapshot: entry.category_snapshot,
         declared_weight_kg: entry.declared_weight_kg,
         student: {
             name: entry.student_name,
@@ -145,10 +165,14 @@ export async function GET(
             dob: entry.student_dob,
             rank: entry.student_rank,
             photo_url: entry.student_photo,
+            phone: entry.student_phone,
+            school_or_city: entry.school_or_city,
+            weight: entry.declared_weight_kg,
         },
         dojo: {
             name: entry.dojo_name,
             coach_name: entry.coach_name,
+            city: entry.dojo_city,
         },
         event: {
             id: entry.event_id,
@@ -156,6 +180,14 @@ export async function GET(
             location: entry.event_location,
             start_date: entry.start_date,
             end_date: entry.end_date,
+        },
+        emergency_contact: {
+            name: entry.parent_name || entry.coach_name || 'Emergency Contact',
+            phone: entry.student_phone || '+91 00000 00000',
+        },
+        registration: {
+            email: entry.parent_email || 'parent@email.com',
+            phone: entry.student_phone || '+91 00000 00000',
         },
         qr: {
             token: qrToken,
