@@ -45,7 +45,7 @@ export function ParentPortalNav({ userEmail, userName, userAvatar }: ParentPorta
         <div ref={ref} className="relative">
             <button
                 onClick={() => setOpen((o) => !o)}
-                className="flex items-center gap-1.5 rounded-xl px-2 py-1.5 text-sm hover:bg-muted/50 transition-colors"
+                className="flex items-center gap-1.5 rounded-xl px-2 py-1.5 text-sm hover:bg-[#ded8cb]/40 text-[#1c1917] dark:text-[#e8eef5] dark:hover:bg-[#16233a] transition-colors"
                 aria-expanded={open}
                 aria-haspopup="true"
             >
@@ -58,32 +58,35 @@ export function ParentPortalNav({ userEmail, userName, userAvatar }: ParentPorta
                         className="rounded-full object-cover"
                     />
                 ) : (
-                    <div className="flex h-[26px] w-[26px] items-center justify-center rounded-full bg-primary/20 text-xs font-semibold text-primary">
+                    <div className="flex h-[26px] w-[26px] items-center justify-center rounded-full bg-emerald-500/15 border border-emerald-500/20 text-xs font-bold text-emerald-700 dark:bg-[#2dd4b4]/20 dark:border-transparent dark:text-[#2dd4b4]">
                         {initials}
                     </div>
                 )}
-                <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="hidden sm:inline-block text-xs font-semibold text-[#1c1917] dark:text-[#e8eef5] max-w-[140px] truncate">
+                    {displayName}
+                </span>
+                <ChevronDown className="h-3.5 w-3.5 text-[#57534e] dark:text-[#8a99ab]" />
             </button>
 
             {open && (
-                <div className="absolute right-0 top-full mt-1.5 w-52 rounded-xl border border-border/50 bg-card shadow-lg dark:border-white/[0.10] overflow-hidden z-50">
-                    <div className="px-3 py-2.5 border-b border-border/40 dark:border-white/[0.06]">
-                        <p className="text-xs font-semibold truncate">{displayName}</p>
-                        <p className="text-[11px] text-muted-foreground truncate">{userEmail}</p>
+                <div className="absolute right-0 top-full mt-1.5 w-52 rounded-xl border border-[#ded8cb] bg-white text-[#1c1917] dark:border-[#1f2b40] dark:bg-[#111a2b] dark:text-[#e8eef5] shadow-xl overflow-hidden z-50">
+                    <div className="px-3 py-2.5 border-b border-[#ded8cb] dark:border-[#1f2b40]">
+                        <p className="text-xs font-semibold truncate text-[#1c1917] dark:text-[#e8eef5]">{displayName}</p>
+                        <p className="text-[11px] text-[#57534e] dark:text-[#8a99ab] truncate">{userEmail}</p>
                     </div>
 
                     <Link
                         href="/athlete"
                         onClick={() => setOpen(false)}
-                        className="flex items-center gap-2.5 px-3 py-2 text-sm hover:bg-muted/50 transition-colors"
+                        className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#1c1917] hover:bg-[#f7f4ec] dark:text-[#e8eef5] dark:hover:bg-[#16233a] transition-colors"
                     >
-                        <User className="h-4 w-4 text-muted-foreground" />
+                        <User className="h-4 w-4 text-[#57534e] dark:text-[#8a99ab]" />
                         My Profile(s)
                     </Link>
 
                     <button
                         onClick={handleLogout}
-                        className="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors"
+                        className="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 transition-colors"
                     >
                         <LogOut className="h-4 w-4" />
                         Sign out

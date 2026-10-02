@@ -14,6 +14,8 @@ import { ParentCreateStudentSchema } from '@/lib/validation'
 import { audit } from '@/lib/audit'
 import { AUDIT_ACTIONS } from '@/lib/audit'
 
+import { normalizeDobToIso } from '@/lib/date'
+
 async function getClientIp(): Promise<string> {
     const h = await headers()
     return h.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
@@ -129,4 +131,133 @@ export async function createChildAsParent(formData: FormData): Promise<{ error?:
     revalidatePath('/parent')
     revalidatePath('/dashboard/students')
     redirect(`/athlete/${newStudent.id}`)
+}
+
+export async function updateChildAsParent(
+    studentId: string,
+    formData: FormData
+): Promise<{ success?: boolean; error?: string }> {
+    const { user } = await requireRole('parent', { redirectTo: '/login' })
+
+    const section = (formData.get('section') as string)?.trim() || 'all'
+
+    if (section === 'basic') {
+        const name = (formData.get('name') as string)?.trim()
+        const gender = (formData.get('gender') as string)?.trim()?.toLowerCase()
+
+        if (!name) {
+            return { error: 'Athlete name is required.' }
+        }
+
+        const updated = await sql<{ id: string }[]>`
+            UPDATE students
+            SET
+                name = ${name},
+                gender = COALESCE(${gender}, gender)
+            WHERE id = ${studentId}
+              AND parent_id = ${user.id}
+              AND membership_status = 'active'
+            RETURNING id
+        `
+
+        if (updated.length === 0) {
+            return { error: 'Could not update athlete profile. Unauthorized or profile not found.' }
+        }
+    } else if (section === 'personal') {
+        const rank = (formData.get('rank') as string)?.trim() || null
+        const weightRaw = (formData.get('weight') as string)?.trim()
+        const weight = weightRaw ? Number(weightRaw) : null
+        const dobRaw = formData.get('date_of_birth') as string | null
+        const dob = dobRaw ? normalizeDobToIso(dobRaw) : null
+        const schoolOrCity = (formData.get('school_or_city') as string)?.trim() || null
+
+        if (dobRaw && !dob) {
+            return { error: 'Invalid date of birth format. Please use YYYY-MM-DD.' }
+        }
+
+        if (weight !== null && (isNaN(weight) || weight < 5 || weight > 250)) {
+            return { error: 'Please enter a valid weight in kg (5–250 kg).' }
+        }
+
+        const updated = await sql<{ id: string }[]>`
+            UPDATE students
+            SET
+                rank = ${rank},
+                weight = ${weight},
+                date_of_birth = ${dob},
+                school_or_city = ${schoolOrCity}
+            WHERE id = ${studentId}
+              AND parent_id = ${user.id}
+              AND membership_status = 'active'
+            RETURNING id
+        `
+
+        if (updated.length === 0) {
+            return { error: 'Could not update personal details. Unauthorized or profile not found.' }
+        }
+    } else if (section === 'contact') {
+        const phone = (formData.get('phone') as string)?.trim() || null
+
+        const updated = await sql<{ id: string }[]>`
+            UPDATE students
+            SET
+                phone = ${phone}
+            WHERE id = ${studentId}
+              AND parent_id = ${user.id}
+              AND membership_status = 'active'
+            RETURNING id
+        `
+
+        if (updated.length === 0) {
+            return { error: 'Could not update contact details. Unauthorized or profile not found.' }
+        }
+    } else {
+        const name = (formData.get('name') as string)?.trim()
+        const gender = (formData.get('gender') as string)?.trim()?.toLowerCase()
+        const rank = (formData.get('rank') as string)?.trim() || null
+        const weightRaw = (formData.get('weight') as string)?.trim()
+        const weight = weightRaw ? Number(weightRaw) : null
+        const dobRaw = formData.get('date_of_birth') as string | null
+        const dob = dobRaw ? normalizeDobToIso(dobRaw) : null
+        const schoolOrCity = (formData.get('school_or_city') as string)?.trim() || null
+        const phone = (formData.get('phone') as string)?.trim() || null
+
+        if (!name) {
+            return { error: 'Athlete name is required.' }
+        }
+
+        if (dobRaw && !dob) {
+            return { error: 'Invalid date of birth format. Please use YYYY-MM-DD.' }
+        }
+
+        if (weight !== null && (isNaN(weight) || weight < 5 || weight > 250)) {
+            return { error: 'Please enter a valid weight in kg (5–250 kg).' }
+        }
+
+        const updated = await sql<{ id: string }[]>`
+            UPDATE students
+            SET
+                name = ${name},
+                gender = COALESCE(${gender}, gender),
+                rank = ${rank},
+                weight = ${weight},
+                date_of_birth = ${dob},
+                school_or_city = ${schoolOrCity},
+                phone = ${phone}
+            WHERE id = ${studentId}
+              AND parent_id = ${user.id}
+              AND membership_status = 'active'
+            RETURNING id
+        `
+
+        if (updated.length === 0) {
+            return { error: 'Could not update athlete profile. Unauthorized or profile not found.' }
+        }
+    }
+
+    revalidatePath('/athlete')
+    revalidatePath('/parent')
+    revalidatePath(`/athlete/${studentId}`)
+    revalidatePath(`/parent/children/${studentId}`)
+    return { success: true }
 }

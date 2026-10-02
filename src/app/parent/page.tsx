@@ -95,16 +95,16 @@ export default async function ParentHome({ searchParams }: ParentHomeProps) {
             {/* Header */}
             <div className="flex items-center justify-between pt-1">
                 <div>
-                    <h1 className="text-xl font-bold">My Profile(s)</h1>
-                    <p className="text-sm text-muted-foreground mt-0.5">
+                    <h1 className="text-2xl font-bold text-[#1c1917] dark:text-[#e8eef5]">My Profile(s)</h1>
+                    <p className="text-sm text-[#57534e] dark:text-[#8a99ab] mt-0.5">
                         {children.length === 0
                             ? 'Add yourself or your child to get started'
                             : `${children.length} ${children.length === 1 ? 'profile' : 'profiles'} registered`}
                     </p>
                 </div>
                 <Link href={addAthleteHref}>
-                    <Button size="sm" className="gap-1.5 h-9">
-                        <Plus className="h-3.5 w-3.5" />
+                    <Button size="sm" className="gap-1.5 h-9 rounded-xl bg-[#0d9488] text-white hover:bg-[#0f766e] dark:bg-[#2dd4b4] dark:text-[#04231e] dark:hover:bg-[#25c4a5] font-bold shadow-xs">
+                        <Plus className="h-4 w-4" />
                         Add profile
                     </Button>
                 </Link>
@@ -112,16 +112,16 @@ export default async function ParentHome({ searchParams }: ParentHomeProps) {
 
             {/* Empty state */}
             {children.length === 0 && (
-                <div className="rounded-2xl border border-dashed border-border/60 bg-muted/20 py-12 text-center dark:border-white/[0.08] dark:bg-white/[0.02]">
-                    <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-muted">
-                        <UserRound className="h-7 w-7 text-muted-foreground" />
+                <div className="mx-auto max-w-md rounded-[20px] border border-dashed border-[#ded8cb] bg-white dark:border-[#1f2b40] dark:bg-[#111a2b] py-14 px-6 text-center shadow-sm">
+                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#f2eee5] border border-[#ded8cb] dark:bg-[#16233a] dark:border-[#1f2b40]">
+                        <UserRound className="h-8 w-8 text-[#0d9488] dark:text-[#2dd4b4]" />
                     </div>
-                    <h2 className="text-base font-semibold mb-1">No profiles added yet</h2>
-                    <p className="text-sm text-muted-foreground mb-5 px-6">
-                        Add your or your child&apos;s details to register for tournaments.
+                    <h2 className="text-lg font-bold text-[#1c1917] dark:text-[#e8eef5] mb-1.5">No profiles added yet</h2>
+                    <p className="text-sm text-[#57534e] dark:text-[#8a99ab] mb-6 max-w-sm mx-auto">
+                        Add your or your child&apos;s details to register for tournaments and view live entry progress.
                     </p>
                     <Link href={addAthleteHref}>
-                        <Button className="gap-1.5">
+                        <Button className="gap-2 rounded-xl bg-[#0d9488] text-white hover:bg-[#0f766e] dark:bg-[#2dd4b4] dark:text-[#04231e] dark:hover:bg-[#25c4a5] font-bold px-6 h-11 shadow-sm">
                             <Plus className="h-4 w-4" />
                             Add profile
                         </Button>
@@ -129,9 +129,9 @@ export default async function ParentHome({ searchParams }: ParentHomeProps) {
                 </div>
             )}
 
-            {/* Child cards */}
+            {/* Child cards responsive grid */}
             {children.length > 0 && (
-                <div className="space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-5 2xl:gap-6">
                     {children.map((child) => {
                         const latest = latestEntryByChild[child.id]
                         const statusLabel = latest ? getStatusLabel(latest.status, 'parent') : null
@@ -158,8 +158,8 @@ export default async function ParentHome({ searchParams }: ParentHomeProps) {
 
             {/* Bottom hint */}
             {children.length > 0 && (
-                <p className="text-center text-xs text-muted-foreground pb-4">
-                    Tap any athlete to see registrations and download ID cards.
+                <p className="text-center text-xs text-[#57534e] dark:text-[#8a99ab] pt-2 pb-4">
+                    Click any athlete profile to manage tournament entries and access official ID cards.
                 </p>
             )}
         </div>

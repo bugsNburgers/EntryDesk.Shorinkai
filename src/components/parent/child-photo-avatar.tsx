@@ -26,43 +26,61 @@ export function ChildPhotoAvatar({
 
     return (
         <>
-            <div className="relative group shrink-0">
-                {/* Avatar Box */}
+            <div className="relative shrink-0">
+                {/* 84x84 Circular Avatar Frame */}
                 <button
                     type="button"
                     onClick={() => setDialogOpen(true)}
-                    className="relative h-20 w-20 rounded-2xl overflow-hidden bg-primary/10 border-2 border-primary/20 flex items-center justify-center transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-                    title="Click to change athlete photo"
+                    className="relative w-[84px] h-[84px] rounded-full overflow-hidden bg-[#eee9df] border-2 border-emerald-600 dark:bg-[#16233a] dark:border-[#2dd4b4] flex items-center justify-center transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-[#f7f4ec] dark:focus:ring-[#2dd4b4] dark:focus:ring-offset-[#0a1220]"
+                    title="Click to view or change photo"
                 >
                     {photoUrl ? (
                         <Image
                             src={photoUrl}
                             alt={childName}
                             fill
-                            className="object-cover"
+                            className="object-cover rounded-full"
                             unoptimized
                         />
                     ) : (
-                        <span className="text-2xl font-bold text-primary">
-                            {childName.slice(0, 1).toUpperCase()}
-                        </span>
+                        <svg
+                            width="40"
+                            height="40"
+                            viewBox="0 0 46 46"
+                            fill="none"
+                            className="stroke-[#57534e] dark:stroke-[#8a99ab]"
+                            strokeWidth="1.6"
+                        >
+                            <circle cx="23" cy="16" r="8" />
+                            <path d="M6 42c0-10 7-16 17-16s17 6 17 16" />
+                        </svg>
                     )}
 
                     {/* Hover Overlay */}
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-[10px] font-semibold gap-1">
-                        <Camera className="h-4 w-4" />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-semibold">
                         <span>Edit</span>
                     </div>
                 </button>
 
-                {/* Camera Badge Icon */}
+                {/* 28x28 Circular Camera / Edit Badge */}
                 <button
                     type="button"
                     onClick={() => setDialogOpen(true)}
-                    className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full bg-primary text-primary-foreground border-2 border-background flex items-center justify-center shadow-sm hover:bg-primary/90 transition-transform active:scale-95"
+                    className="absolute -right-[2px] -bottom-[2px] w-[28px] h-[28px] rounded-full bg-emerald-600 border-[3px] border-white text-white dark:bg-[#2dd4b4] dark:border-[#0a1220] dark:text-[#04231e] flex items-center justify-center shadow-md hover:bg-emerald-700 dark:hover:bg-[#25c4a5] transition-transform active:scale-95 z-10"
                     title="Upload or change photo"
                 >
-                    <Camera className="h-3.5 w-3.5" />
+                    <svg
+                        width="13"
+                        height="13"
+                        viewBox="0 0 14 14"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                    >
+                        <path d="M2 12l1-3.5L10 1.5l2.5 2.5-7 7z" />
+                    </svg>
                 </button>
             </div>
 

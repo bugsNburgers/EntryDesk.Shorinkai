@@ -37,7 +37,7 @@ function SubmitButton() {
         <Button
             type="submit"
             disabled={pending}
-            className="h-12 w-full text-sm font-semibold"
+            className="h-12 w-full text-base font-bold bg-[#2dd4b4] text-[#04231e] hover:bg-[#25c4a5] rounded-xl shadow-sm transition-all"
         >
             {pending ? (
                 <>
@@ -283,122 +283,125 @@ export function AddChildForm({ dojos }: AddChildFormProps) {
                 <input type="hidden" name="photo_url" value={photoUrl || ''} />
             </div>
 
-            {/* Athlete name */}
-            <div className="space-y-2">
-                <Label htmlFor="name">
-                    Athlete&apos;s full name <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                    id="name"
-                    name="name"
-                    type="text"
-                    placeholder="e.g. Aarav Sharma"
-                    required
-                    maxLength={100}
-                    className="h-11"
-                    autoComplete="off"
-                />
-            </div>
+            {/* 2-Column Responsive Input Grid on tablet / PC */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+                {/* Athlete name */}
+                <div className="space-y-2">
+                    <Label htmlFor="name">
+                        Athlete&apos;s full name <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                        id="name"
+                        name="name"
+                        type="text"
+                        placeholder="e.g. Aarav Sharma"
+                        required
+                        maxLength={100}
+                        className="h-11"
+                        autoComplete="off"
+                    />
+                </div>
 
-            {/* Gender */}
-            <div className="space-y-2">
-                <Label htmlFor="gender">
-                    Gender <span className="text-destructive">*</span>
-                </Label>
-                <Select name="gender" required>
-                    <SelectTrigger id="gender" className="h-11">
-                        <SelectValue placeholder="Select gender" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="male">Male</SelectItem>
-                        <SelectItem value="female">Female</SelectItem>
-                    </SelectContent>
-                </Select>
-            </div>
+                {/* Gender */}
+                <div className="space-y-2">
+                    <Label htmlFor="gender">
+                        Gender <span className="text-destructive">*</span>
+                    </Label>
+                    <Select name="gender" required>
+                        <SelectTrigger id="gender" className="h-11">
+                            <SelectValue placeholder="Select gender" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="male">Male</SelectItem>
+                            <SelectItem value="female">Female</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
 
-            {/* Date of birth */}
-            <div className="space-y-2">
-                <Label htmlFor="date_of_birth">
-                    Date of birth <span className="text-destructive">*</span>
-                </Label>
-                <DobPicker
-                    id="date_of_birth"
-                    name="date_of_birth"
-                    required
-                />
-                <p className="text-xs text-muted-foreground">
-                    Used to automatically assign the right tournament age category.
-                </p>
-            </div>
+                {/* Date of birth */}
+                <div className="space-y-2">
+                    <Label htmlFor="date_of_birth">
+                        Date of birth <span className="text-destructive">*</span>
+                    </Label>
+                    <DobPicker
+                        id="date_of_birth"
+                        name="date_of_birth"
+                        required
+                    />
+                    <p className="text-xs text-muted-foreground">
+                        Used to automatically assign the right tournament age category.
+                    </p>
+                </div>
 
-            {/* Belt rank */}
-            <div className="space-y-2">
-                <Label htmlFor="rank">
-                    Belt rank <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                    id="rank"
-                    name="rank"
-                    type="text"
-                    placeholder="e.g. Yellow Belt, 5th Kyu"
-                    maxLength={50}
-                    className="h-11"
-                    required
-                />
-            </div>
+                {/* Belt rank */}
+                <div className="space-y-2">
+                    <Label htmlFor="rank">
+                        Belt rank <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                        id="rank"
+                        name="rank"
+                        type="text"
+                        placeholder="e.g. Yellow Belt, 5th Kyu"
+                        maxLength={50}
+                        className="h-11"
+                        required
+                    />
+                </div>
 
-            {/* Weight */}
-            <div className="space-y-2">
-                <Label htmlFor="weight">
-                    Weight (kg) <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                    id="weight"
-                    name="weight"
-                    type="number"
-                    min="5"
-                    max="200"
-                    step="0.1"
-                    placeholder="e.g. 35"
-                    className="h-11"
-                    required
-                />
-                <p className="text-xs text-muted-foreground">
-                    Used for weight category matching. Your coach can update this before registration.
-                </p>
-            </div>
+                {/* Weight */}
+                <div className="space-y-2">
+                    <Label htmlFor="weight">
+                        Weight (kg) <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                        id="weight"
+                        name="weight"
+                        type="number"
+                        min="5"
+                        max="200"
+                        step="0.1"
+                        placeholder="e.g. 35"
+                        className="h-11"
+                        required
+                    />
+                    <p className="text-xs text-muted-foreground">
+                        Used for weight category matching.
+                    </p>
+                </div>
 
-            {/* School / city */}
-            <div className="space-y-2">
-                <Label htmlFor="school_or_city">
-                    School or city <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                    id="school_or_city"
-                    name="school_or_city"
-                    type="text"
-                    placeholder="e.g. Crux Public School, Bangalore"
-                    maxLength={100}
-                    className="h-11"
-                    required
-                />
-            </div>
+                {/* School / city */}
+                <div className="space-y-2">
+                    <Label htmlFor="school_or_city">
+                        School or city <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                        id="school_or_city"
+                        name="school_or_city"
+                        type="text"
+                        placeholder="e.g. Crux Public School, Bangalore"
+                        maxLength={100}
+                        className="h-11"
+                        required
+                    />
+                </div>
 
-            {/* Phone */}
-            <div className="space-y-2">
-                <Label htmlFor="phone">Mobile number (optional)</Label>
-                <Input
-                    id="phone"
-                    name="phone"
-                    type="tel"
-                    placeholder="+91 98765 43210"
-                    maxLength={20}
-                    className="h-11"
-                    autoComplete="tel"
-                />
-                <p className="text-xs text-muted-foreground">
-                    Shared with your coach for quick tournament communication.
-                </p>
+                {/* Phone */}
+                <div className="space-y-2 sm:col-span-2">
+                    <Label htmlFor="phone">Mobile number (optional)</Label>
+                    <Input
+                        id="phone"
+                        name="phone"
+                        type="tel"
+                        placeholder="+91 98765 43210"
+                        maxLength={20}
+                        className="h-11"
+                        autoComplete="tel"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                        Shared with your coach for quick tournament communication.
+                    </p>
+                </div>
             </div>
 
             {/* DPDP Consent */}

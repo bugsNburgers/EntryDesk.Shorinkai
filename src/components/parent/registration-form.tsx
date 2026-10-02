@@ -15,22 +15,21 @@ import {
     AlertCircle,
     Loader2,
     Camera,
-    Info,
     ArrowRight,
     Scale,
 } from 'lucide-react'
 import { submitParentEntry } from '@/app/parent/entry-actions'
-import { calculateCategory } from '@/lib/category'
 import { PhotoUploadDialog } from '@/components/ui/photo-upload-dialog'
+import { formatDateRangeStable, formatDateStable } from '@/lib/date'
 
 export interface TournamentOption {
     id: string
     title: string
     description: string | null
-    start_date: string
-    end_date: string
+    start_date: string | Date
+    end_date: string | Date
     location: string | null
-    registration_close_date: string | null
+    registration_close_date: string | Date | null
     photo_required: boolean
     coach_checks_each_entry: boolean
     existing_entry_id?: string | null
@@ -41,7 +40,7 @@ export interface ChildData {
     id: string
     name: string
     gender: string
-    date_of_birth: string | null
+    date_of_birth: string | Date | null
     rank: string | null
     weight: number | null
     photo_url: string | null
@@ -71,7 +70,9 @@ export function RegistrationForm({
     const [selectedEventId, setSelectedEventId] = useState<string>(
         preselectedEventId || (tournaments.length === 1 ? tournaments[0].id : '')
     )
-    const [participationType, setParticipationType] = useState<'kata' | 'kumite' | 'both'>('both')
+    const [individualType, setIndividualType] = useState<'both' | 'kata' | 'kumite'>('both')
+    const [teamKata, setTeamKata] = useState(false)
+    const [teamKumite, setTeamKumite] = useState(false)
     const [weightStr, setWeightStr] = useState<string>(
         child.weight ? String(child.weight) : ''
     )
@@ -80,13 +81,6 @@ export function RegistrationForm({
     const parsedWeight = parseFloat(weightStr)
     const currentWeight = !isNaN(parsedWeight) && parsedWeight > 0 ? parsedWeight : child.weight
 
-    // Reactive category calculation
-    const calculatedCategory = calculateCategory({
-        date_of_birth: child.date_of_birth,
-        gender: child.gender,
-        rank: child.rank,
-        weight: currentWeight,
-    })
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -105,11 +99,16 @@ export function RegistrationForm({
             return
         }
 
+        const parts: string[] = [individualType]
+        if (teamKata) parts.push('team_kata')
+        if (teamKumite) parts.push('team_kumite')
+        const finalParticipationType = parts.join(',')
+
         startTransition(async () => {
             const res = await submitParentEntry({
                 student_id: child.id,
                 event_id: selectedEventId,
-                participation_type: participationType,
+                participation_type: finalParticipationType,
                 declared_weight_kg: currentWeight ?? null,
             })
 
@@ -117,7 +116,7 @@ export function RegistrationForm({
                 setError(res.error)
             } else if (res.success && res.entry_id) {
                 setSuccessMessage('Registration submitted successfully! Redirecting...')
-                router.push(`/parent/entries/${res.entry_id}`)
+                router.push(`/athlete/entries/${res.entry_id}`)
                 router.refresh()
             }
         })
@@ -180,30 +179,39 @@ export function RegistrationForm({
                     </span>
                 </div>
 
-                <div className="grid gap-3">
-                    {tournaments.map((t) => {
-                        const isSelected = selectedEventId === t.id
-                        const isAlreadyRegistered =
-                            t.existing_entry_id &&
-                            t.existing_entry_status !== 'withdrawn' &&
-                            t.existing_entry_status !== 'coach_declined'
+                {tournaments.length === 0 ? (
+                    <div className="rounded-xl border border-dashed p-6 text-center bg-muted/20">
+                        <Trophy className="h-8 w-8 text-muted-foreground mx-auto mb-2 opacity-60" />
+                        <h4 className="text-sm font-semibold mb-1">No Open Tournaments for {child.dojo_name}</h4>
+                        <p className="text-xs text-muted-foreground max-w-md mx-auto leading-relaxed">
+                            Tournaments will appear here once your coach applies and is approved by the tournament organizer. If your coach already applied, the organizer may still need to approve the application.
+                        </p>
+                    </div>
+                ) : (
+                    <div className="grid gap-3">
+                        {tournaments.map((t) => {
+                            const isSelected = selectedEventId === t.id
+                            const isAlreadyRegistered =
+                                t.existing_entry_id &&
+                                t.existing_entry_status !== 'withdrawn' &&
+                                t.existing_entry_status !== 'coach_declined'
 
-                        return (
-                            <div
-                                key={t.id}
-                                onClick={() => {
-                                    if (!isAlreadyRegistered) {
-                                        setSelectedEventId(t.id)
-                                    }
-                                }}
-                                className={`relative rounded-xl border p-4 transition-all ${
-                                    isAlreadyRegistered
-                                        ? 'opacity-60 bg-muted/30 cursor-not-allowed border-border'
-                                        : isSelected
-                                        ? 'border-primary ring-2 ring-primary/20 bg-primary/5 cursor-pointer shadow-sm'
-                                        : 'hover:border-foreground/20 hover:bg-muted/30 cursor-pointer bg-card'
-                                }`}
-                            >
+                            return (
+                                <div
+                                    key={t.id}
+                                    onClick={() => {
+                                        if (!isAlreadyRegistered) {
+                                            setSelectedEventId(t.id)
+                                        }
+                                    }}
+                                    className={`relative rounded-xl border p-4 transition-all ${
+                                        isAlreadyRegistered
+                                            ? 'opacity-60 bg-muted/30 cursor-not-allowed border-border'
+                                            : isSelected
+                                            ? 'border-primary ring-2 ring-primary/20 bg-primary/5 cursor-pointer shadow-sm'
+                                            : 'hover:border-foreground/20 hover:bg-muted/30 cursor-pointer bg-card'
+                                    }`}
+                                >
                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                     <div className="space-y-1">
                                         <div className="flex items-center gap-2">
@@ -211,7 +219,7 @@ export function RegistrationForm({
                                                 {t.title}
                                             </h4>
                                             {isAlreadyRegistered && (
-                                                <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                                                <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300">
                                                     Already Registered
                                                 </span>
                                             )}
@@ -220,16 +228,7 @@ export function RegistrationForm({
                                         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
                                             <span className="flex items-center gap-1">
                                                 <Calendar className="h-3.5 w-3.5 text-primary" />
-                                                {new Date(t.start_date).toLocaleDateString('en-IN', {
-                                                    day: 'numeric',
-                                                    month: 'short',
-                                                })}
-                                                {t.start_date !== t.end_date &&
-                                                    ` - ${new Date(t.end_date).toLocaleDateString('en-IN', {
-                                                        day: 'numeric',
-                                                        month: 'short',
-                                                        year: 'numeric',
-                                                    })}`}
+                                                {formatDateRangeStable(t.start_date, t.end_date)}
                                             </span>
 
                                             {t.location && (
@@ -242,10 +241,7 @@ export function RegistrationForm({
                                             {t.registration_close_date && (
                                                 <span className="text-amber-600 dark:text-amber-400 font-medium">
                                                     Closes:{' '}
-                                                    {new Date(t.registration_close_date).toLocaleDateString(
-                                                        'en-IN',
-                                                        { day: 'numeric', month: 'short' }
-                                                    )}
+                                                    {formatDateStable(t.registration_close_date)}
                                                 </span>
                                             )}
                                         </div>
@@ -253,7 +249,7 @@ export function RegistrationForm({
 
                                     {isAlreadyRegistered ? (
                                         <Link
-                                            href={`/parent/entries/${t.existing_entry_id}`}
+                                            href={`/athlete/entries/${t.existing_entry_id}`}
                                             className="text-xs text-primary font-medium hover:underline shrink-0"
                                             onClick={(e) => e.stopPropagation()}
                                         >
@@ -285,11 +281,12 @@ export function RegistrationForm({
                             </div>
                         )
                     })}
-                </div>
+                    </div>
+                )}
             </div>
 
-            {/* Step 2: Participation Type */}
-            <div className="space-y-3">
+            {/* Step 2: Events to Enter */}
+            <div className="space-y-4">
                 <Label className="text-sm font-semibold flex items-center gap-1.5">
                     <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground">
                         2
@@ -297,47 +294,116 @@ export function RegistrationForm({
                     Events to Enter
                 </Label>
 
-                <div className="grid grid-cols-3 gap-2.5">
-                    {[
-                        { id: 'both', label: 'Kata & Kumite', desc: 'Form & Sparring' },
-                        { id: 'kata', label: 'Kata Only', desc: 'Form demonstration' },
-                        { id: 'kumite', label: 'Kumite Only', desc: 'Sparring match' },
-                    ].map((opt) => {
-                        const isSelected = participationType === opt.id
-                        return (
-                            <button
-                                type="button"
-                                key={opt.id}
-                                onClick={() => setParticipationType(opt.id as any)}
-                                className={`rounded-xl border p-3 text-left transition-all ${
-                                    isSelected
-                                        ? 'border-primary ring-2 ring-primary/20 bg-primary/5'
-                                        : 'border-border hover:bg-muted/40'
-                                }`}
-                            >
-                                <p className="text-xs sm:text-sm font-bold">{opt.label}</p>
-                                <p className="text-[10px] text-muted-foreground mt-0.5">{opt.desc}</p>
-                            </button>
-                        )
-                    })}
+                {/* Individual Events (Select 1 of 3) */}
+                <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                            Individual Events (Choose 1)
+                        </span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2.5">
+                        {[
+                            { id: 'both', label: 'Kata & Kumite', desc: 'Form & Sparring' },
+                            { id: 'kata', label: 'Kata Only', desc: 'Form demonstration' },
+                            { id: 'kumite', label: 'Kumite Only', desc: 'Sparring match' },
+                        ].map((opt) => {
+                            const isSelected = individualType === opt.id
+                            return (
+                                <button
+                                    type="button"
+                                    key={opt.id}
+                                    onClick={() => setIndividualType(opt.id as any)}
+                                    className={`rounded-xl border p-3 text-left transition-all ${
+                                        isSelected
+                                            ? 'border-primary ring-2 ring-primary/20 bg-primary/5 shadow-xs'
+                                            : 'border-border hover:bg-muted/40'
+                                    }`}
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <p className="text-xs sm:text-sm font-bold">{opt.label}</p>
+                                        <div className={`h-3.5 w-3.5 rounded-full border flex items-center justify-center shrink-0 ml-1 ${
+                                            isSelected ? 'border-primary bg-primary' : 'border-muted-foreground/40'
+                                        }`}>
+                                            {isSelected && <div className="h-1.5 w-1.5 rounded-full bg-primary-foreground" />}
+                                        </div>
+                                    </div>
+                                    <p className="text-[10px] text-muted-foreground mt-0.5">{opt.desc}</p>
+                                </button>
+                            )
+                        })}
+                    </div>
+                </div>
+
+                {/* Team Events (Both Selectable / Optional) */}
+                <div className="space-y-1.5 pt-1">
+                    <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                            Team Events (Optional · Select any)
+                        </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2.5">
+                        {[
+                            {
+                                id: 'team_kata',
+                                label: 'Team Kata',
+                                desc: 'Synchronized 3-person form',
+                                selected: teamKata,
+                                toggle: () => setTeamKata((prev) => !prev),
+                            },
+                            {
+                                id: 'team_kumite',
+                                label: 'Team Kumite',
+                                desc: 'Team sparring rotation',
+                                selected: teamKumite,
+                                toggle: () => setTeamKumite((prev) => !prev),
+                            },
+                        ].map((opt) => {
+                            return (
+                                <button
+                                    type="button"
+                                    key={opt.id}
+                                    onClick={opt.toggle}
+                                    className={`rounded-xl border p-3 text-left transition-all ${
+                                        opt.selected
+                                            ? 'border-primary ring-2 ring-primary/20 bg-primary/5 shadow-xs'
+                                            : 'border-border hover:bg-muted/40'
+                                    }`}
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <p className="text-xs sm:text-sm font-bold">{opt.label}</p>
+                                        <div className={`h-4 w-4 rounded-md border flex items-center justify-center shrink-0 ml-1 transition-colors ${
+                                            opt.selected ? 'border-primary bg-primary text-primary-foreground' : 'border-muted-foreground/40'
+                                        }`}>
+                                            {opt.selected && (
+                                                <svg className="h-3 w-3 stroke-current stroke-2 fill-none" viewBox="0 0 24 24">
+                                                    <polyline points="20 6 9 17 4 12" />
+                                                </svg>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <p className="text-[10px] text-muted-foreground mt-0.5">{opt.desc}</p>
+                                </button>
+                            )
+                        })}
+                    </div>
                 </div>
             </div>
 
-            {/* Step 3: Weight and Category Auto-Calculation */}
+            {/* Step 3: Competition Weight */}
             <div className="space-y-3">
                 <Label className="text-sm font-semibold flex items-center gap-1.5">
                     <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground">
                         3
                     </span>
-                    Weight & Category
+                    Competition Weight (Optional)
                 </Label>
 
-                <div className="rounded-2xl border bg-card p-4 space-y-4">
+                <div className="rounded-2xl border bg-card p-4 space-y-3">
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">
                             <Label htmlFor="weight" className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
                                 <Scale className="h-3.5 w-3.5 text-primary" />
-                                Current Competition Weight (kg)
+                                Current Weight (kg)
                             </Label>
                             <span className="text-[11px] text-muted-foreground">
                                 Profile: {child.weight ? `${child.weight} kg` : 'Not set'}
@@ -355,28 +421,9 @@ export function RegistrationForm({
                             className="h-10 text-sm"
                         />
                     </div>
-
-                    {/* Category preview pill */}
-                    <div className="rounded-xl bg-primary/5 border border-primary/20 p-3.5 space-y-2">
-                        <div className="flex items-center justify-between">
-                            <span className="text-xs font-semibold text-primary uppercase tracking-wider">
-                                Auto-Calculated Category
-                            </span>
-                            <span className="text-[11px] font-medium text-muted-foreground">
-                                Age {calculatedCategory.ageYears ? `~${calculatedCategory.ageYears} yrs` : ''}
-                            </span>
-                        </div>
-                        <p className="text-base font-bold text-foreground">
-                            {calculatedCategory.displayName}
-                        </p>
-                        <p className="text-[11px] text-muted-foreground leading-normal flex items-start gap-1.5">
-                            <Info className="h-3.5 w-3.5 shrink-0 text-primary mt-0.5" />
-                            <span>
-                                Calculated based on {child.name}’s date of birth ({child.date_of_birth || 'not set'}), rank ({child.rank || 'open'}), and weight.
-                                The coach and tournament organiser will verify final category placement.
-                            </span>
-                        </p>
-                    </div>
+                    <p className="text-[11px] text-muted-foreground">
+                        Declared weight for official weigh-in and kumite bouts. Leave blank or update if changed.
+                    </p>
                 </div>
             </div>
 
@@ -394,7 +441,7 @@ export function RegistrationForm({
                         type="button"
                         size="sm"
                         onClick={() => setPhotoDialogOpen(true)}
-                        className="rounded-xl gap-2 font-semibold text-xs h-9 bg-amber-600 hover:bg-amber-700 text-white"
+                        className="rounded-md gap-2 font-semibold text-xs h-9 bg-amber-600 hover:bg-amber-700 text-white"
                     >
                         <Camera className="h-4 w-4" />
                         Upload Photo Now
@@ -426,7 +473,7 @@ export function RegistrationForm({
                 <Button
                     type="submit"
                     disabled={isPending || !selectedEventId}
-                    className="w-full sm:w-auto h-12 px-8 text-sm font-semibold rounded-xl"
+                    className="w-full sm:w-auto h-11 px-8 text-sm font-semibold rounded-md"
                 >
                     {isPending ? (
                         <>

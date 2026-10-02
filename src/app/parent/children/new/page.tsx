@@ -81,24 +81,26 @@ export default async function AddChildPage({ searchParams }: AddChildPageProps) 
     }
 
     return (
-        <div className="space-y-5">
+        <div className="w-full max-w-4xl 2xl:max-w-5xl mx-auto space-y-6 pb-16">
             {/* Back link */}
             <Link
                 href="/athlete"
-                className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-[#57534e] hover:text-[#1c1917] dark:text-[#8a99ab] dark:hover:text-[#e8eef5] transition-colors group"
             >
-                <ArrowLeft className="h-4 w-4" />
+                <ArrowLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
                 Back to my profile(s)
             </Link>
 
-            <div>
-                <h1 className="text-xl font-bold">Add a profile</h1>
-                <p className="text-sm text-muted-foreground mt-0.5">
-                    Your coach will see these details in their roster.
+            <div className="space-y-1">
+                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#1c1917] dark:text-[#e8eef5]">Add a profile</h1>
+                <p className="text-sm text-[#57534e] dark:text-[#8a99ab]">
+                    Your coach will see these details in their roster and approve tournament entries.
                 </p>
             </div>
 
-            <AddChildForm dojos={availableDojos} />
+            <div className="bg-white border border-[#ded8cb] dark:bg-[#111a2b] dark:border-[#1f2b40] rounded-[20px] p-5 sm:p-7 shadow-xs">
+                <AddChildForm dojos={availableDojos} />
+            </div>
         </div>
     )
 }

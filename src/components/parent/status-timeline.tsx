@@ -117,7 +117,7 @@ export function StatusTimeline({
                         Track your registration as it moves through coach review and organiser acceptance
                     </p>
                 </div>
-                <span className={cn('inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold', getStatusBgClass(status))}>
+                <span className={cn('inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold', getStatusBgClass(status))}>
                     {getStatusLabel(status)}
                 </span>
             </div>

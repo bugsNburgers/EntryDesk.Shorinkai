@@ -40,31 +40,32 @@ export function ChildCardItem({ child, latestStatus }: ChildCardItemProps) {
             href={`/athlete/${child.id}`}
             prefetch={true}
             onClick={handleClick}
-            className={`block relative overflow-hidden rounded-2xl border bg-card/70 p-4 shadow-sm backdrop-blur transition-all duration-150 active:scale-[0.98] ${
+            className={`block relative overflow-hidden rounded-[16px] border bg-white dark:bg-[#111a2b] p-4 shadow-xs hover:shadow-md transition-all duration-150 active:scale-[0.98] ${
                 isSelected || isPending
-                    ? 'border-primary ring-2 ring-primary/30 bg-primary/5 shadow-md'
-                    : 'border-border/50 hover:border-primary/30 hover:shadow-md dark:border-white/[0.08]'
+                    ? 'border-[#0d9488] ring-2 ring-[#0d9488]/30 dark:border-[#2dd4b4] dark:ring-[#2dd4b4]/30 shadow-md'
+                    : 'border-[#ded8cb] hover:border-[#0d9488]/50 hover:bg-[#faf8f3] dark:border-[#1f2b40] dark:hover:border-[#2dd4b4]/50 dark:hover:bg-[#131e32]'
             }`}
         >
             {/* Top subtle selection indicator strip when clicked */}
             {(isSelected || isPending) && (
-                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary to-primary/60 animate-pulse" />
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#0d9488] to-[#0d9488]/60 dark:from-[#2dd4b4] dark:to-[#2dd4b4]/60 animate-pulse" />
             )}
 
-            <div className="flex items-center gap-3">
-                {/* Avatar */}
-                <div className="relative">
+            <div className="flex items-center gap-3.5">
+                {/* Avatar matching Portal.dc.html */}
+                <div className="relative shrink-0">
                     {child.photo_url ? (
-                        <Image
-                            src={child.photo_url}
-                            alt={child.name}
-                            width={52}
-                            height={52}
-                            className="h-[52px] w-[52px] rounded-xl object-cover shrink-0"
-                        />
+                        <div className="relative h-[54px] w-[54px] rounded-full overflow-hidden border-2 border-[#0d9488] bg-[#f2eee5] dark:border-[#2dd4b4] dark:bg-[#16233a] shadow-2xs">
+                            <Image
+                                src={child.photo_url}
+                                alt={child.name}
+                                fill
+                                className="object-cover"
+                            />
+                        </div>
                     ) : (
-                        <div className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-xl bg-primary/10 dark:bg-primary/20">
-                            <span className="text-xl font-bold text-primary">
+                        <div className="flex h-[54px] w-[54px] items-center justify-center rounded-full border-2 border-[#0d9488] bg-[#f2eee5] dark:border-[#2dd4b4] dark:bg-[#16233a] shadow-2xs">
+                            <span className="text-xl font-bold text-[#0d9488] dark:text-[#2dd4b4]">
                                 {child.name.charAt(0).toUpperCase()}
                             </span>
                         </div>
@@ -72,8 +73,8 @@ export function ChildCardItem({ child, latestStatus }: ChildCardItemProps) {
 
                     {/* Instant spinner overlay on avatar when selected */}
                     {(isSelected || isPending) && (
-                        <div className="absolute inset-0 bg-background/60 backdrop-blur-[1px] rounded-xl flex items-center justify-center">
-                            <Loader2 className="h-5 w-5 text-primary animate-spin" />
+                        <div className="absolute inset-0 bg-black/40 dark:bg-[#0a1220]/70 rounded-full flex items-center justify-center">
+                            <Loader2 className="h-5 w-5 text-white dark:text-[#2dd4b4] animate-spin" />
                         </div>
                     )}
                 </div>
@@ -82,19 +83,19 @@ export function ChildCardItem({ child, latestStatus }: ChildCardItemProps) {
                     <div className="flex items-start justify-between gap-2">
                         <div>
                             <div className="flex items-center gap-2">
-                                <p className="font-semibold truncate text-foreground">{child.name}</p>
+                                <p className="font-bold text-[16.5px] truncate text-[#1c1917] dark:text-[#e8eef5]">{child.name}</p>
                                 {(isSelected || isPending) && (
-                                    <span className="text-[10px] font-bold text-primary px-1.5 py-0.5 rounded bg-primary/15 animate-pulse">
+                                    <span className="text-[10px] font-bold text-[#0d9488] bg-[#0d9488]/15 dark:text-[#2dd4b4] dark:bg-[#2dd4b4]/15 px-1.5 py-0.5 rounded animate-pulse">
                                         Loading...
                                     </span>
                                 )}
                             </div>
                             <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
                                 {child.rank && (
-                                    <span className="text-xs text-muted-foreground">{child.rank}</span>
+                                    <span className="text-xs text-[#57534e] dark:text-[#8a99ab] font-medium">{child.rank}</span>
                                 )}
                                 {child.dojo_name && (
-                                    <span className="text-xs text-muted-foreground truncate">
+                                    <span className="text-xs text-[#57534e] dark:text-[#8a99ab] truncate">
                                         {child.rank ? '· ' : ''}{child.dojo_name}
                                     </span>
                                 )}
@@ -103,9 +104,9 @@ export function ChildCardItem({ child, latestStatus }: ChildCardItemProps) {
 
                         {/* Entry counts */}
                         {child.entry_count > 0 && (
-                            <div className="flex items-center gap-1 shrink-0">
-                                <Trophy className="h-3.5 w-3.5 text-muted-foreground" />
-                                <span className="text-xs text-muted-foreground">
+                            <div className="flex items-center gap-1 shrink-0 bg-[#eee9df] border border-[#ded8cb] dark:bg-[#16233a] dark:border-[#1f2b40] rounded-md px-2 py-0.5 shadow-2xs">
+                                <Trophy className="h-3 w-3 text-[#0d9488] dark:text-[#2dd4b4]" />
+                                <span className="text-xs font-semibold text-[#1c1917] dark:text-[#8a99ab]">
                                     {child.entry_count}
                                 </span>
                             </div>
@@ -114,11 +115,15 @@ export function ChildCardItem({ child, latestStatus }: ChildCardItemProps) {
 
                     {/* Latest status pill */}
                     {latestStatus && (
-                        <div className="mt-2">
-                            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-medium ${latestStatus.bgClass}`}>
+                        <div className="mt-2.5">
+                            <span className={`inline-flex items-center rounded-md px-2.5 py-0.5 text-[11px] font-semibold ${
+                                latestStatus.label.toLowerCase().includes('approved')
+                                    ? 'bg-[#dcfce7] text-[#14532d] border border-[#86efac] dark:bg-[#2dd4b4] dark:text-[#04231e]'
+                                    : 'bg-amber-100 text-amber-800 border border-amber-300 dark:bg-amber-500/20 dark:text-amber-300 dark:border-amber-500/30'
+                            }`}>
                                 {latestStatus.label}
                                 {latestStatus.eventTitle && (
-                                    <span className="ml-1 opacity-70 truncate max-w-[120px]">
+                                    <span className="ml-1 opacity-80 truncate max-w-[140px]">
                                         · {latestStatus.eventTitle}
                                     </span>
                                 )}

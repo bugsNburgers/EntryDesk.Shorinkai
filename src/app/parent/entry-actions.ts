@@ -12,7 +12,7 @@ import sql from '@/lib/db'
 import { z } from 'zod'
 import { UpsertEntrySchema } from '@/lib/validation'
 import { audit, AUDIT_ACTIONS } from '@/lib/audit'
-import { calculateCategory } from '@/lib/category'
+import { toIsoDate, isRegistrationClosed } from '@/lib/events/registration'
 
 async function getClientIp(): Promise<string> {
     const h = await headers()
@@ -27,7 +27,7 @@ const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 export interface SubmitParentEntryInput {
     student_id: string
     event_id: string
-    participation_type?: 'kata' | 'kumite' | 'both' | null
+    participation_type?: string | null
     declared_weight_kg?: number | null
 }
 
@@ -83,7 +83,7 @@ export async function submitParentEntry(
         coach_checks_each_entry: boolean
         max_events_per_athlete: number | null
     }[]>`
-        SELECT
+        SELECT DISTINCT
             ev.id,
             ev.title,
             ev.is_registration_open,
@@ -93,11 +93,17 @@ export async function submitParentEntry(
             COALESCE(ev.coach_checks_each_entry, TRUE) AS coach_checks_each_entry,
             ev.max_events_per_athlete
         FROM events ev
-        JOIN event_applications ea ON ea.event_id = ev.id
-        JOIN dojos d ON ea.coach_id = d.coach_id
+        JOIN dojos d ON d.id = ${student.dojo_id}
+        LEFT JOIN event_applications ea ON ea.event_id = ev.id AND (
+            ea.coach_id = d.coach_id 
+            OR EXISTS (SELECT 1 FROM dojo_collaborators dc WHERE dc.dojo_id = d.id AND dc.user_id = ea.coach_id)
+        )
         WHERE ev.id = ${data.event_id}
-          AND d.id = ${student.dojo_id}
-          AND ea.status = 'approved'
+          AND (
+            ea.status = 'approved'
+            OR ev.organizer_id = d.coach_id
+            OR EXISTS (SELECT 1 FROM dojo_collaborators dc WHERE dc.dojo_id = d.id AND dc.user_id = ev.organizer_id)
+          )
         LIMIT 1
     `
     if (!eventRows.length) {
@@ -109,10 +115,12 @@ export async function submitParentEntry(
     if (!event.is_registration_open) {
         return { error: 'Registration for this tournament is currently closed.' }
     }
-    if (event.registration_close_date && event.registration_close_date < today) {
+    const regCloseDateIso = toIsoDate(event.registration_close_date)
+    if (regCloseDateIso && regCloseDateIso < today) {
         return { error: 'The registration deadline for this tournament has passed.' }
     }
-    if (event.end_date < today) {
+    const endDateIso = toIsoDate(event.end_date)
+    if (endDateIso && endDateIso < today) {
         return { error: 'This tournament has already concluded.' }
     }
 
@@ -146,18 +154,10 @@ export async function submitParentEntry(
         return { error: 'Could not find the coach for this dojo.' }
     }
 
-    // ── 6. Auto-calculate category display name ───────────────────────────────
-    const category = calculateCategory({
-        date_of_birth: student.date_of_birth,
-        gender: student.gender,
-        rank: student.rank,
-        weight: data.declared_weight_kg ?? student.weight,
-    })
-
-    // ── 7. Determine initial status based on coach_checks_each_entry ──────────
+    // ── 6. Determine initial status based on coach_checks_each_entry ──────────
     const initialStatus = event.coach_checks_each_entry ? 'pending_coach' : 'submitted'
 
-    // ── 8. Upsert entry (handles re-registration after withdrawal) ────────────
+    // ── 7. Upsert entry (handles re-registration after withdrawal) ────────────
     let entryId: string
 
     if (existing.length > 0) {
@@ -167,7 +167,7 @@ export async function submitParentEntry(
             SET status = ${initialStatus},
                 participation_type = ${data.participation_type ?? null},
                 declared_weight_kg = ${data.declared_weight_kg ?? null},
-                category_snapshot = ${JSON.stringify(category)},
+                category_snapshot = NULL,
                 submitted_by = ${user.id},
                 coach_notes = NULL,
                 rejection_reason = NULL,
@@ -196,7 +196,7 @@ export async function submitParentEntry(
                 ${coachId},
                 ${data.participation_type ?? null},
                 ${data.declared_weight_kg ?? null},
-                ${JSON.stringify(category)},
+                NULL,
                 ${initialStatus},
                 ${user.id}
             )
@@ -216,7 +216,7 @@ export async function submitParentEntry(
             event_id: data.event_id,
             student_id: data.student_id,
             initial_status: initialStatus,
-            category: category.displayName,
+            participation_type: data.participation_type,
         },
         ipAddress: ip,
     }).catch(console.error)
@@ -238,6 +238,7 @@ export async function withdrawParentEntry(
     reason?: string
 ): Promise<{ success?: boolean; error?: string }> {
     const { user } = await requireRole('parent', { redirectTo: '/login' })
+    const ip = await getClientIp()
 
     if (!uuidRe.test(entryId)) {
         return { error: 'Invalid entry ID.' }
@@ -249,10 +250,21 @@ export async function withdrawParentEntry(
         status: string
         student_id: string
         event_id: string
+        is_registration_open: boolean
+        registration_close_date: string | Date | null
+        end_date: string | Date
     }[]>`
-        SELECT e.id, e.status, e.student_id, e.event_id
+        SELECT
+            e.id,
+            e.status,
+            e.student_id,
+            e.event_id,
+            ev.is_registration_open,
+            ev.registration_close_date,
+            ev.end_date
         FROM entries e
         JOIN students s ON e.student_id = s.id
+        JOIN events ev ON e.event_id = ev.id
         WHERE e.id = ${entryId}
           AND s.parent_id = ${user.id}
         LIMIT 1
@@ -262,12 +274,18 @@ export async function withdrawParentEntry(
     }
     const entry = entryRows[0]
 
-    // Cannot withdraw if already approved (show message to contact coach)
+    // Cannot withdraw directly if already approved by organizer (must contact coach)
     if (entry.status === 'approved') {
-        return { error: 'This entry has already been accepted. Please contact your coach to withdraw.' }
+        return { error: 'This entry has already been accepted by the organiser. Please contact your coach to withdraw.' }
     }
     if (entry.status === 'withdrawn') {
         return { error: 'This entry is already withdrawn.' }
+    }
+
+    // Must be before tournament registration deadline
+    const todayIso = new Date().toISOString().slice(0, 10)
+    if (isRegistrationClosed(entry, todayIso)) {
+        return { error: 'Tournament registration deadline has passed. Please contact your coach to request withdrawal.' }
     }
 
     await sql`
@@ -279,10 +297,26 @@ export async function withdrawParentEntry(
         WHERE id = ${entryId}
     `
 
+    audit({
+        actorType: 'parent',
+        actorId: user.id,
+        action: AUDIT_ACTIONS.ENTRY_WITHDRAWN,
+        entityType: 'entry',
+        entityId: entryId,
+        details: {
+            reason: reason || 'Withdrawn by parent',
+            event_id: entry.event_id,
+            student_id: entry.student_id,
+        },
+        ipAddress: ip,
+    }).catch(console.error)
+
     revalidatePath('/athlete')
     revalidatePath('/parent')
     revalidatePath(`/athlete/${entry.student_id}`)
     revalidatePath(`/parent/children/${entry.student_id}`)
+    revalidatePath(`/athlete/entries/${entryId}`)
+    revalidatePath(`/parent/entries/${entryId}`)
     revalidatePath(`/dashboard/entries/${entry.event_id}`)
     revalidatePath('/dashboard/parent-entries')
 

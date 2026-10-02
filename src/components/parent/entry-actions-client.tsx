@@ -65,7 +65,7 @@ export function EntryActionsClient({
         <div className="flex flex-wrap items-center gap-3 pt-2">
             {canEdit && (
                 <Link href={`/athlete/${studentId}/register?event=${eventId}`}>
-                    <Button className="rounded-xl gap-2 font-semibold">
+                    <Button className="rounded-md gap-2 font-semibold">
                         <Edit3 className="h-4 w-4" />
                         Update Registration
                         <ArrowRight className="h-4 w-4" />
@@ -76,7 +76,7 @@ export function EntryActionsClient({
             {canWithdraw && (
                 <Dialog open={isWithdrawOpen} onOpenChange={setIsWithdrawOpen}>
                     <DialogTrigger asChild>
-                        <Button variant="outline" className="rounded-xl gap-2 text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30">
+                        <Button variant="outline" className="rounded-md gap-2 text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/30">
                             <Ban className="h-4 w-4" />
                             Withdraw Entry
                         </Button>
