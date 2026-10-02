@@ -60,7 +60,10 @@ export default function GlobalError({
                         )}
                     </p>
                     <button
-                        onClick={reset}
+                        onClick={() => {
+                            reset()
+                            window.location.reload()
+                        }}
                         style={{
                             padding: '10px 20px',
                             borderRadius: 8,

@@ -91,8 +91,117 @@ export function formatDateStable(value: string | Date): string {
     return new Intl.DateTimeFormat('en-GB', { timeZone: 'UTC' }).format(parsed)
 }
 
-export function formatDateRangeStable(startDate: string, endDate: string): string {
+export function formatDateRangeStable(startDate: string | Date, endDate: string | Date): string {
     const start = formatDateStable(startDate)
     const end = formatDateStable(endDate)
     return start === end ? start : `${start} – ${end}`
+}
+
+export function calculateAge(dobValue: string | Date | null | undefined): string | null {
+    if (!dobValue) return null
+    let date: Date
+    if (typeof dobValue === 'string') {
+        const iso = normalizeDobToIso(dobValue) || dobValue
+        date = new Date(iso)
+    } else {
+        date = dobValue
+    }
+    if (isNaN(date.getTime())) return null
+
+    const today = new Date()
+    let age = today.getUTCFullYear() - date.getUTCFullYear()
+    const monthDiff = today.getUTCMonth() - date.getUTCMonth()
+    if (monthDiff < 0 || (monthDiff === 0 && today.getUTCDate() < date.getUTCDate())) {
+        age--
+    }
+    if (age <= 0) return '< 1 year'
+    return `${age} ${age === 1 ? 'year' : 'years'}`
+}
+
+export function formatDobLong(dobValue: string | Date | null | undefined): string | null {
+    if (!dobValue) return null
+    let date: Date
+    if (typeof dobValue === 'string') {
+        const iso = normalizeDobToIso(dobValue) || dobValue
+        date = new Date(iso)
+    } else {
+        date = dobValue
+    }
+    if (isNaN(date.getTime())) return null
+
+    const day = String(date.getUTCDate()).padStart(2, '0')
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    const month = months[date.getUTCMonth()]
+    const year = date.getUTCFullYear()
+    return `${day} ${month} ${year}`
+}
+
+export function formatTournamentDateRangeLong(
+    startDate: string | Date,
+    endDate: string | Date
+): string {
+    const start = typeof startDate === 'string' ? new Date(startDate) : startDate
+    const end = typeof endDate === 'string' ? new Date(endDate) : endDate
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) return ''
+
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    const startDay = String(start.getUTCDate()).padStart(2, '0')
+    const endDay = String(end.getUTCDate()).padStart(2, '0')
+    const startMonth = months[start.getUTCMonth()]
+    const endMonth = months[end.getUTCMonth()]
+    const startYear = start.getUTCFullYear()
+    const endYear = end.getUTCFullYear()
+
+    if (startDay === endDay && startMonth === endMonth && startYear === endYear) {
+        return `${startDay} ${startMonth} ${startYear}`
+    }
+
+    if (startMonth === endMonth && startYear === endYear) {
+        return `${startDay} – ${endDay} ${startMonth} ${startYear}`
+    }
+
+    return `${startDay} ${startMonth} – ${endDay} ${endMonth} ${endYear}`
+}
+
+export function formatCloseDateBadge(closeDate: string | Date | null | undefined): string | null {
+    if (!closeDate) return null
+    let date: Date
+    if (typeof closeDate === 'string') {
+        const iso = normalizeDobToIso(closeDate) || closeDate
+        date = new Date(iso)
+    } else {
+        date = closeDate
+    }
+    if (isNaN(date.getTime())) return null
+
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    const day = String(date.getUTCDate()).padStart(2, '0')
+    const month = months[date.getUTCMonth()]
+    return `${day} ${month}`
+}
+
+export function formatSubmittedTimestamp(val: string | Date | null | undefined): string {
+    if (!val) return '—'
+    const date = typeof val === 'string' ? new Date(val) : val
+    if (isNaN(date.getTime())) return '—'
+
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    const day = date.getDate()
+    const month = months[date.getMonth()]
+    const year = date.getFullYear()
+    const hours = String(date.getHours()).padStart(2, '0')
+    const mins = String(date.getMinutes()).padStart(2, '0')
+    return `${day} ${month} ${year}, ${hours}:${mins}`
+}
+
+export function formatStepDate(val: string | Date | null | undefined): string {
+    if (!val) return ''
+    const date = typeof val === 'string' ? new Date(val) : val
+    if (isNaN(date.getTime())) return ''
+
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    const day = date.getDate()
+    const month = months[date.getMonth()]
+    const year = date.getFullYear()
+    return `${day} ${month} ${year}`
 }

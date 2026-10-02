@@ -137,7 +137,7 @@ export function DobPicker({
                         type="button"
                         id={`${id}-trigger`}
                         className={cn(
-                            'flex h-11 w-full items-center justify-between rounded-xl border border-input bg-background px-3.5 py-2 text-sm ring-offset-background transition-colors hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                            'flex h-11 w-full items-center justify-between rounded-md border border-input bg-background px-3.5 py-2 text-sm ring-offset-background transition-colors hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
                             !selectedDate && 'text-muted-foreground'
                         )}
                     >
@@ -155,14 +155,14 @@ export function DobPicker({
                         </div>
 
                         {calculatedAge !== null && (
-                            <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
+                            <span className="shrink-0 rounded-md bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
                                 {calculatedAge} {calculatedAge === 1 ? 'yr' : 'yrs'} old
                             </span>
                         )}
                     </button>
                 </PopoverTrigger>
 
-                <PopoverContent className="w-[320px] p-4 rounded-2xl shadow-xl border border-border/80 bg-card" align="start">
+                <PopoverContent className="w-[320px] p-4 rounded-lg shadow-xl border border-border/80 bg-card" align="start">
                     {/* Month & Year Selectors Header */}
                     <div className="space-y-3 pb-3 border-b border-border/60">
                         <div className="flex items-center justify-between gap-2">
@@ -170,7 +170,7 @@ export function DobPicker({
                             <select
                                 value={viewMonth}
                                 onChange={(e) => setViewMonth(Number(e.target.value))}
-                                className="h-9 flex-1 rounded-lg border border-input bg-background px-2.5 text-xs font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
+                                className="h-9 flex-1 rounded-md border border-input bg-background px-2.5 text-xs font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
                             >
                                 {MONTHS.map((m, idx) => (
                                     <SelectItemOption key={m} value={idx}>
@@ -183,7 +183,7 @@ export function DobPicker({
                             <select
                                 value={viewYear}
                                 onChange={(e) => setViewYear(Number(e.target.value))}
-                                className="h-9 w-24 rounded-lg border border-input bg-background px-2 text-xs font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
+                                className="h-9 w-24 rounded-md border border-input bg-background px-2 text-xs font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
                             >
                                 {years.map((y) => (
                                     <SelectItemOption key={y} value={y}>
@@ -199,7 +199,7 @@ export function DobPicker({
                                     variant="ghost"
                                     size="icon"
                                     onClick={handlePrevMonth}
-                                    className="h-8 w-8 rounded-lg hover:bg-muted"
+                                    className="h-8 w-8 rounded-md hover:bg-muted"
                                     title="Previous Month"
                                 >
                                     <ChevronLeft className="h-4 w-4" />
@@ -209,7 +209,7 @@ export function DobPicker({
                                     variant="ghost"
                                     size="icon"
                                     onClick={handleNextMonth}
-                                    className="h-8 w-8 rounded-lg hover:bg-muted"
+                                    className="h-8 w-8 rounded-md hover:bg-muted"
                                     title="Next Month"
                                 >
                                     <ChevronRight className="h-4 w-4" />
@@ -254,7 +254,7 @@ export function DobPicker({
                                     type="button"
                                     onClick={() => handleSelectDay(day)}
                                     className={cn(
-                                        'h-8 w-8 rounded-lg text-xs font-medium transition-all flex items-center justify-center cursor-pointer',
+                                        'h-8 w-8 rounded-md text-xs font-medium transition-all flex items-center justify-center cursor-pointer',
                                         isSelected
                                             ? 'bg-primary text-primary-foreground font-bold shadow-sm'
                                             : 'hover:bg-muted/70 text-foreground',

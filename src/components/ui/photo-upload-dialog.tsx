@@ -25,7 +25,6 @@ import {
     AlertCircle,
     Loader2,
     Trash2,
-    Sparkles,
     FileImage,
 } from 'lucide-react'
 import { compressAthletePhoto, type CompressionResult } from '@/lib/image-compression'
@@ -38,12 +37,6 @@ interface PhotoUploadDialogProps {
     studentName: string
     currentPhotoUrl?: string | null
     onSuccess?: (newPhotoUrl: string | null) => void
-}
-
-function formatBytes(bytes: number): string {
-    if (bytes < 1024) return `${bytes} B`
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
 export function PhotoUploadDialog({
@@ -198,19 +191,6 @@ export function PhotoUploadDialog({
                         <p className="text-[11px] text-muted-foreground font-medium text-center">
                             Circle crop preview for Tournament ID Card
                         </p>
-
-                        {/* File compression stats pill */}
-                        {compressionData && (
-                            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-800 dark:text-emerald-300">
-                                <Sparkles className="h-3 w-3 shrink-0" />
-                                <span>
-                                    {formatBytes(compressionData.originalSize)} → <strong>{formatBytes(compressionData.compressedSize)}</strong>
-                                </span>
-                                <span className="text-[10px] bg-emerald-200/60 dark:bg-emerald-900/60 px-1.5 py-0.2 rounded font-semibold">
-                                    Optimized
-                                </span>
-                            </div>
-                        )}
                     </div>
 
                     {/* Hidden Native File Input */}
@@ -229,7 +209,7 @@ export function PhotoUploadDialog({
                             variant="outline"
                             onClick={() => fileInputRef.current?.click()}
                             disabled={isCompressing || isUploading}
-                            className="flex-1 rounded-xl gap-2 font-medium"
+                            className="flex-1 rounded-md gap-2 font-medium"
                         >
                             <FileImage className="h-4 w-4" />
                             {compressionData || previewUrl ? 'Choose Different Image' : 'Select Photo'}
@@ -242,7 +222,7 @@ export function PhotoUploadDialog({
                                 size="icon"
                                 onClick={handleDeletePhoto}
                                 disabled={isDeleting || isUploading}
-                                className="text-destructive hover:bg-destructive/10 rounded-xl"
+                                className="text-destructive hover:bg-destructive/10 rounded-md"
                                 title="Remove photo"
                             >
                                 {isDeleting ? (
@@ -259,7 +239,7 @@ export function PhotoUploadDialog({
 
                     {/* Error display */}
                     {error && (
-                        <div className="rounded-xl bg-destructive/10 border border-destructive/20 p-3 flex items-start gap-2 text-xs text-destructive">
+                        <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3 flex items-start gap-2 text-xs text-destructive">
                             <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
                             <span>{error}</span>
                         </div>
@@ -272,7 +252,7 @@ export function PhotoUploadDialog({
                         variant="ghost"
                         onClick={() => handleClose(false)}
                         disabled={isUploading}
-                        className="rounded-xl"
+                        className="rounded-md"
                     >
                         Cancel
                     </Button>
@@ -280,7 +260,7 @@ export function PhotoUploadDialog({
                         type="button"
                         onClick={handleUpload}
                         disabled={!compressionData || isUploading || isCompressing}
-                        className="rounded-xl font-semibold gap-2"
+                        className="rounded-md font-semibold gap-2"
                     >
                         {isUploading ? (
                             <Loader2 className="h-4 w-4 animate-spin" />

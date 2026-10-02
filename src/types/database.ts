@@ -16,7 +16,7 @@ export type EntryStatus =
     | 'correction_needed'
     | 'coach_declined'
     | 'withdrawn'
-export type ParticipationType = 'kata' | 'kumite' | 'both'
+export type ParticipationType = 'kata' | 'kumite' | 'both' | string
 export type MembershipStatus = 'active' | 'removed'
 export type AuditActorType = 'parent' | 'coach' | 'organizer' | 'admin' | 'system'
 export type AgeCutoffRule = 'tournament_day' | 'jan_1'

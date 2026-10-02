@@ -9,57 +9,60 @@ html {
 }
 
 :root {
-  /* Green / White / Black Theme - Light Mode */
+  /* EntryDesk Luxury Warm Cream & Emerald Design System - Light Mode */
 
-  --card: hsl(0, 0%, 100%);
-  --card-foreground: hsl(222.2, 84%, 4.9%);
+  /* Background: Elegant warm cream / linen (#f7f4ec) */
+  --background: #f7f4ec;
 
-  --popover: hsl(0, 0%, 100%);
-  --popover-foreground: hsl(222.2, 84%, 4.9%);
+  /* Typography: Deep warm espresso/charcoal for soft, strain-free high contrast */
+  --foreground: #1c1917;
 
-  /* EntryDesk Emerald Primary */
-  --primary: oklch(0.508 0.118 165.612);
-  /* emerald-700 */
-  --primary-foreground: oklch(1 0 0);
+  /* Elevated Surfaces & Cards: Crisp warm white (#ffffff) to create immediate depth above cream */
+  --card: #ffffff;
+  --card-foreground: #1c1917;
 
-  --secondary: hsl(210, 40%, 96.1%);
-  --secondary-foreground: hsl(222.2, 47.4%, 11.2%);
+  --popover: #ffffff;
+  --popover-foreground: #1c1917;
 
-  --muted: hsl(210, 40%, 96.1%);
-  /* Improved contrast ratio for WCAG AA — was 46.9% lightness, now 38% */
-  --muted-foreground: hsl(215.4, 16.3%, 38%);
+  /* Primary Brand: Deep Forest Emerald */
+  --primary: oklch(0.46 0.135 158);
+  --primary-foreground: #ffffff;
 
-  --accent: hsl(210, 40%, 96.1%);
-  --accent-foreground: hsl(222.2, 47.4%, 11.2%);
+  /* Secondary: Soft warm oat (#eee9df) */
+  --secondary: #eee9df;
+  --secondary-foreground: #1c1917;
 
-  --destructive: hsl(0, 84.2%, 60.2%);
-  --destructive-foreground: hsl(210, 40%, 98%);
+  /* Muted: Warm sand (#ece6db) */
+  --muted: #ece6db;
+  --muted-foreground: #57534e;
 
-  --border: hsl(214.3, 31.8%, 91.4%);
-  --input: hsl(214.3, 31.8%, 91.4%);
-  --ring: hsl(222.2, 84%, 4.9%);
+  /* Accent: Warm cream tint */
+  --accent: #eae4d8;
+  --accent-foreground: #1c1917;
 
-  --radius: 1rem;
+  --destructive: hsl(0, 75%, 52%);
+  --destructive-foreground: #ffffff;
 
-  /* Light Mode Background: Slate 50 (#f8fafc) */
-  --background: oklch(0.984 0.003 247.858);
+  /* Crisp, visible warm borders & inputs */
+  --border: #ded8cb;
+  --input: #ded8cb;
+  --ring: oklch(0.46 0.135 158);
 
-  --foreground: oklch(0.129 0.042 264.695);
-  /* Slate 900-ish */
+  --radius: 0.625rem;
 
-  /* Semantic Status Tokens */
-  --status-pending: hsl(38, 92%, 50%);
-  --status-pending-bg: hsl(48, 96%, 95%);
-  --status-pending-fg: hsl(32, 95%, 30%);
-  --status-approved: hsl(158, 64%, 42%);
-  --status-approved-bg: hsl(152, 76%, 94%);
-  --status-approved-fg: hsl(158, 64%, 28%);
-  --status-rejected: hsl(0, 84%, 60%);
-  --status-rejected-bg: hsl(0, 86%, 97%);
-  --status-rejected-fg: hsl(0, 72%, 40%);
-  --status-draft: hsl(215, 16%, 47%);
-  --status-draft-bg: hsl(210, 40%, 96%);
-  --status-draft-fg: hsl(215, 16%, 35%);
+  /* Semantic Status Tokens (High-legibility warm pastels with rich text) */
+  --status-pending: hsl(38, 92%, 46%);
+  --status-pending-bg: hsl(42, 85%, 92%);
+  --status-pending-fg: hsl(32, 95%, 26%);
+  --status-approved: hsl(158, 64%, 38%);
+  --status-approved-bg: hsl(152, 60%, 92%);
+  --status-approved-fg: hsl(158, 80%, 22%);
+  --status-rejected: hsl(0, 75%, 52%);
+  --status-rejected-bg: hsl(0, 75%, 93%);
+  --status-rejected-fg: hsl(0, 75%, 32%);
+  --status-draft: hsl(35, 14%, 48%);
+  --status-draft-bg: hsl(38, 20%, 90%);
+  --status-draft-fg: hsl(35, 14%, 30%);
 
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
@@ -67,14 +70,15 @@ html {
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
 
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  /* Sidebar: Grounded parchment cream (#f2eee5) */
+  --sidebar: #f2eee5;
+  --sidebar-foreground: #1c1917;
+  --sidebar-primary: oklch(0.46 0.135 158);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #eae4d8;
+  --sidebar-accent-foreground: #1c1917;
+  --sidebar-border: #ded7cb;
+  --sidebar-ring: oklch(0.46 0.135 158);
 }
 
 .dark {
@@ -174,6 +178,17 @@ html {
   textarea {
     @apply transition-all duration-200 ease-in-out;
   }
+
+  /* Enforce smooth rounded-rectangle styling for all entry fields, dropdowns, and textareas */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+  select,
+  textarea,
+  [data-slot="input"],
+  [data-slot="select-trigger"],
+  [data-radix-select-trigger],
+  button[role="combobox"] {
+    border-radius: var(--radius-md, 0.625rem) !important;
+  }
 }
 
 
@@ -223,13 +238,13 @@ html {
   --color-chart-2: var(--chart-2);
   --color-chart-1: var(--chart-1);
 
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
-  --radius-3xl: calc(var(--radius) + 12px);
-  --radius-4xl: calc(var(--radius) + 16px);
+  --radius-sm: 0.375rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 0.875rem;
+  --radius-2xl: 1rem;
+  --radius-3xl: 1.25rem;
+  --radius-4xl: 1.5rem;
 }
 
 body {
@@ -295,16 +310,16 @@ body {
 
   .dashboard-shell .dashboard-surface {
     border-radius: var(--radius-2xl);
-    border: 1px solid color-mix(in oklab, var(--color-border) 55%, transparent);
-    background: color-mix(in oklab, var(--color-background) 88%, var(--color-muted) 12%);
-    box-shadow: 0 14px 30px -24px rgb(0 0 0 / 0.35);
-    backdrop-filter: blur(8px);
+    border: 1px solid var(--border);
+    background: var(--card);
+    box-shadow: 0 1px 3px 0 rgba(40, 30, 20, 0.04), 0 4px 16px -2px rgba(40, 30, 20, 0.05);
   }
 
   .dark .dashboard-shell .dashboard-surface {
     border-color: rgb(255 255 255 / 0.05);
     background: rgb(255 255 255 / 0.03);
     box-shadow: 0 14px 32px -24px rgb(0 0 0 / 0.55);
+    backdrop-filter: blur(8px);
   }
 
   .shimmer {
@@ -347,7 +362,7 @@ body {
   }
 
   .dashboard-shell .dashboard-list > * + * {
-    border-top: 1px solid color-mix(in oklab, var(--color-border) 70%, transparent);
+    border-top: 1px solid var(--border);
   }
 
   .dark .dashboard-shell .dashboard-list > * + * {
@@ -359,13 +374,17 @@ body {
   }
 
   .dashboard-shell .dashboard-list-item:hover {
+    background: #f7f4ec;
+  }
+
+  .dark .dashboard-shell .dashboard-list-item:hover {
     background: color-mix(in oklab, var(--color-accent) 45%, transparent);
   }
 
   .dashboard-shell .dashboard-empty {
     border-radius: var(--radius-2xl);
-    border: 1px dashed color-mix(in oklab, var(--color-border) 65%, transparent);
-    background: color-mix(in oklab, var(--color-muted) 25%, transparent);
+    border: 1px dashed var(--border);
+    background: #f2eee5;
   }
 
   .dark .dashboard-shell .dashboard-empty {
@@ -457,4 +476,122 @@ body {
     background-color: var(--status-approved);
     flex-shrink: 0;
   }
+}
+
+/* ============================================================================
+   Karate Athlete ID Card Styles (Phone & A4 Pass)
+   Exact match to Karate Athlete ID Card.html
+   ============================================================================ */
+.karate-id-card-scope .r {
+  font-family: "Google Sans", "Product Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: #0e2238;
+  background: #fff;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+  box-sizing: border-box;
+}
+
+.karate-id-card-scope .c {
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: -0.005em;
+}
+
+.karate-id-card-scope .m {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+.karate-id-card-scope .l {
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: #52606d;
+}
+
+.karate-id-card-scope .cb {
+  width: 18px;
+  height: 18px;
+  box-sizing: border-box;
+  border: 2px solid #0e2238;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.karate-id-card-scope .cb.on {
+  background: #0e2238;
+}
+
+.karate-id-card-scope .ev {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.karate-id-card-scope .row {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 11px 0;
+  border-bottom: 1px solid #d3dae0;
+  align-items: baseline;
+}
+
+.karate-id-card-scope .row b {
+  font-size: 15px;
+  font-weight: 600;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.karate-id-card-scope .row span {
+  font-size: 13px;
+  color: #52606d;
+  flex-shrink: 0;
+}
+
+.karate-id-card-scope .ch {
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: #087f72;
+  margin-bottom: 4px;
+}
+
+.karate-id-card-scope .card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 16px 18px;
+  box-shadow: 0 1px 2px rgba(11, 37, 64, 0.08);
+}
+
+.karate-id-card-scope li {
+  margin-bottom: 8px;
+}
+
+.karate-id-card-scope .cell {
+  background: #fff;
+  padding: 7px 10px 8px;
+}
+
+.karate-id-card-scope .cell b {
+  display: block;
+  font-size: 15px;
+  font-weight: 600;
+  margin-top: 3px;
+  overflow-wrap: anywhere;
+}
+
+.karate-id-card-scope .h {
+  font-size: 15px;
+  margin: 0 0 8px;
+  padding-bottom: 5px;
+  border-bottom: 2px solid #0e2238;
 }

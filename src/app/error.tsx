@@ -46,7 +46,13 @@ export default function RootError({ error, reset }: ErrorPageProps) {
 
                 {/* Actions */}
                 <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
-                    <Button onClick={reset} className="gap-2">
+                    <Button
+                        onClick={() => {
+                            reset()
+                            window.location.reload()
+                        }}
+                        className="gap-2"
+                    >
                         <RefreshCw className="h-4 w-4" />
                         Try again
                     </Button>

@@ -40,7 +40,14 @@ export default function DashboardError({ error, reset }: ErrorProps) {
             )}
 
             <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:justify-center">
-                <Button onClick={reset} variant="destructive" className="gap-2">
+                <Button
+                    onClick={() => {
+                        reset()
+                        window.location.reload()
+                    }}
+                    variant="destructive"
+                    className="gap-2"
+                >
                     <RefreshCw className="h-4 w-4" />
                     Try again
                 </Button>

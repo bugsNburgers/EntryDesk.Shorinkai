@@ -117,7 +117,7 @@ export const UpsertEntrySchema = z.object({
     category_id: z.string().uuid('Invalid category ID').optional().nullable(),
     event_day_id: z.string().uuid('Invalid event day ID').optional().nullable(),
     participation_type: z
-        .enum(['kata', 'kumite', 'both'])
+        .string()
         .optional()
         .nullable(),
     declared_weight_kg: z
