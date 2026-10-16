@@ -11,8 +11,8 @@ export function SiteFooter() {
     const socialLinks = [
         {
             icon: <Github className="h-4 w-4" />,
-            href: 'https://github.com/bugsNburgers/EntryDesk.Shorinkai',
-            label: 'GitHub',
+            href: 'https://cruxstudios.dev',
+            label: 'Crux Studios',
         },
     ]
 
@@ -97,8 +97,10 @@ export function SiteFooter() {
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                         {/* Copyright block */}
                         <div className="text-sm leading-relaxed text-muted-foreground">
-                            <div>© {year} EntryDesk. All rights reserved.</div>
-                            <div className="text-xs mt-1 text-muted-foreground/70">Next.js • PostgreSQL • Tailwind</div>
+                            <div>© {year} EntryDesk by <a href="https://cruxstudios.dev" target="_blank" rel="noopener noreferrer" className="font-medium hover:underline text-foreground/90">Crux Studios</a>. All rights reserved.</div>
+                            <div className="text-xs mt-1 text-muted-foreground/70">
+                                <a href="mailto:contact@cruxstudios.dev" className="hover:underline">contact@cruxstudios.dev</a> • Next.js • PostgreSQL • Tailwind
+                            </div>
                         </div>
 
                         {/* Nav + legal links stacked right */}

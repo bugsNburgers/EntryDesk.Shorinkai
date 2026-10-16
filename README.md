@@ -87,4 +87,5 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to view the 
 
 ---
 
-Built with ❤️ for the karate community
+Owned & developed by [Crux Studios](https://cruxstudios.dev) • [contact@cruxstudios.dev](mailto:contact@cruxstudios.dev)
+Built with ❤️ for sports and martial arts communities worldwide

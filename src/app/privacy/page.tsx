@@ -21,7 +21,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-2xl font-semibold mb-4">1. Introduction</h2>
             <p className="text-muted-foreground">
-              EntryDesk (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;) is an open-source tournament operations and event management platform. This Privacy Policy explains how we collect, use, store, and protect personal information when you use the hosted version of EntryDesk at <a href="https://entrydesk.shorinkai.in" className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">entrydesk.shorinkai.in</a> (the &quot;Service&quot;).
+              EntryDesk (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;) is a tournament operations and event management platform owned and operated by Crux Studios. This Privacy Policy explains how we collect, use, store, and protect personal information when you use the hosted version of EntryDesk at <a href="https://cruxstudios.dev" className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">cruxstudios.dev</a> (the &quot;Service&quot;).
             </p>
             <p className="text-muted-foreground mt-2">
               If you are self-hosting EntryDesk, this policy does not apply to your instance &mdash; you are responsible for your own privacy practices and compliance.
@@ -303,7 +303,7 @@ export default function PrivacyPage() {
               <li><strong>Portability:</strong> Request a data export in JSON or CSV format.</li>
             </ul>
             <p className="text-muted-foreground">
-              To exercise any of these rights, email <strong>hello@ull0sm.in</strong> or <strong>hello@suprateekyawagal.in</strong> with &ldquo;Parent Data Request&rdquo; in the subject line.
+              To exercise any of these rights, email <strong>contact@cruxstudios.dev</strong> with &ldquo;Parent Data Request&rdquo; in the subject line.
             </p>
           </section>
 
@@ -311,10 +311,9 @@ export default function PrivacyPage() {
             <h2 className="text-2xl font-semibold mb-4">15. Contact Us</h2>
             <p className="text-muted-foreground mb-4">For privacy-related questions, requests, or concerns, contact:</p>
             <div className="space-y-1 text-muted-foreground">
-              <p><strong>EntryDesk Maintainers</strong></p>
-              <p>Emails: <strong>hello@ull0sm.in</strong>, <strong>hello@suprateekyawagal.in</strong></p>
-              <p>GitHub Profiles: <a href="https://github.com/ull0sm" className="text-primary hover:underline">@ull0sm</a>, <a href="https://github.com/bugsNburgers" className="text-primary hover:underline">@bugsNburgers</a></p>
-              <p>Repository: <a href="https://github.com/ull0sm/entrydesk" className="text-primary hover:underline">EntryDesk</a></p>
+              <p><strong>Crux Studios</strong></p>
+              <p>Website: <a href="https://cruxstudios.dev" className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">cruxstudios.dev</a></p>
+              <p>Email: <a href="mailto:contact@cruxstudios.dev" className="text-primary hover:underline">contact@cruxstudios.dev</a></p>
             </div>
           </section>
         </div>

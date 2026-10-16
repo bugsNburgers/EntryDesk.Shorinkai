@@ -29,7 +29,7 @@ Principles:
 ## 2. Decisions already made
 
 1. **Integrate into the existing EntryDesk.** Same database, same coach and organiser roles, same entries. Add a new role: **Parent (guardian)**. Do NOT build a separate app.
-2. **Hosting-independent.** The domain will change. Never hardcode `entrydesk.shorinkai.in`. Use env var `APP_BASE_URL` for all generated links, emails, QR URLs.
+2. **Hosting-independent.** The domain will change. Never hardcode absolute domains. Use env var `APP_BASE_URL` for all generated links, emails, QR URLs.
 3. **Flow:**
    1. Organiser accepts a coach/club into a tournament (already exists).
    2. Coach shares the club link. That is all the coach has to do up front.

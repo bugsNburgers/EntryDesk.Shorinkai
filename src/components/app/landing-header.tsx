@@ -72,12 +72,7 @@ export function LandingHeader() {
                     <a href="#upcoming-events" className={navLinkClassName}>
                         Events
                     </a>
-                    <a
-                        href="https://honorlog.shorinkai.in"
-                        target="_blank"
-                        rel="noreferrer"
-                        className={navLinkClassName}
-                    >
+                    <a href="#student-portal" className={navLinkClassName}>
                         Student Portal
                     </a>
                     <a href="#contact" className={navLinkClassName}>

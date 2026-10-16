@@ -60,7 +60,7 @@ This doc captures the main issues encountered while setting up/running the app l
 - **12th session:** Hardened organizer event deletion UX with a 3-dot actions menu + destructive modal + typed confirmation (`delete`) to reduce accidental data loss.
 - **13th session:** Completed image-only optimization pass (Next image formats/sizes/cache + responsive hero `sizes`) without introducing unrelated UX changes.
 - **14th session:** Fixed Vercel production TypeScript build failure in dashboard entries by replacing an unsafe relation cast with normalized flattening + strict type guard filtering.
-- **15th session:** Integrated external Student Profile Portal (`testlist.shorinkai.in`) into landing UX with header link + dedicated section, then iteratively polished the mock preview (spacing, styling, and accent/avatar overlap fixes).
+- **15th session:** Integrated Student Profile Portal into landing UX with header link + dedicated section, then iteratively polished the mock preview (spacing, styling, and accent/avatar overlap fixes).
 - **17th session:** Fixed coach event visibility/actions so upcoming approved events also appear under Active Events with direct Entries navigation, and events auto-disappear after `end_date`.
 - **18th session:** Reworked landing-page render path for faster first paint (above-the-fold first, deferred below-the-fold), moved public events loading to post-render client fetch, fixed App Router dynamic import build issue, and stabilized `/api/public-events` with schema-correct query + scoped proxy behavior.
 - **19th session:** Polished dark-theme tone and landing hero refresh behavior, fixed dashboard hydration mismatch from locale-dependent date rendering, and rebuilt mock dashboard side-switch UX with modern indicator + interaction-aware auto-scroll timing.
@@ -2039,7 +2039,7 @@ This session focused on blending the hosted Student Profile Portal into EntryDes
 ## 1) Integrate Testlist portal into landing flow
 
 ### Requirement
-- Expose hosted student portal (`testlist.shorinkai.in`) inside EntryDesk landing experience.
+- Expose student portal inside EntryDesk landing experience.
 - Add link in header/title bar and include clear explanatory content on page.
 
 ### Fix
@@ -2554,7 +2554,7 @@ This doc captures the main issues encountered while setting up/running the app l
 - **12th session:** Hardened organizer event deletion UX with a 3-dot actions menu + destructive modal + typed confirmation (`delete`) to reduce accidental data loss.
 - **13th session:** Completed image-only optimization pass (Next image formats/sizes/cache + responsive hero `sizes`) without introducing unrelated UX changes.
 - **14th session:** Fixed Vercel production TypeScript build failure in dashboard entries by replacing an unsafe relation cast with normalized flattening + strict type guard filtering.
-- **15th session:** Integrated external Student Profile Portal (`testlist.shorinkai.in`) into landing UX with header link + dedicated section, then iteratively polished the mock preview (spacing, styling, and accent/avatar overlap fixes).
+- **15th session:** Integrated Student Profile Portal into landing UX with header link + dedicated section, then iteratively polished the mock preview (spacing, styling, and accent/avatar overlap fixes).
 - **17th session:** Fixed coach event visibility/actions so upcoming approved events also appear under Active Events with direct Entries navigation, and events auto-disappear after `end_date`.
 
 ## 1) Supabase migration error: `must be owner of table users`
@@ -4197,7 +4197,7 @@ This session focused on blending the hosted Student Profile Portal into EntryDes
 ## 1) Integrate Testlist portal into landing flow
 
 ### Requirement
-- Expose hosted student portal (`testlist.shorinkai.in`) inside EntryDesk landing experience.
+- Expose student portal inside EntryDesk landing experience.
 - Add link in header/title bar and include clear explanatory content on page.
 
 ### Fix

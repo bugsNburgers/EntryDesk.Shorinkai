@@ -32,8 +32,24 @@ export default function ContactPage() {
             <div>
               <h3 className="text-lg font-semibold mb-2">Get in touch</h3>
               <p className="text-muted-foreground">
-                Whether you have questions about EntryDesk, need support, or just want to say hello,
-                feel free to reach out using the form above. We'll get back to you as soon as possible!
+                Whether you have questions about EntryDesk, need support, or want to discuss enterprise features,
+                feel free to reach out using the form or contact Crux Studios directly.
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-border/60 bg-muted/20 p-5 space-y-3">
+              <p className="text-base font-semibold">Crux Studios</p>
+              <p className="text-sm text-muted-foreground">
+                Website:{' '}
+                <a href="https://cruxstudios.dev" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium">
+                  cruxstudios.dev
+                </a>
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Email:{' '}
+                <a href="mailto:contact@cruxstudios.dev" className="text-primary hover:underline font-medium">
+                  contact@cruxstudios.dev
+                </a>
               </p>
             </div>
           </div>

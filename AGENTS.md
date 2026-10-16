@@ -179,7 +179,7 @@ See → `.agents/rules/db-schema.md` for full column list.
 ## Anti-Patterns (NEVER DO)
 
 - Never install Supabase — DB is Neon Postgres directly
-- Never hardcode `entrydesk.shorinkai.in` — use `APP_BASE_URL` env var
+- Never hardcode production domain URLs — use `APP_BASE_URL` env var
 - Never write raw SQL strings — always use `` sql`...` `` tagged template
 - Never show raw DB status values in UI — use `@/lib/status` helpers
 - Never edit `schema.sql` to make changes — write a safe migration instead keeping in mind that its an active running db and it shouldnt affect running application

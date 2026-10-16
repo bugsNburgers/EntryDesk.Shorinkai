@@ -21,7 +21,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-2xl font-semibold mb-4">1. Acceptance of Terms</h2>
             <p className="text-muted-foreground">
-              By accessing or using the hosted EntryDesk service at <a href="https://entrydesk.shorinkai.in" className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">entrydesk.shorinkai.in</a> (&quot;Service&quot;), you agree to be bound by these Terms & Conditions (&quot;Terms&quot;). If you do not agree, do not use the Service.
+              By accessing or using the hosted EntryDesk service at <a href="https://cruxstudios.dev" className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">cruxstudios.dev</a> (&quot;Service&quot;), you agree to be bound by these Terms & Conditions (&quot;Terms&quot;). If you do not agree, do not use the Service.
             </p>
             <p className="text-muted-foreground mt-2">
               These Terms apply only to the hosted version of EntryDesk. If you are self-hosting EntryDesk under its open-source license, these Terms do not govern your use &mdash; refer to the project&apos;s license file on GitHub instead.
@@ -223,10 +223,9 @@ export default function TermsPage() {
             <h2 className="text-2xl font-semibold mb-4">16. Contact</h2>
             <p className="text-muted-foreground mb-4">For any questions about these Terms, contact:</p>
             <div className="space-y-1 text-muted-foreground">
-              <p><strong>EntryDesk Maintainers</strong></p>
-              <p>Emails: <strong>hello@ull0sm.in</strong>, <strong>hello@suprateekyawagal.in</strong></p>
-              <p>GitHub Profiles: <a href="https://github.com/ull0sm" className="text-primary hover:underline">@ull0sm</a>, <a href="https://github.com/bugsNburgers" className="text-primary hover:underline">@bugsNburgers</a></p>
-              <p>Repository: <a href="https://github.com/ull0sm/entrydesk" className="text-primary hover:underline">EntryDesk</a></p>
+              <p><strong>Crux Studios</strong></p>
+              <p>Website: <a href="https://cruxstudios.dev" className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">cruxstudios.dev</a></p>
+              <p>Email: <a href="mailto:contact@cruxstudios.dev" className="text-primary hover:underline">contact@cruxstudios.dev</a></p>
             </div>
           </section>
         </div>

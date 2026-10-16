@@ -17,9 +17,9 @@ export function StudentPortalSection() {
                 <div className="grid gap-8 p-8 lg:grid-cols-[1.35fr_1fr] lg:p-10">
                     <div>
                         <Badge variant="secondary">Integrated student portal</Badge>
-                        <h3 className="mt-4 text-3xl font-bold tracking-tight">Shorin Kai Student Profile Portal</h3>
+                        <h3 className="mt-4 text-3xl font-bold tracking-tight">Athlete & Student Profile Portal</h3>
                         <p className="mt-3 max-w-3xl text-muted-foreground">
-                            Testlist helps staff and organizers quickly search students and open complete karate profiles with belt rank, dojo,
+                            EntryDesk helps staff and organizers quickly search students and open complete athlete profiles with belt rank, dojo,
                             participation history, and medal results.
                         </p>
 
@@ -43,12 +43,12 @@ export function StudentPortalSection() {
 
                         <div className="mt-7 flex flex-wrap items-center gap-3">
                             <Button asChild className="h-11 gap-2 rounded-md px-6 text-base">
-                                <a href="https://honorlog.shorinkai.in" target="_blank" rel="noreferrer">
-                                    Open Student Portal
+                                <a href="https://cruxstudios.dev" target="_blank" rel="noreferrer">
+                                    Crux Studios
                                     <ArrowUpRight className="h-4 w-4" />
                                 </a>
                             </Button>
-                            <p className="text-sm text-muted-foreground">Live at honorlog.shorinkai.in</p>
+                            <p className="text-sm text-muted-foreground">Powered by Crux Studios • cruxstudios.dev</p>
                         </div>
                     </div>
 
@@ -65,7 +65,7 @@ export function StudentPortalSection() {
                                 <div className="ml-20 flex items-start justify-between gap-3">
                                     <div>
                                         <p className="text-lg font-semibold leading-tight">Akshay Kumar</p>
-                                        <p className="mt-1 text-xs text-muted-foreground">SK-0110 • North Branch</p>
+                                        <p className="mt-1 text-xs text-muted-foreground">ED-0110 • North Branch</p>
                                     </div>
                                     <Badge variant="secondary" className="rounded-full px-3 py-1 text-[11px]">
                                         White Belt
