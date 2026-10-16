@@ -45,6 +45,7 @@ import { coachAddManualStudentAndEntry } from '@/app/dashboard/entries/actions'
 import { toast } from 'sonner'
 import { isSimpleEntryEventType } from '@/lib/events/type'
 import { normalizeDobToIso } from '@/lib/date'
+import { AthleteIcon } from '@/components/ui/athlete-icon'
 
 const BELT_CONFIGS: Record<string, { label: string; hex: string }> = {
     white: { label: 'White Belt', hex: '#E4E4E7' },
@@ -268,8 +269,8 @@ export function CoachAddStudentDialog({
                 {/* ── Header ── */}
                 <div className="px-6 py-4 border-b border-border/60 bg-gradient-to-r from-muted/30 via-background to-muted/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shrink-0">
                     <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center text-white shadow-md shadow-emerald-500/20">
-                            <Trophy className="h-5 w-5" />
+                        <div className="h-10 w-10 rounded-2xl bg-[#0d9488]/10 dark:bg-[#2dd4b4]/10 border border-[#0d9488]/20 flex items-center justify-center p-1.5 shadow-xs">
+                            <AthleteIcon size={32} />
                         </div>
                         <div>
                             <div className="flex items-center gap-2">
@@ -301,7 +302,7 @@ export function CoachAddStudentDialog({
                                         : 'text-muted-foreground hover:text-foreground'
                                 }`}
                             >
-                                <UserPlus className="h-3.5 w-3.5" />
+                                <AthleteIcon size={16} />
                                 New Athlete
                             </button>
                             <button

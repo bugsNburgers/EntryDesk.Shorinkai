@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button'
 import { Plus, UserRound } from 'lucide-react'
 import { JoinDojoHandler } from '@/components/parent/join-dojo-handler'
 import { ChildCardItem } from '@/components/parent/child-card-item'
+import { AthleteIcon } from '@/components/ui/athlete-icon'
 
 export const metadata: Metadata = {
     title: 'My Profile(s) — EntryDesk',
@@ -103,8 +104,8 @@ export default async function ParentHome({ searchParams }: ParentHomeProps) {
                     </p>
                 </div>
                 <Link href={addAthleteHref}>
-                    <Button size="sm" className="gap-1.5 h-9 rounded-xl bg-[#0d9488] text-white hover:bg-[#0f766e] dark:bg-[#2dd4b4] dark:text-[#04231e] dark:hover:bg-[#25c4a5] font-bold shadow-xs">
-                        <Plus className="h-4 w-4" />
+                    <Button size="sm" className="gap-2 h-9 rounded-xl bg-[#0d9488] text-white hover:bg-[#0f766e] dark:bg-[#2dd4b4] dark:text-[#04231e] dark:hover:bg-[#25c4a5] font-bold shadow-xs">
+                        <AthleteIcon size={16} />
                         Add profile
                     </Button>
                 </Link>
@@ -113,8 +114,8 @@ export default async function ParentHome({ searchParams }: ParentHomeProps) {
             {/* Empty state */}
             {children.length === 0 && (
                 <div className="mx-auto max-w-md rounded-[20px] border border-dashed border-[#ded8cb] bg-white dark:border-[#1f2b40] dark:bg-[#111a2b] py-14 px-6 text-center shadow-sm">
-                    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#f2eee5] border border-[#ded8cb] dark:bg-[#16233a] dark:border-[#1f2b40]">
-                        <UserRound className="h-8 w-8 text-[#0d9488] dark:text-[#2dd4b4]" />
+                    <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-2xl bg-[#f2eee5] border border-[#ded8cb] dark:bg-[#16233a] dark:border-[#1f2b40] p-3 shadow-xs">
+                        <AthleteIcon size={64} />
                     </div>
                     <h2 className="text-lg font-bold text-[#1c1917] dark:text-[#e8eef5] mb-1.5">No profiles added yet</h2>
                     <p className="text-sm text-[#57534e] dark:text-[#8a99ab] mb-6 max-w-sm mx-auto">
@@ -122,7 +123,7 @@ export default async function ParentHome({ searchParams }: ParentHomeProps) {
                     </p>
                     <Link href={addAthleteHref}>
                         <Button className="gap-2 rounded-xl bg-[#0d9488] text-white hover:bg-[#0f766e] dark:bg-[#2dd4b4] dark:text-[#04231e] dark:hover:bg-[#25c4a5] font-bold px-6 h-11 shadow-sm">
-                            <Plus className="h-4 w-4" />
+                            <AthleteIcon size={20} />
                             Add profile
                         </Button>
                     </Link>

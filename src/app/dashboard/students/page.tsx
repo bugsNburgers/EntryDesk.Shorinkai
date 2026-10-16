@@ -6,6 +6,7 @@ import { DashboardPageHeader } from '@/components/dashboard/page-header'
 import { PaginationControls } from '@/components/ui/pagination-controls'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Users } from 'lucide-react'
+import { AthleteIcon } from '@/components/ui/athlete-icon'
 import sql from '@/lib/db'
 
 export default async function StudentsPage({
@@ -117,7 +118,7 @@ export default async function StudentsPage({
             <div className="dashboard-surface p-4 sm:p-5">
                 {(students || []).length === 0 && !selectedDojoId ? (
                     <EmptyState
-                        icon={<Users />}
+                        icon={<AthleteIcon size={48} />}
                         title="No athletes yet"
                         description="Add your first athlete manually, or upload a CSV to import your entire roster at once."
                         actions={

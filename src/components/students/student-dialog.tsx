@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
+import { AthleteIcon } from '@/components/ui/athlete-icon'
 import {
     Dialog,
     DialogContent,
@@ -153,12 +154,18 @@ export function StudentDialog({ dojos, student, open, onOpenChange, showTrigger 
         <Dialog open={show} onOpenChange={setShow}>
             {!isEditing && showTrigger && (
                 <DialogTrigger asChild>
-                    <Button>Add Student</Button>
+                    <Button className="gap-2">
+                        <AthleteIcon size={16} />
+                        <span>Add Student</span>
+                    </Button>
                 </DialogTrigger>
             )}
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
-                    <DialogTitle>{isEditing ? 'Edit Student' : 'Add New Student'}</DialogTitle>
+                    <div className="flex items-center gap-2.5">
+                        <AthleteIcon size={24} />
+                        <DialogTitle>{isEditing ? 'Edit Student' : 'Add New Student'}</DialogTitle>
+                    </div>
                     <DialogDescription>
                         {isEditing ? 'Update student details.' : 'Add a new student to your roster.'}
                     </DialogDescription>

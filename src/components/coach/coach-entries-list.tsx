@@ -35,6 +35,7 @@ import { Button } from '@/components/ui/button'
 import { Search, Loader2, Check, X, Circle, Printer, UserPlus } from 'lucide-react'
 import { toast } from 'sonner'
 import { AthletePfp } from '@/components/ui/enlarged-pfp-dialog'
+import { AthleteIcon } from '@/components/ui/athlete-icon'
 
 interface CoachEntriesListProps {
     entries: any[]
@@ -610,7 +611,7 @@ export function CoachEntriesList({
                             size="sm"
                             className="flex-1 sm:flex-initial h-11 px-4 gap-2 font-semibold shadow-xs rounded-xl bg-[#0d9488] hover:bg-[#0f766e] text-white dark:bg-[#2dd4b4] dark:hover:bg-[#25c4a5] dark:text-[#04231e] cursor-pointer"
                         >
-                            <UserPlus className="h-4 w-4" />
+                            <AthleteIcon size={16} className="shrink-0" />
                             <span>Add Student</span>
                         </Button>
                     )}
