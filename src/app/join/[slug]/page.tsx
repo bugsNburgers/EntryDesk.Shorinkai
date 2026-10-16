@@ -98,8 +98,8 @@ export default async function JoinPage({ params }: JoinPageProps) {
             <header className="fixed inset-x-0 top-0 z-50 border-b border-border/40 bg-background/95 backdrop-blur dark:border-white/[0.08]">
                 <div className="mx-auto flex h-14 max-w-lg items-center px-5">
                     <div className="flex items-center gap-2">
-                        <div className="relative h-7 w-7 overflow-hidden rounded-md border border-border/50 bg-background/70">
-                            <Image src="/favicon.ico" alt="EntryDesk" fill className="object-cover" sizes="28px" />
+                        <div className="relative h-7 w-7 overflow-hidden rounded-md border border-border/50 bg-background/70 p-0.5">
+                            <Image src="/icons/add-athlete-32.svg?v=2" alt="EntryDesk" fill className="object-contain" sizes="28px" />
                         </div>
                         <span className="text-sm font-semibold">EntryDesk</span>
                     </div>

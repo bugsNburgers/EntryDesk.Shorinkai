@@ -57,12 +57,12 @@ export function SiteFooter() {
                             aria-label="EntryDesk"
                             className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-muted/30 px-3 py-1 text-xs font-medium text-muted-foreground dark:border-white/[0.12] dark:bg-white/[0.04] transition-colors hover:bg-muted/50"
                         >
-                            <span className="relative h-3.5 w-3.5 overflow-hidden rounded-full">
+                            <span className="relative h-3.5 w-3.5 overflow-hidden">
                                 <Image
-                                    src="/favicon.ico"
+                                    src="/icons/add-athlete-16.svg?v=2"
                                     alt="EntryDesk logo"
                                     fill
-                                    className="object-cover"
+                                    className="object-contain"
                                     sizes="14px"
                                 />
                             </span>

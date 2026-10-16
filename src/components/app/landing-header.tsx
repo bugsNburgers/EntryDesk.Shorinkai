@@ -59,8 +59,8 @@ export function LandingHeader() {
         <header className={headerClassName}>
             <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6 xl:max-w-[95vw] xl:px-8">
                 <Link href="/" className="flex items-center gap-2">
-                    <div className="relative h-8 w-8 overflow-hidden rounded-md border border-border/50 bg-background/70 dark:border-white/[0.12]">
-                        <Image src="/favicon.ico" alt="EntryDesk logo" fill className="object-cover" sizes="32px" priority />
+                    <div className="relative h-8 w-8 overflow-hidden rounded-md border border-border/50 bg-background/70 dark:border-white/[0.12] p-1">
+                        <Image src="/icons/add-athlete-32.svg?v=2" alt="EntryDesk logo" fill className="object-contain p-0.5" sizes="32px" priority />
                     </div>
                     <span className={brandTextClassName}>EntryDesk</span>
                 </Link>

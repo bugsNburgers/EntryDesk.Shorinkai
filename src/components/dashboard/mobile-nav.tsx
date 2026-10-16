@@ -77,8 +77,8 @@ export function MobileNav({ role, profile, userEmail }: MobileNavProps) {
                 <div className="flex h-[100dvh] flex-col">
                     {/* Brand header */}
                     <div className="flex items-center gap-3 px-5 py-5 border-b border-border/50">
-                        <div className="relative h-9 w-9 overflow-hidden rounded-xl border border-border/50 bg-background/70 dark:border-white/[0.12] shrink-0">
-                            <Image src="/favicon.ico" alt="EntryDesk logo" fill className="object-cover" sizes="36px" priority />
+                        <div className="relative h-9 w-9 overflow-hidden rounded-xl border border-border/50 bg-background/70 dark:border-white/[0.12] shrink-0 p-1">
+                            <Image src="/icons/add-athlete-32.svg?v=2" alt="EntryDesk logo" fill className="object-contain p-0.5" sizes="36px" priority />
                         </div>
                         <div className="leading-tight">
                             <div className="text-sm font-bold tracking-tight">EntryDesk</div>

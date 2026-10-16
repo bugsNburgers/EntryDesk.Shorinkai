@@ -12,8 +12,8 @@ export default function NotFound() {
     return (
         <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 text-center">
             {/* Logo */}
-            <div className="relative mb-8 h-12 w-12 overflow-hidden rounded-xl border border-border/50 bg-background/70">
-                <Image src="/favicon.ico" alt="EntryDesk" fill className="object-cover" sizes="48px" />
+            <div className="relative mb-8 h-12 w-12 overflow-hidden rounded-xl border border-border/50 bg-background/70 p-1">
+                <Image src="/icons/add-athlete-64.svg?v=2" alt="EntryDesk" fill className="object-contain p-0.5" sizes="48px" />
             </div>
 
             {/* 404 Number */}

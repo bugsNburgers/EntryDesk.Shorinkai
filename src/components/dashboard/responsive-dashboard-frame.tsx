@@ -169,12 +169,12 @@ export function ResponsiveDashboardFrame({
                                 href="/dashboard"
                                 className="flex items-center gap-2.5 rounded-xl p-1 transition-opacity hover:opacity-90"
                             >
-                                <div className="relative h-9 w-9 overflow-hidden rounded-xl border border-[#ded8cb] bg-white dark:border-[#1f2b40] dark:bg-[#111a2b] shrink-0 shadow-2xs">
+                                <div className="relative h-9 w-9 overflow-hidden rounded-xl border border-[#ded8cb] bg-white dark:border-[#1f2b40] dark:bg-[#111a2b] shrink-0 shadow-2xs p-1">
                                     <Image
-                                        src="/favicon.ico"
+                                        src="/icons/add-athlete-32.svg?v=2"
                                         alt="EntryDesk logo"
                                         fill
-                                        className="object-cover"
+                                        className="object-contain p-0.5"
                                         sizes="36px"
                                         priority
                                     />
@@ -264,8 +264,8 @@ export function ResponsiveDashboardFrame({
                     <div className="flex h-14 items-center justify-between px-4">
                         <div className="flex items-center gap-2">
                             <Link href="/dashboard" className="flex items-center gap-2">
-                                <div className="relative h-7 w-7 overflow-hidden rounded-lg border border-[#ded8cb] bg-white dark:border-[#1f2b40] dark:bg-[#111a2b] shadow-2xs">
-                                    <Image src="/favicon.ico" alt="EntryDesk" fill className="object-cover" sizes="28px" priority />
+                                <div className="relative h-7 w-7 overflow-hidden rounded-lg border border-[#ded8cb] bg-white dark:border-[#1f2b40] dark:bg-[#111a2b] shadow-2xs p-0.5">
+                                    <Image src="/icons/add-athlete-32.svg?v=2" alt="EntryDesk" fill className="object-contain" sizes="28px" priority />
                                 </div>
                                 <span className="text-sm font-bold tracking-tight text-[#1c1917] dark:text-[#e8eef5]">
                                     EntryDesk

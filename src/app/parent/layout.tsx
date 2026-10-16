@@ -46,8 +46,8 @@ export default async function ParentLayout({
             <header className="fixed inset-x-0 top-0 z-50 border-b border-[#ded8cb] bg-[#f7f4ec]/90 backdrop-blur dark:border-[#1f2b40] dark:bg-[#0a1220]/90">
                 <div className="mx-auto flex h-14 w-full max-w-[1600px] 2xl:max-w-[1720px] items-center justify-between px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12">
                     <Link href="/athlete" className="flex items-center gap-2.5 hover:opacity-90 transition-opacity">
-                        <div className="relative h-7 w-7 overflow-hidden rounded-md border border-[#ded8cb] bg-white dark:border-[#1f2b40] dark:bg-[#111a2b] shadow-2xs">
-                            <Image src="/favicon.ico" alt="EntryDesk" fill className="object-cover" sizes="28px" />
+                        <div className="relative h-7 w-7 overflow-hidden rounded-md border border-[#ded8cb] bg-white dark:border-[#1f2b40] dark:bg-[#111a2b] shadow-2xs p-0.5">
+                            <Image src="/icons/add-athlete-32.svg?v=2" alt="EntryDesk" fill className="object-contain" sizes="28px" />
                         </div>
                         <span className="text-sm font-semibold tracking-tight text-[#1c1917] dark:text-[#e8eef5]">EntryDesk</span>
                     </Link>
