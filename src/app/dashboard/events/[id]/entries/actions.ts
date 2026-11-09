@@ -5,6 +5,7 @@ import { requireRole } from '@/lib/auth/require-role'
 import sql from '@/lib/db'
 import { generateQrToken } from '@/lib/qr'
 import { audit, AUDIT_ACTIONS } from '@/lib/audit'
+import { toRingFlowRows, type RingFlowRow, type RingFlowSourceEntry } from '@/lib/export/ringflow'
 
 export async function updateEntryStatus(
     entryId: string,
@@ -59,11 +60,8 @@ export async function updateEntryStatus(
     revalidatePath(`/dashboard/events/${eventId}/entries`)
     revalidatePath(`/dashboard/events/${eventId}`)
     revalidatePath('/athlete')
-    revalidatePath('/parent')
     revalidatePath(`/athlete/${studentId}`)
-    revalidatePath(`/parent/children/${studentId}`)
     revalidatePath(`/athlete/entries/${entryId}`)
-    revalidatePath(`/parent/entries/${entryId}`)
     return { success: true }
 }
 
@@ -117,19 +115,49 @@ export async function bulkUpdateEntryStatus(entryIds: string[], status: 'approve
     return { success: true }
 }
 
-export async function updateEntryChestNo(entryId: string, chestNo: number | null) {
+/** Postgres unique_violation on the per-event chest number index (migration 004). */
+function isChestNoConflict(err: unknown): boolean {
+    const e = err as { code?: string; constraint_name?: string; message?: string }
+    return e?.code === '23505' && (e.constraint_name === 'idx_entries_event_chest' || /idx_entries_event_chest/.test(e.message ?? ''))
+}
+
+export async function updateEntryChestNo(
+    entryId: string,
+    chestNo: number | null
+): Promise<{ success?: boolean; error?: string }> {
     const { user, role } = await requireRole(['organizer', 'admin'])
-    const updated = await sql<{ event_id: string }[]>`
-        UPDATE entries e
-        SET chest_no = ${chestNo},
-            updated_at = NOW()
-        FROM events ev
-        WHERE e.id = ${entryId}
-          AND e.event_id = ev.id
-          ${role !== 'admin' ? sql`AND (ev.organizer_id = ${user.id} OR EXISTS (SELECT 1 FROM event_collaborators ec WHERE ec.event_id = ev.id AND ec.user_id = ${user.id} AND ec.permission = 'write'))` : sql``}
-        RETURNING e.event_id
-    `
-    if (updated.length === 0) throw new Error('Unauthorized or entry not found')
+    if (chestNo !== null && (!Number.isInteger(chestNo) || chestNo < 1 || chestNo > 999999)) {
+        return { error: 'Chest number must be a whole number from 1 to 999999.' }
+    }
+    let updated: { event_id: string; previous: number | null }[]
+    try {
+        updated = await sql<{ event_id: string; previous: number | null }[]>`
+            UPDATE entries e
+            SET chest_no = ${chestNo},
+                updated_at = NOW()
+            FROM events ev, (SELECT chest_no AS previous FROM entries WHERE id = ${entryId}) old
+            WHERE e.id = ${entryId}
+              AND e.event_id = ev.id
+              ${role !== 'admin' ? sql`AND (ev.organizer_id = ${user.id} OR EXISTS (SELECT 1 FROM event_collaborators ec WHERE ec.event_id = ev.id AND ec.user_id = ${user.id} AND ec.permission = 'write'))` : sql``}
+            RETURNING e.event_id, old.previous
+        `
+    } catch (err) {
+        if (isChestNoConflict(err)) {
+            return { error: `Chest number ${chestNo} is already used by another athlete in this event.` }
+        }
+        throw err
+    }
+    if (updated.length === 0) return { error: 'Unauthorized or entry not found' }
+
+    audit({
+        actorType: role === 'admin' ? 'admin' : 'organizer',
+        actorId: user.id,
+        action: AUDIT_ACTIONS.ENTRY_CHEST_NO_CHANGED,
+        entityType: 'entry',
+        entityId: entryId,
+        details: { event_id: updated[0].event_id, from: updated[0].previous, to: chestNo },
+    }).catch(console.error)
+
     revalidatePath(`/dashboard/events/${updated[0].event_id}`)
     revalidatePath(`/dashboard/events/${updated[0].event_id}/entries`)
     return { success: true }
@@ -162,11 +190,11 @@ export async function exportEventEntries(
         }[]
     >`
         SELECT 
-            s.name AS student_name,
-            s.rank AS student_rank,
-            s.weight AS student_weight,
+            COALESCE(e.snap_name, s.name) AS student_name,
+            COALESCE(e.snap_rank, s.rank) AS student_rank,
+            COALESCE(e.declared_weight_kg, s.weight) AS student_weight,
             d.name AS dojo_name,
-            c.name AS category_name,
+            COALESCE(c.name, e.category_snapshot->>'displayName') AS category_name,
             ed.name AS event_day_name,
             e.participation_type,
             e.status,
@@ -183,7 +211,7 @@ export async function exportEventEntries(
         WHERE e.event_id = ${eventId}
           AND e.status != 'draft'
           ${role !== 'admin' ? sql`AND (ev.organizer_id = ${user.id} OR EXISTS (SELECT 1 FROM event_collaborators ec WHERE ec.event_id = ev.id AND ec.user_id = ${user.id}))` : sql``}
-          ${q ? sql`AND s.name ILIKE ${'%' + q + '%'}` : sql``}
+          ${q ? sql`AND COALESCE(e.snap_name, s.name) ILIKE ${'%' + q + '%'}` : sql``}
           ${status && status !== 'all' ? sql`AND e.status = ${status}` : sql``}
           ${coach && coach !== 'all' ? sql`AND e.coach_id = ${coach}` : sql``}
           ${day && day !== 'all' ? sql`AND e.event_day_id = ${day}` : sql``}
@@ -201,6 +229,51 @@ export async function exportEventEntries(
         'Status': e.status,
         'Coach Name': e.coach_name || '-',
         'Coach Email': e.coach_email,
-        'Date Applied': new Date(e.created_at).toLocaleDateString(),
+        'Date Applied': new Date(e.created_at).toLocaleDateString('en-IN', { timeZone: 'UTC' }),
     }))
+}
+
+/**
+ * Rows for RingFlow's official-roster import (first sheet, exact headers in
+ * lib/export/ringflow.ts). Approved entries only, ordered by chest number, using the
+ * per-event snapshot (what the athlete was entered with).
+ */
+export async function exportEventForRingFlow(eventId: string): Promise<{ rows?: RingFlowRow[]; title?: string; error?: string }> {
+    const { user, role } = await requireRole(['organizer', 'admin'])
+
+    const events = await sql<{ id: string; title: string; start_date: string | Date; age_cutoff_rule: string | null }[]>`
+        SELECT ev.id, ev.title, ev.start_date, ev.age_cutoff_rule
+        FROM events ev
+        WHERE ev.id = ${eventId}
+          ${role !== 'admin' ? sql`AND (ev.organizer_id = ${user.id} OR EXISTS (SELECT 1 FROM event_collaborators ec WHERE ec.event_id = ev.id AND ec.user_id = ${user.id}))` : sql``}
+        LIMIT 1
+    `
+    if (!events.length) return { error: 'Event not found or unauthorized' }
+    const event = events[0]
+
+    const entries = await sql<RingFlowSourceEntry[]>`
+        SELECT
+            e.chest_no,
+            d.name AS dojo_name,
+            d.join_code AS dojo_join_code,
+            s.registration_no,
+            COALESCE(e.snap_name, s.name) AS name,
+            COALESCE(e.snap_gender, s.gender) AS gender,
+            COALESCE(e.snap_dob, s.date_of_birth)::text AS dob,
+            COALESCE(e.snap_rank, s.rank) AS rank,
+            COALESCE(e.declared_weight_kg, s.weight)::text AS weight_kg,
+            ed.name AS day_name,
+            e.participation_type,
+            COALESCE(c.name, e.category_snapshot->>'displayName') AS category_label
+        FROM entries e
+        JOIN students s ON s.id = e.student_id
+        LEFT JOIN dojos d ON d.id = s.dojo_id
+        LEFT JOIN event_days ed ON ed.id = e.event_day_id
+        LEFT JOIN categories c ON c.id = e.category_id
+        WHERE e.event_id = ${eventId}
+          AND e.status = 'approved'
+          AND e.chest_no IS NOT NULL
+        ORDER BY e.chest_no ASC
+    `
+    return { rows: toRingFlowRows(entries, event), title: event.title }
 }
