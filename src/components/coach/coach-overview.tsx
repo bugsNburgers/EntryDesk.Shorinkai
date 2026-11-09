@@ -42,6 +42,7 @@ function UnifiedStatusCard({
     subtitle,
     icon,
     entries,
+    status,
     onSelect,
     highlightClass,
 }: UnifiedCardProps) {
