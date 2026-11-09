@@ -70,6 +70,7 @@ export default async function DojosPage({
                 permission: 'read' | 'write'
                 email: string
                 full_name: string | null
+                avatar_url: string | null
             }[]
         >`
             SELECT 
@@ -77,7 +78,8 @@ export default async function DojosPage({
                 dc.user_id,
                 dc.permission,
                 u.email,
-                u.full_name
+                u.full_name,
+                u.avatar_url
             FROM dojo_collaborators dc
             JOIN users u ON dc.user_id = u.id
         `,
@@ -98,6 +100,7 @@ export default async function DojosPage({
             profiles: {
                 email: c.email,
                 full_name: c.full_name,
+                avatar_url: c.avatar_url,
             },
         })
     }

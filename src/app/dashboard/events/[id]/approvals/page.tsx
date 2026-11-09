@@ -1,4 +1,5 @@
 import { requireRole } from '@/lib/auth/require-role'
+import { SafeAvatar } from '@/components/ui/safe-avatar'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ApprovalButtons } from '@/components/approvals/approval-buttons'
 import { notFound } from 'next/navigation'
@@ -38,6 +39,7 @@ export default async function EventApprovalsPage({
             created_at: string
             coach_name: string | null
             coach_email: string
+            coach_avatar: string | null
         }[]
     >`
         SELECT 
@@ -47,7 +49,8 @@ export default async function EventApprovalsPage({
             a.status,
             a.created_at,
             u.full_name AS coach_name,
-            u.email AS coach_email
+            u.email AS coach_email,
+            u.avatar_url AS coach_avatar
         FROM event_applications a
         JOIN users u ON a.coach_id = u.id
         WHERE a.event_id = ${id}
@@ -88,10 +91,19 @@ export default async function EventApprovalsPage({
                                     {applications.map((app) => (
                                         <tr key={app.id} className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
                                             <td className="p-4 align-middle font-medium">
-                                                {app.coach_name || app.coach_email.split('@')?.[0] || '—'}
+                                                <div className="flex items-center gap-3">
+                                                    <SafeAvatar
+                                                        src={app.coach_avatar}
+                                                        name={app.coach_name || app.coach_email}
+                                                        size={40}
+                                                        enlargeable
+                                                        subtitle={app.coach_email}
+                                                    />
+                                                    <span>{app.coach_name || app.coach_email.split('@')?.[0] || '—'}</span>
+                                                </div>
                                             </td>
                                             <td className="p-4 align-middle">{app.coach_email}</td>
-                                            <td className="p-4 align-middle">{new Date(app.created_at).toLocaleDateString()}</td>
+                                            <td className="p-4 align-middle">{new Date(app.created_at).toLocaleDateString('en-IN', { timeZone: 'UTC' })}</td>
                                             <td className="p-4 align-middle text-right">
                                                 {status === 'pending' ? (
                                                     <ApprovalButtons applicationId={app.id} />

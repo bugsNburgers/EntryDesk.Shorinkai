@@ -5,6 +5,7 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { CheckCircle2, Clock, Users } from 'lucide-react'
 import { PaginationControls } from '@/components/ui/pagination-controls'
 import sql from '@/lib/db'
+import { SafeAvatar } from '@/components/ui/safe-avatar'
 
 export default async function ApprovalsPage({
     searchParams,
@@ -28,6 +29,7 @@ export default async function ApprovalsPage({
                 event_title: string
                 coach_name: string | null
                 coach_email: string
+                coach_avatar: string | null
             }[]
         >`
             SELECT 
@@ -38,7 +40,8 @@ export default async function ApprovalsPage({
                 a.created_at,
                 ev.title AS event_title,
                 u.full_name AS coach_name,
-                u.email AS coach_email
+                u.email AS coach_email,
+                u.avatar_url AS coach_avatar
             FROM event_applications a
             JOIN events ev ON a.event_id = ev.id
             JOIN users u ON a.coach_id = u.id
@@ -95,9 +98,13 @@ export default async function ApprovalsPage({
                                     {/* Coach info */}
                                     <div className="min-w-0">
                                         <div className="flex items-center gap-2.5">
-                                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold border border-border/50">
-                                                {(app.coach_name || app.coach_email || 'U').charAt(0).toUpperCase()}
-                                            </div>
+                                            <SafeAvatar
+                                                src={app.coach_avatar}
+                                                name={app.coach_name || app.coach_email}
+                                                size={40}
+                                                enlargeable
+                                                subtitle={app.coach_email}
+                                            />
                                             <div className="min-w-0">
                                                 <p className="text-sm font-medium truncate">
                                                     {app.coach_name || '—'}
@@ -113,7 +120,7 @@ export default async function ApprovalsPage({
                                     <div className="min-w-0">
                                         <p className="text-sm font-medium truncate">{app.event_title}</p>
                                         <p className="text-xs text-muted-foreground">
-                                            Requested {new Date(app.created_at).toLocaleDateString()}
+                                            Requested {new Date(app.created_at).toLocaleDateString('en-IN', { timeZone: 'UTC' })}
                                         </p>
                                     </div>
 
@@ -143,9 +150,13 @@ export default async function ApprovalsPage({
                             >
                                 {/* Coach avatar + name */}
                                 <div className="flex items-center gap-3">
-                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-semibold border border-border/50">
-                                        {(app.coach_name || app.coach_email || 'U').charAt(0).toUpperCase()}
-                                    </div>
+                                    <SafeAvatar
+                                        src={app.coach_avatar}
+                                        name={app.coach_name || app.coach_email}
+                                        size={48}
+                                        enlargeable
+                                        subtitle={app.coach_email}
+                                    />
                                     <div className="min-w-0 flex-1">
                                         <p className="text-sm font-semibold truncate">{app.coach_name || '—'}</p>
                                         <p className="text-xs text-muted-foreground truncate">{app.coach_email}</p>
@@ -157,7 +168,7 @@ export default async function ApprovalsPage({
                                     <p className="text-xs text-muted-foreground mb-0.5">Requesting to join</p>
                                     <p className="text-sm font-medium">{app.event_title}</p>
                                     <p className="text-xs text-muted-foreground mt-0.5">
-                                        {new Date(app.created_at).toLocaleDateString()}
+                                        {new Date(app.created_at).toLocaleDateString('en-IN', { timeZone: 'UTC' })}
                                     </p>
                                 </div>
 

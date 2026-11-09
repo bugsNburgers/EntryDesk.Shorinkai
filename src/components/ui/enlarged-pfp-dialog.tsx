@@ -273,6 +273,8 @@ export function AthletePfp({
     extraDetails,
 }: AthletePfpProps) {
     const [open, setOpen] = useState(false)
+    const [failedSrc, setFailedSrc] = useState<string | null>(null)
+    const showPhoto = Boolean(photoUrl) && failedSrc !== photoUrl
 
     const handleClick = (e: React.MouseEvent) => {
         // Prevent row selection or parent card navigation from firing
@@ -305,12 +307,13 @@ export function AthletePfp({
                     className
                 )}
             >
-                {photoUrl ? (
+                {showPhoto ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
-                        src={photoUrl}
+                        src={photoUrl as string}
                         alt={name || 'Athlete'}
                         className="w-full h-full object-cover rounded-full pointer-events-none"
+                        onError={() => setFailedSrc(photoUrl ?? null)}
                     />
                 ) : (
                     <AvatarPlaceholderSilhouette size={Math.round(size * 0.5)} />

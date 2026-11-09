@@ -44,13 +44,15 @@ export default async function EventSettingsPage({ params }: { params: Promise<{ 
                 permission: 'read' | 'write'
                 email: string
                 full_name: string | null
+                avatar_url: string | null
             }[]
         >`
             SELECT 
                 ec.user_id,
                 ec.permission,
                 u.email,
-                u.full_name
+                u.full_name,
+                u.avatar_url
             FROM event_collaborators ec
             JOIN users u ON ec.user_id = u.id
             WHERE ec.event_id = ${id}
@@ -74,6 +76,7 @@ export default async function EventSettingsPage({ params }: { params: Promise<{ 
         profiles: {
             email: c.email,
             full_name: c.full_name,
+            avatar_url: c.avatar_url,
         }
     }))
 

@@ -6,7 +6,7 @@
 // ============================================================================
 
 import { useState, useRef, useEffect } from 'react'
-import Image from 'next/image'
+import { SafeAvatar } from '@/components/ui/safe-avatar'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { LogOut, User, ChevronDown } from 'lucide-react'
@@ -50,13 +50,7 @@ export function ParentPortalNav({ userEmail, userName, userAvatar }: ParentPorta
                 aria-haspopup="true"
             >
                 {userAvatar ? (
-                    <Image
-                        src={userAvatar}
-                        alt={displayName}
-                        width={26}
-                        height={26}
-                        className="rounded-full object-cover"
-                    />
+                    <SafeAvatar src={userAvatar} name={displayName} size={26} />
                 ) : (
                     <div className="flex h-[26px] w-[26px] items-center justify-center rounded-full bg-emerald-500/15 border border-emerald-500/20 text-xs font-bold text-emerald-700 dark:bg-primary/20 dark:border-transparent dark:text-primary">
                         {initials}
