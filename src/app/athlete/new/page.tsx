@@ -1,6 +1,6 @@
 // ============================================================================
 // EntryDesk — Add Child Page (Parent)
-// src/app/parent/children/new/page.tsx
+// src/app/athlete/new/page.tsx
 // DPDP-compliant child creation form with explicit consent checkbox.
 // Mobile-first. All fields pre-filled where possible.
 // ============================================================================

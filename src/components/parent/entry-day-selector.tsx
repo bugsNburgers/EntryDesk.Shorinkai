@@ -2,7 +2,7 @@
 
 import React, { useState, useTransition } from 'react'
 import { Calendar, Check, ChevronDown, Loader2 } from 'lucide-react'
-import { updateParentEntryDay } from '@/app/parent/entry-actions'
+import { updateParentEntryDay } from '@/app/athlete/entry-actions'
 import { toast } from 'sonner'
 import {
     Dialog,

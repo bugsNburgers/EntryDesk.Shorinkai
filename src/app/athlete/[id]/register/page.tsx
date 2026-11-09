@@ -1,13 +1,13 @@
 // ============================================================================
 // EntryDesk — Parent Tournament Registration Page
-// src/app/parent/children/[id]/register/page.tsx
+// src/app/athlete/[id]/register/page.tsx
 // Parents register a child for an open tournament approved for their dojo.
 // ============================================================================
 
 import type { Metadata } from 'next'
+import { SafeAvatar } from '@/components/ui/safe-avatar'
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
-import Image from 'next/image'
 import { requireRole } from '@/lib/auth/require-role'
 import sql from '@/lib/db'
 import { ChevronLeft, Trophy } from 'lucide-react'
@@ -242,14 +242,7 @@ export default async function RegisterTournamentPage({
                         </div>
                         <div className="flex items-center gap-3.5">
                             {child.photo_url ? (
-                                <div className="relative h-14 w-14 rounded-full overflow-hidden border-2 border-emerald-500 dark:border-primary bg-muted shrink-0">
-                                    <Image
-                                        src={child.photo_url}
-                                        alt={child.name}
-                                        fill
-                                        className="object-cover"
-                                    />
-                                </div>
+                                <SafeAvatar src={child.photo_url} name={child.name} size={56} className="border-2 border-primary" priority />
                             ) : (
                                 <div className="h-14 w-14 rounded-full border-2 border-emerald-500 dark:border-primary bg-emerald-50 dark:bg-muted flex items-center justify-center text-emerald-700 dark:text-primary font-bold text-xl shrink-0">
                                     {child.name.charAt(0).toUpperCase()}
@@ -289,7 +282,7 @@ export default async function RegisterTournamentPage({
                         <div className="space-y-3 text-xs text-muted-foreground leading-relaxed">
                             <div className="flex gap-2.5 items-start">
                                 <span className="flex h-5 w-5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 dark:bg-primary/15 dark:border-primary/30 dark:text-primary text-[11px] font-bold items-center justify-center shrink-0 mt-0.5">1</span>
-                                <p><strong className="text-foreground">Apply:</strong> Select category &amp; confirm weight. Your entry is sent to your coach.</p>
+                                <p><strong className="text-foreground">Apply:</strong> Choose kata/kumite and confirm weight. The category is worked out from age, belt and weight. Your entry is sent to your coach.</p>
                             </div>
                             <div className="flex gap-2.5 items-start">
                                 <span className="flex h-5 w-5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:bg-[#f5c542]/15 dark:border-[#f5c542]/30 dark:text-[#f5c542] text-[11px] font-bold items-center justify-center shrink-0 mt-0.5">2</span>

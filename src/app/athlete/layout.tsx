@@ -1,6 +1,6 @@
 // ============================================================================
 // EntryDesk — Parent Portal Layout
-// src/app/parent/layout.tsx
+// src/app/athlete/layout.tsx
 // Minimal mobile-first layout for parents. No sidebar. Clean top nav.
 // ============================================================================
 
@@ -28,7 +28,7 @@ export default async function ParentLayout({
         redirect('/login?callbackUrl=/athlete')
     }
 
-    // Coaches/organisers/admins should use /dashboard, not /parent
+    // Coaches/organisers/admins should use /dashboard, not /athlete
     if (session.user.role !== 'parent') {
         redirect('/dashboard')
     }

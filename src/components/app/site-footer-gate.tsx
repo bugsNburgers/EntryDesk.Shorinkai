@@ -7,7 +7,6 @@ function shouldHideFooter(pathname: string) {
     // Keep login, portal, and dashboard UX clean and focused.
     if (pathname === '/login' || pathname.startsWith('/login/')) return true
     if (pathname === '/dashboard' || pathname.startsWith('/dashboard/')) return true
-    if (pathname === '/parent' || pathname.startsWith('/parent/')) return true
     if (pathname === '/athlete' || pathname.startsWith('/athlete/')) return true
 
     // Auth callback/signout routes should remain minimal.

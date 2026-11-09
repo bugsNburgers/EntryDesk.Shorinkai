@@ -1,6 +1,6 @@
 // ============================================================================
 // EntryDesk — Parent Portal Home: Kid Picker
-// src/app/parent/page.tsx
+// src/app/athlete/page.tsx
 // Shows all children linked to this parent. Entry point for all parent actions.
 // Design: mobile-first, one primary CTA, plain-English status, no jargon.
 // ============================================================================

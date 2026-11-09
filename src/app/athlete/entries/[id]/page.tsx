@@ -1,6 +1,6 @@
 // ============================================================================
 // EntryDesk — Tournament Entry Detail Page (Parent / Student Portal)
-// src/app/parent/entries/[id]/page.tsx
+// src/app/athlete/entries/[id]/page.tsx
 // Faithfully replicates the Tournament Entry reference design (Entry.dc.html).
 // Obsidian dark palette (#0a1220 / #111a2b), teal accents (#2dd4b4), Google Sans typography.
 // ============================================================================
@@ -30,7 +30,7 @@ interface EntryPageProps {
 export async function generateMetadata({ params }: EntryPageProps): Promise<Metadata> {
     const { id } = await params
     const rows = await sql<{ student_name: string; event_title: string }[]>`
-        SELECT s.name AS student_name, ev.title AS event_title
+        SELECT COALESCE(e.snap_name, s.name) AS student_name, ev.title AS event_title
         FROM entries e
         JOIN students s ON e.student_id = s.id
         JOIN events ev ON e.event_id = ev.id
@@ -115,10 +115,10 @@ export default async function ParentEntryDetailPage({ params }: EntryPageProps) 
             e.qr_token,
             e.created_at,
             e.updated_at,
-            s.name AS student_name,
-            s.gender AS student_gender,
-            s.date_of_birth AS student_dob,
-            s.rank AS student_rank,
+            COALESCE(e.snap_name, s.name) AS student_name,
+            COALESCE(e.snap_gender, s.gender) AS student_gender,
+            COALESCE(e.snap_dob, s.date_of_birth) AS student_dob,
+            COALESCE(e.snap_rank, s.rank) AS student_rank,
             s.photo_url AS student_photo,
             d.name AS dojo_name,
             d.city AS dojo_city,
@@ -294,7 +294,7 @@ export default async function ParentEntryDetailPage({ params }: EntryPageProps) 
                             </div>
 
                             <div className="relative z-10 pt-1 flex items-center gap-3 flex-wrap">
-                                <Link href={`/parent/entries/${entry.id}/id-card`}>
+                                <Link href={`/athlete/entries/${entry.id}/id-card`}>
                                     <Button
                                         size="default"
                                         className="gap-2 rounded-xl font-bold bg-primary/90 hover:bg-primary/90 text-primary-foreground shadow-lg shadow-[#3fd8c3]/20 h-10 px-5 text-xs sm:text-sm transition-all cursor-pointer"

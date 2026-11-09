@@ -67,7 +67,7 @@ export function JoinPageClient({ dojoSlug, dojoName, googleClientId }: JoinPageC
                 if (!res.ok || !data.success) {
                     setError(data.error ?? 'Google sign-in failed. Please try again.')
                 } else {
-                    router.push(data.redirectTo ?? `/parent?joinedDojo=${dojoSlug}`)
+                    router.push(data.redirectTo ?? `/athlete?joinedDojo=${dojoSlug}`)
                 }
             } catch {
                 setError('Something went wrong. Please try again.')
@@ -176,7 +176,7 @@ export function JoinPageClient({ dojoSlug, dojoName, googleClientId }: JoinPageC
             if (!res.ok) {
                 setError(data.error ?? 'Verification failed. Please try again.')
             } else {
-                router.push(data.redirectTo ?? `/parent?joinedDojo=${dojoSlug}`)
+                router.push(data.redirectTo ?? `/athlete?joinedDojo=${dojoSlug}`)
             }
         } catch {
             setError('Something went wrong. Please try again.')

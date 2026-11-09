@@ -1,6 +1,6 @@
 // ============================================================================
 // EntryDesk — Full-Screen Athlete ID Card (Official Digital Pass)
-// Route: /parent/entries/[id]/id-card
+// Route: /athlete/entries/[id]/id-card
 // ============================================================================
 
 import type { Metadata } from 'next'
@@ -23,7 +23,7 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
     const { id } = await params
     const rows = await sql<{ student_name: string; event_title: string }[]>`
-        SELECT s.name AS student_name, ev.title AS event_title
+        SELECT COALESCE(e.snap_name, s.name) AS student_name, ev.title AS event_title
         FROM entries e
         JOIN students s ON e.student_id = s.id
         JOIN events ev ON e.event_id = ev.id
@@ -38,7 +38,7 @@ export default async function AthleteIdCardFullPage({ params }: PageProps) {
     const { id } = await params
     const session = await getCurrentSession()
     if (!session) {
-        redirect(`/login?next=/parent/entries/${id}/id-card`)
+        redirect(`/login?next=/athlete/entries/${id}/id-card`)
     }
 
     const { user } = session
@@ -85,14 +85,14 @@ export default async function AthleteIdCardFullPage({ params }: PageProps) {
             e.chest_no,
             e.qr_token,
             s.id AS student_id,
-            s.name AS student_name,
-            s.gender AS student_gender,
-            s.date_of_birth AS student_dob,
-            s.rank AS student_rank,
+            COALESCE(e.snap_name, s.name) AS student_name,
+            COALESCE(e.snap_gender, s.gender) AS student_gender,
+            COALESCE(e.snap_dob, s.date_of_birth) AS student_dob,
+            COALESCE(e.snap_rank, s.rank) AS student_rank,
             s.photo_url AS student_photo,
             s.registration_no,
             s.phone AS student_phone,
-            s.school_or_city,
+            COALESCE(e.snap_school_or_city, s.school_or_city) AS school_or_city,
             s.parent_id,
             d.name AS dojo_name,
             d.city AS dojo_city,
@@ -123,11 +123,11 @@ export default async function AthleteIdCardFullPage({ params }: PageProps) {
 
     // Authorization: parent or coach/admin
     if (user.role === 'parent' && entry.parent_id !== user.id) {
-        redirect('/parent')
+        redirect('/athlete')
     }
 
     if (entry.status !== 'approved') {
-        redirect(`/parent/entries/${id}`)
+        redirect(`/athlete/entries/${id}`)
     }
 
     let qrToken = entry.qr_token
@@ -192,7 +192,7 @@ export default async function AthleteIdCardFullPage({ params }: PageProps) {
             <header className="w-full bg-[#071320]/95 backdrop-blur border-b border-neutral-800 px-4 py-3 sticky top-0 z-30 shadow-md">
                 <div className="w-full max-w-lg mx-auto flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <Link href={`/parent/entries/${id}`}>
+                        <Link href={`/athlete/entries/${id}`}>
                             <Button
                                 variant="ghost"
                                 size="sm"
@@ -221,7 +221,7 @@ export default async function AthleteIdCardFullPage({ params }: PageProps) {
                             customButtonClass="h-8 px-3 rounded-lg border-neutral-700 bg-neutral-800/80 text-neutral-200 hover:bg-neutral-700 hover:text-white text-xs font-semibold gap-1.5"
                         />
 
-                        <Link href={`/parent/entries/${id}`}>
+                        <Link href={`/athlete/entries/${id}`}>
                             <button
                                 className="h-8 w-8 rounded-lg flex items-center justify-center text-neutral-400 hover:text-white hover:bg-neutral-800 transition cursor-pointer"
                                 aria-label="Close pass"

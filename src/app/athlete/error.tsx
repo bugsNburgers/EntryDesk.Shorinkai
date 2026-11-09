@@ -2,7 +2,7 @@
 
 // ============================================================================
 // EntryDesk — Parent Portal Error Boundary
-// Catches errors in all /parent/* routes.
+// Catches errors in all /athlete/* routes.
 // Renders inside the parent portal layout (top nav still visible).
 // ============================================================================
 

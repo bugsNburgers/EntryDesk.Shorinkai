@@ -12,7 +12,7 @@
 // ============================================================================
 
 import crypto from 'crypto'
-import bcrypt from 'bcrypt'
+import bcrypt from 'bcryptjs'
 import sql from '@/lib/db'
 
 const OTP_EXPIRY_MINUTES = 10

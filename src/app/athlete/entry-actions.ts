@@ -13,6 +13,7 @@ import { z } from 'zod'
 import { UpsertEntrySchema } from '@/lib/validation'
 import { audit, AUDIT_ACTIONS } from '@/lib/audit'
 import { toIsoDate, isRegistrationClosed } from '@/lib/events/registration'
+import { jsonb, snapshotColumns } from '@/lib/entries/snapshot'
 
 async function getClientIp(): Promise<string> {
     const h = await headers()
@@ -61,8 +62,9 @@ export async function submitParentEntry(
         weight: number | null
         dojo_id: string
         photo_url: string | null
+        school_or_city: string | null
     }[]>`
-        SELECT id, name, gender, date_of_birth, rank, weight, dojo_id, photo_url
+        SELECT id, name, gender, date_of_birth::text AS date_of_birth, rank, weight, dojo_id, photo_url, school_or_city
         FROM students
         WHERE id = ${data.student_id}
           AND parent_id = ${user.id}
@@ -81,6 +83,8 @@ export async function submitParentEntry(
         is_registration_open: boolean
         registration_close_date: string | null
         end_date: string
+        start_date: string | Date
+        age_cutoff_rule: string | null
         photo_required: boolean
         coach_checks_each_entry: boolean
         max_events_per_athlete: number | null
@@ -91,6 +95,8 @@ export async function submitParentEntry(
             ev.is_registration_open,
             ev.registration_close_date,
             ev.end_date,
+            ev.start_date,
+            ev.age_cutoff_rule,
             COALESCE(ev.photo_required, FALSE) AS photo_required,
             COALESCE(ev.coach_checks_each_entry, TRUE) AS coach_checks_each_entry,
             ev.max_events_per_athlete
@@ -140,8 +146,9 @@ export async function submitParentEntry(
     `
     if (existing.length > 0) {
         const existingStatus = existing[0].status
-        if (existingStatus === 'withdrawn' || existingStatus === 'coach_declined') {
-            // Allow re-registration if previously withdrawn
+        if (existingStatus === 'withdrawn' || existingStatus === 'coach_declined' || existingStatus === 'correction_needed') {
+            // Re-registration after withdraw/decline, or resubmission after the coach asked for a correction.
+            // Either way a fresh snapshot of the current profile is taken below.
         } else {
             return { error: `${student.name} is already registered for this tournament (status: ${existingStatus.replace(/_/g, ' ')}).` }
         }
@@ -159,7 +166,12 @@ export async function submitParentEntry(
     // ── 6. Determine initial status based on coach_checks_each_entry ──────────
     const initialStatus = event.coach_checks_each_entry ? 'pending_coach' : 'submitted'
 
-    // ── 7. Upsert entry (handles re-registration after withdrawal) ────────────
+    // ── 7. Snapshot of the athlete as submitted (owner decision: the entry keeps these
+    //       details even if the profile is edited later) + informational category ─────
+    const snap = snapshotColumns(student, event, data.declared_weight_kg ?? null)
+    const categoryJson = jsonb(snap.category_snapshot)
+
+    // ── 8. Upsert entry (handles re-registration after withdrawal) ────────────
     let entryId: string
 
     if (existing.length > 0) {
@@ -168,9 +180,15 @@ export async function submitParentEntry(
             UPDATE entries
             SET status = ${initialStatus},
                 participation_type = ${data.participation_type ?? null},
-                declared_weight_kg = ${data.declared_weight_kg ?? null},
+                declared_weight_kg = ${snap.declared_weight_kg},
                 event_day_id = ${data.event_day_id ?? null},
-                category_snapshot = NULL,
+                category_snapshot = ${categoryJson},
+                snap_name = ${snap.snap_name},
+                snap_gender = ${snap.snap_gender},
+                snap_dob = ${snap.snap_dob},
+                snap_rank = ${snap.snap_rank},
+                snap_school_or_city = ${snap.snap_school_or_city},
+                snap_taken_at = NOW(),
                 submitted_by = ${user.id},
                 coach_notes = NULL,
                 rejection_reason = NULL,
@@ -192,6 +210,12 @@ export async function submitParentEntry(
                 declared_weight_kg,
                 event_day_id,
                 category_snapshot,
+                snap_name,
+                snap_gender,
+                snap_dob,
+                snap_rank,
+                snap_school_or_city,
+                snap_taken_at,
                 status,
                 submitted_by
             ) VALUES (
@@ -199,9 +223,15 @@ export async function submitParentEntry(
                 ${data.student_id},
                 ${coachId},
                 ${data.participation_type ?? null},
-                ${data.declared_weight_kg ?? null},
+                ${snap.declared_weight_kg},
                 ${data.event_day_id ?? null},
-                NULL,
+                ${categoryJson},
+                ${snap.snap_name},
+                ${snap.snap_gender},
+                ${snap.snap_dob},
+                ${snap.snap_rank},
+                ${snap.snap_school_or_city},
+                NOW(),
                 ${initialStatus},
                 ${user.id}
             )
@@ -227,9 +257,7 @@ export async function submitParentEntry(
     }).catch(console.error)
 
     revalidatePath('/athlete')
-    revalidatePath('/parent')
     revalidatePath(`/athlete/${data.student_id}`)
-    revalidatePath(`/parent/children/${data.student_id}`)
     revalidatePath(`/dashboard/entries/${data.event_id}`)
     revalidatePath('/dashboard/parent-entries')
 
@@ -317,11 +345,8 @@ export async function withdrawParentEntry(
     }).catch(console.error)
 
     revalidatePath('/athlete')
-    revalidatePath('/parent')
     revalidatePath(`/athlete/${entry.student_id}`)
-    revalidatePath(`/parent/children/${entry.student_id}`)
     revalidatePath(`/athlete/entries/${entryId}`)
-    revalidatePath(`/parent/entries/${entryId}`)
     revalidatePath(`/dashboard/entries/${entry.event_id}`)
     revalidatePath('/dashboard/parent-entries')
 
@@ -373,11 +398,8 @@ export async function updateParentEntryDay(
     `
 
     revalidatePath('/athlete')
-    revalidatePath('/parent')
     revalidatePath(`/athlete/${entry.student_id}`)
-    revalidatePath(`/parent/children/${entry.student_id}`)
     revalidatePath(`/athlete/entries/${entryId}`)
-    revalidatePath(`/parent/entries/${entryId}`)
     revalidatePath(`/dashboard/events/${entry.event_id}/entries`)
     return { success: true }
 }

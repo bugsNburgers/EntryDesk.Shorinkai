@@ -2,7 +2,7 @@
 
 // ============================================================================
 // EntryDesk — Parent Server Actions
-// src/app/parent/actions.ts
+// src/app/athlete/actions.ts
 // ============================================================================
 
 import { revalidatePath } from 'next/cache'
@@ -128,7 +128,6 @@ export async function createChildAsParent(formData: FormData): Promise<{ error?:
     })
 
     revalidatePath('/athlete')
-    revalidatePath('/parent')
     revalidatePath('/dashboard/students')
     redirect(`/athlete/${newStudent.id}`)
 }
@@ -256,8 +255,6 @@ export async function updateChildAsParent(
     }
 
     revalidatePath('/athlete')
-    revalidatePath('/parent')
     revalidatePath(`/athlete/${studentId}`)
-    revalidatePath(`/parent/children/${studentId}`)
     return { success: true }
 }

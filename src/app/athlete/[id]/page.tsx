@@ -1,6 +1,6 @@
 // ============================================================================
 // EntryDesk — Child Detail Page (Parent / Student Portal)
-// src/app/parent/children/[id]/page.tsx
+// src/app/athlete/[id]/page.tsx
 // Faithfully replicates the Student Portal reference design (Portal.dc.html).
 // Obsidian dark palette (#0a1220 / #111a2b), teal accents (#2dd4b4), Google Sans typography.
 // ============================================================================

@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { AlertCircle, Edit3, ArrowRight, RotateCcw } from 'lucide-react'
-import { withdrawParentEntry } from '@/app/parent/entry-actions'
+import { withdrawParentEntry } from '@/app/athlete/entry-actions'
 
 interface EntryWithdrawDialogProps {
     entryId: string

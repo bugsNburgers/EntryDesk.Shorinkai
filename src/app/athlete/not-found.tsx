@@ -1,7 +1,7 @@
 // ============================================================================
 // EntryDesk — Parent Portal 404 Page
 // Shows within the parent portal layout (top nav visible) when a parent
-// sub-route is not found (e.g. /parent/children/invalid-id)
+// sub-route is not found (e.g. /athlete/invalid-id)
 // ============================================================================
 
 import Link from 'next/link'
