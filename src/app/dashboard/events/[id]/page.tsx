@@ -37,6 +37,7 @@ export default async function EventOverviewPage({ params }: { params: Promise<{ 
                 coach_name: string | null
                 coach_email: string
                 student_id: string
+                coach_avatar: string | null
                 student_name: string
                 student_gender: string
                 student_rank: string | null
@@ -64,17 +65,18 @@ export default async function EventOverviewPage({ params }: { params: Promise<{ 
                 e.coach_id,
                 p.full_name AS coach_name,
                 p.email AS coach_email,
+                p.avatar_url AS coach_avatar,
                 s.id AS student_id,
-                s.name AS student_name,
-                s.gender AS student_gender,
-                s.rank AS student_rank,
-                s.weight AS student_weight,
-                s.date_of_birth::text AS student_dob,
+                COALESCE(e.snap_name, s.name) AS student_name,
+                COALESCE(e.snap_gender, s.gender) AS student_gender,
+                COALESCE(e.snap_rank, s.rank) AS student_rank,
+                COALESCE(e.declared_weight_kg, s.weight) AS student_weight,
+                COALESCE(e.snap_dob, s.date_of_birth)::text AS student_dob,
                 s.photo_url AS student_photo,
                 s.registration_no AS student_registration_no,
                 d.id AS dojo_id,
                 d.name AS dojo_name,
-                c.name AS category_name,
+                COALESCE(c.name, e.category_snapshot->>'displayName') AS category_name,
                 ed.name AS event_day_name
             FROM entries e
             JOIN students s ON e.student_id = s.id

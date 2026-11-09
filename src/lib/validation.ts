@@ -103,8 +103,8 @@ export const ParentCreateStudentSchema = StudentBaseSchema.extend({
 })
 
 export const UpdateStudentSchema = StudentBaseSchema.partial().extend({
-    // These fields cannot be changed by a parent once the entry is approved
-    // (dob_locked check is enforced in the server action, not here)
+    // Profile edits are always allowed. Existing entries are not affected: each entry keeps
+    // a per-event snapshot (entries.snap_*, migration 003). students.dob_locked is unused.
     photo_url: z.string().url('Invalid photo URL').optional().or(z.literal('')),
 })
 

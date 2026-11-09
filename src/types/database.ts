@@ -83,6 +83,7 @@ export interface Student {
     phone: string | null
     school_or_city: string | null
     /** Locked after first approved entry to prevent DOB manipulation */
+    /** UNUSED (never set or read). Superseded by the per-event entry snapshot (migration 003). */
     dob_locked: boolean
     // DPDP consent fields
     consent_given_at: string | null
@@ -177,8 +178,16 @@ export interface Entry {
     checked_in_at: string | null
     checked_in_by: string | null
     declared_weight_kg: number | null
-    /** Snapshot of category rules at time of submission to prevent retroactive changes */
+    /** Informational category label computed at submission (lib/category.ts), see migration 003 */
     category_snapshot: Record<string, unknown> | null
+    // Per-event athlete snapshot (migration 003). Reads in an event context use
+    // COALESCE(e.snap_*, s.*). Filled by trigger tr_fill_entry_snapshot.
+    snap_name: string | null
+    snap_gender: string | null
+    snap_dob: string | null
+    snap_rank: string | null
+    snap_school_or_city: string | null
+    snap_taken_at: string | null
     created_at: string
     updated_at: string
 }

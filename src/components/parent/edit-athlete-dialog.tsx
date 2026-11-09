@@ -16,7 +16,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
-import { updateChildAsParent } from '@/app/parent/actions'
+import { updateChildAsParent } from '@/app/athlete/actions'
 import { toast } from 'sonner'
 import { Loader2 } from 'lucide-react'
 
@@ -153,6 +153,10 @@ export function EditAthleteDialog({
                         {currentConfig.description}
                     </DialogDescription>
                 </DialogHeader>
+
+                <p className="rounded-lg border border-border bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
+                    Changes apply to future events. Existing entries keep the details they were submitted with.
+                </p>
 
                 {errorMessage && (
                     <div className="rounded-lg bg-rose-500/10 border border-rose-500/20 px-3 py-2 text-xs text-rose-600 dark:text-rose-400">

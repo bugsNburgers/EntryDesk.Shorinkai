@@ -204,6 +204,8 @@ DECLARE
     next_chest_no INTEGER;
 BEGIN
     IF (NEW.status = 'approved' AND (OLD.status IS NULL OR OLD.status != 'approved') AND NEW.chest_no IS NULL) THEN
+        -- One assigner per event at a time (migration 004); released at commit/rollback.
+        PERFORM pg_advisory_xact_lock(hashtext('entrydesk.chest_no:' || NEW.event_id::text));
         SELECT COALESCE(MAX(chest_no), 0) + 1
         INTO next_chest_no
         FROM entries
@@ -220,6 +222,22 @@ CREATE TRIGGER tr_assign_chest_no_on_approval
 BEFORE UPDATE ON entries
 FOR EACH ROW
 EXECUTE FUNCTION assign_chest_no_on_approval();
+
+-- Chest numbers are unique per event (migration 004; on a live DB build it CONCURRENTLY).
+CREATE UNIQUE INDEX IF NOT EXISTS idx_entries_event_chest ON entries (event_id, chest_no) WHERE chest_no IS NOT NULL;
+
+-- Per-event athlete snapshot (migration 003). Entries keep the details they were submitted
+-- with; reads in an event context use COALESCE(e.snap_*, s.*).
+ALTER TABLE entries ADD COLUMN IF NOT EXISTS declared_weight_kg NUMERIC;
+ALTER TABLE entries ADD COLUMN IF NOT EXISTS category_snapshot JSONB;
+ALTER TABLE entries ADD COLUMN IF NOT EXISTS snap_name TEXT;
+ALTER TABLE entries ADD COLUMN IF NOT EXISTS snap_gender TEXT;
+ALTER TABLE entries ADD COLUMN IF NOT EXISTS snap_dob DATE;
+ALTER TABLE entries ADD COLUMN IF NOT EXISTS snap_rank TEXT;
+ALTER TABLE entries ADD COLUMN IF NOT EXISTS snap_school_or_city TEXT;
+ALTER TABLE entries ADD COLUMN IF NOT EXISTS snap_taken_at TIMESTAMPTZ;
+-- fill_entry_snapshot() + tr_fill_entry_snapshot are defined in migrations/003_entry_snapshot.sql
+-- (they need students.school_or_city from migration 001). Always apply all migrations in order.
 
 -- 11. EVENT COLLABORATORS (Shared access for events)
 CREATE TABLE IF NOT EXISTS event_collaborators (

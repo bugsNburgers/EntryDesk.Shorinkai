@@ -18,7 +18,7 @@ import {
     ArrowRight,
     Scale,
 } from 'lucide-react'
-import { submitParentEntry } from '@/app/parent/entry-actions'
+import { submitParentEntry } from '@/app/athlete/entry-actions'
 import { PhotoUploadDialog } from '@/components/ui/photo-upload-dialog'
 import { formatDateRangeStable, formatDateStable } from '@/lib/date'
 
@@ -228,7 +228,8 @@ export function RegistrationForm({
                             const isAlreadyRegistered =
                                 t.existing_entry_id &&
                                 t.existing_entry_status !== 'withdrawn' &&
-                                t.existing_entry_status !== 'coach_declined'
+                                t.existing_entry_status !== 'coach_declined' &&
+                                t.existing_entry_status !== 'correction_needed'
 
                             return (
                                 <div

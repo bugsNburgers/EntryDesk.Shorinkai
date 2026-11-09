@@ -94,7 +94,7 @@ export async function sendEntryStatusNotification(
                 e.rejection_reason,
                 e.chest_no,
                 s.id AS student_id,
-                s.name AS student_name,
+                COALESCE(e.snap_name, s.name) AS student_name,
                 s.parent_id AS student_parent_id,
                 p.email AS parent_email,
                 p.full_name AS parent_name,
@@ -342,7 +342,7 @@ export async function sendCoachPendingDigest(
 
         // Fetch count and sample of pending entries
         const pendingEntries = await sql<{ student_name: string }[]>`
-            SELECT s.name AS student_name
+            SELECT COALESCE(e.snap_name, s.name) AS student_name
             FROM entries e
             JOIN students s ON e.student_id = s.id
             JOIN dojos d ON s.dojo_id = d.id
