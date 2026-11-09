@@ -60,23 +60,33 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        // OTP valid — upsert parent user
+        // OTP valid. Email OTP is ONLY for parent accounts. It must never log into, or
+        // re-activate, a coach/organiser/admin account: those are whitelisted by an admin
+        // (users.is_active) and sign in with Google or password.
         const name = email.split('@')[0]
 
-        const rows = await sql<{ id: string; role: string; is_active: boolean }[]>`
+        await sql`
             INSERT INTO users (email, full_name, role, is_active)
             VALUES (${email}, ${name}, 'parent', TRUE)
-            ON CONFLICT (email) DO UPDATE
-                SET is_active = TRUE
-            RETURNING id, role, is_active
+            ON CONFLICT (email) DO NOTHING
         `
 
-        const user = rows[0]
+        const found = await sql<{ id: string; role: string; is_active: boolean }[]>`
+            SELECT id, role, is_active FROM users WHERE lower(email) = ${email} LIMIT 1
+        `
+        const user = found[0]
 
         if (!user) {
             return NextResponse.json(
                 { error: 'Failed to create account. Please try again.' },
                 { status: 500 }
+            )
+        }
+
+        if (user.role !== 'parent' || !user.is_active) {
+            return NextResponse.json(
+                { error: 'This email cannot sign in with a code. Please use Google or your password.' },
+                { status: 403 }
             )
         }
 

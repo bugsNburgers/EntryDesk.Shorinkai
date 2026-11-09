@@ -61,7 +61,7 @@ export async function generateAndStoreOtp(email: string, ipAddress: string): Pro
         SELECT created_at
         FROM otp_codes
         WHERE lower(email) = ${normalizedEmail}
-          AND created_at > NOW() - INTERVAL '${OTP_RESEND_COOLDOWN_SECONDS} seconds'
+          AND created_at > NOW() - (${OTP_RESEND_COOLDOWN_SECONDS}::int * INTERVAL '1 second')
         ORDER BY created_at DESC
         LIMIT 1
     `

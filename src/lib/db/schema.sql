@@ -89,7 +89,8 @@ BEGIN
     IF NEW.registration_no IS NULL OR NEW.registration_no = '' THEN
         year_prefix := 'SK' || to_char(NOW(), 'YY');
         SELECT nextval('student_reg_seq') INTO next_val;
-        NEW.registration_no := year_prefix || '-' || LPAD(next_val::TEXT, 4, '0');
+        NEW.registration_no := year_prefix || '-' ||
+            CASE WHEN next_val < 10000 THEN LPAD(next_val::TEXT, 4, '0') ELSE next_val::TEXT END;
     END IF;
     RETURN NEW;
 END;
