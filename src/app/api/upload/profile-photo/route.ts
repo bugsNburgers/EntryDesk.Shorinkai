@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
 import { put, del } from '@vercel/blob'
+import { devDataUriFallback } from '@/lib/storage/photo-fallback'
 import { getCurrentSession } from '@/lib/auth/session'
 import sql from '@/lib/db'
 
@@ -72,10 +73,8 @@ export async function POST(req: NextRequest) {
                 del(existingAvatar, { token: blobToken }).catch(() => {})
             }
         } else {
-            // Local dev fallback: Data URI
-            const arrayBuffer = await file.arrayBuffer()
-            const base64 = Buffer.from(arrayBuffer).toString('base64')
-            avatarUrl = `data:${file.type};base64,${base64}`
+            // Local dev only; throws in production (never store data: URIs there)
+            avatarUrl = await devDataUriFallback(file)
         }
 
         // Save into users table
@@ -87,7 +86,6 @@ export async function POST(req: NextRequest) {
         `
 
         revalidatePath('/dashboard', 'layout')
-        revalidatePath('/parent', 'layout')
 
         return NextResponse.json({
             success: true,
