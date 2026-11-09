@@ -30,3 +30,7 @@ In dev without a key the code is printed to the server log and returned as `devC
 
 ## Mandatory profile photo
 Coach/organiser with `avatar_url IS NULL` are blocked by `compulsory-profile-photo-upload.tsx` until they upload (`/api/upload/profile-photo`).
+**Owner decision: this stays mandatory** — organisers must be able to recognise a coach. The gate says so ("Organisers see this photo
+when approving you"). The photo is shown (click to enlarge, `SafeAvatar enlargeable`) on `/dashboard/approvals`,
+`/dashboard/events/<id>/approvals`, event/dojo collaborator lists and the organiser entries "Coach" column.
+OTP codes are hashed with `bcryptjs` (the native `bcrypt` dependency was removed; hashes are compatible).

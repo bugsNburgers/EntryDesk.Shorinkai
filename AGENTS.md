@@ -1,7 +1,7 @@
 # EntryDesk — Agent Briefing
 
 > Read this first, then open ONLY the doc for your task. Every doc here was verified against the code
-> (last verified 2026-11-09). If you change behaviour, update the matching doc in the same change.
+> (last verified 2026-11-09, updated after the snapshot/chest-number/RingFlow/test round). If you change behaviour, update the matching doc in the same change.
 
 ## What it is
 Karate tournament entry platform. **Next.js 16 (App Router, Turbopack) · React 19 · TypeScript · Tailwind v4 ·
@@ -20,10 +20,11 @@ entry is `pending_coach` → coach **forwards** it (`submitted`) or sends back/d
 Coach/organiser/admin are **whitelisted** (an admin adds them; unknown Google emails are stored inactive). Parents
 self-register. One session cookie for everyone: `entrydesk_session`. → `.agents/modules/auth.md`
 
-## URL ≠ folder (important)
-Public parent URLs are `/athlete/...` but the code lives in `src/app/parent/...`. `next.config.ts` **rewrites**
-`/athlete/*` → `/parent/*`, and `src/proxy.ts` redirects `/parent/*` → `/athlete/*`. There is no `src/app/athlete/`.
-`src/proxy.ts` is Next 16's replacement for `middleware.ts`.
+## Parent portal = `/athlete` (URL = folder)
+Parent pages live in `src/app/athlete/...` and are served at the same path (`/athlete`, `/athlete/new`,
+`/athlete/<id>`, `/athlete/<id>/register`, `/athlete/entries/<id>[/id-card]`). There are no rewrites.
+`src/proxy.ts` (Next 16's replacement for `middleware.ts`) redirects legacy `/parent/*` and `/athlete/children/*`
+bookmarks and guards the protected prefixes.
 
 ## Where things are
 ```
@@ -31,13 +32,15 @@ src/app/
   page.tsx, login/, join/[slug]/, v/[token]/, contact/, privacy/, terms/   public
   dashboard/        coach + organiser UI (role decides what renders)
     students/ dojos/ events/ events-browser/ entries/ parent-entries/ approvals/
-  parent/           parent portal (served at /athlete/*)  actions.ts, entry-actions.ts
+  athlete/          parent portal  actions.ts, entry-actions.ts, new/, [id]/, [id]/register/, entries/[id]/
   api/              auth/{otp,otp/verify,google-join,logout,session}  upload/{photo,profile-photo}
                     id-card/[entryId]  public-events  email/preview
 src/components/     ui/ (shadcn primitives) + one folder per module (coach, events, parent, students, id-card…)
-src/lib/            auth/ db/ email/ events/ status.ts validation.ts audit.ts category.ts date.ts qr.ts
+src/lib/            auth/ db/ email/ events/ entries/snapshot.ts export/ringflow.ts storage/ status.ts validation.ts
+                    audit.ts category.ts date.ts qr.ts
 src/lib/db/         schema.sql (base) + migrations/NNN_*.sql (apply in order, by hand, on Neon)
 src/types/database.ts   all DB types
+tests/unit (vitest) · tests/db (vitest, local Docker PG) · tests/e2e (Playwright)   → testing.md
 ```
 
 ## Docs index
@@ -65,3 +68,8 @@ src/types/database.ts   all DB types
 6. Email-OTP is for **parents only**; it must never sign in or re-activate a coach/organiser/admin.
 7. Dates from the DB are date-only strings: format with explicit locale + `timeZone: 'UTC'` (hydration safety).
 8. Links/QR use `NEXT_PUBLIC_BASE_URL` (not a hard-coded domain).
+9. **Entries keep a per-event snapshot** of the athlete (`entries.snap_*`, `declared_weight_kg`, `category_snapshot`).
+   Anything that shows an athlete *in the context of an event* reads `COALESCE(e.snap_x, s.x)`; profile pages read `students`.
+10. JSONB params: bind with `sql.json(x)` (or `jsonb()` from `lib/entries/snapshot.ts`), **never** `JSON.stringify(x)` (double-encodes).
+11. Render user/athlete photos with `components/ui/safe-avatar.tsx` (never raw `next/image` on a DB URL).
+12. Chest numbers are unique per event (index `idx_entries_event_chest`); catch `23505` and show a friendly error.

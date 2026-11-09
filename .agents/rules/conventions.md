@@ -20,8 +20,8 @@ Always scope queries to the caller (`parent_id = ${user.id}` / `dojos.coach_id =
 
 ## Server actions
 Co-locate `actions.ts` next to the page, `'use server'` on top, validate with zod (`lib/validation.ts`), `audit()` for
-consent/status changes (fire-and-forget `.catch(console.error)` except consent), then `revalidatePath` for **both**
-`/athlete…` and `/parent…` variants (the app serves one via rewrite; keep both fresh) and the dashboard pages.
+consent/status changes (fire-and-forget `.catch(console.error)` except consent), then `revalidatePath` for the
+`/athlete…` page(s) (URL = folder since the rename; there is no `/parent` route any more) and the dashboard pages.
 
 ## Forms
 react-hook-form + zod v4. **zod v4 `.uuid()` is strict (RFC variant bits)** — hand-typed fake UUIDs like
@@ -36,8 +36,21 @@ for DB `DATE` values (they parse as UTC midnight).
 ## Images
 `next/image` throws (whole page crashes) for hosts not in `next.config.ts → images.remotePatterns`. Allowed:
 `*.googleusercontent.com`, `*.public.blob.vercel-storage.com`, `avatars.githubusercontent.com`, and local `/…` paths.
+Use **`SafeAvatar`** (`components/ui/safe-avatar.tsx`) for any user/athlete photo: it only hands next/image an allowed
+src, falls back to `<img>` otherwise and to initials on error, and can open the enlarge dialog (`enlargeable`).
+Keep its `ALLOWED_HOSTS` in sync with `remotePatterns`.
+
+## JSONB
+Bind JSONB values with `sql.json(x)` / `jsonb(x)`. `${JSON.stringify(x)}` is stored as a JSON *string* (postgres.js
+serialises jsonb params itself) and `col->>'key'` then returns NULL (migration 005 repaired old rows).
+
+## Entry snapshot
+Event-context reads (organiser/coach lists, print, exports, ID card, `/v/[token]`, emails): `COALESCE(e.snap_x, s.x)`.
+Profile pages read `students`. Coach draft rows show the live profile (snapshot is re-taken when the draft is sent).
 
 ## Components
+Large client components are split into `<name>-parts/` folders: `use-<name>.ts(x)` (all state/handlers, returns a VM),
+one file per screen section taking `{ vm }`, and `shared.tsx` (icons/helpers/types). Keep new sections under ~400 lines.
 Server Components by default; `'use client'` only for hooks/events. Primitives in `components/ui`. Colours only via tokens
 (`design-system.md`). Status badges via `lib/status.ts`.
 

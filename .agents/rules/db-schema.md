@@ -1,6 +1,8 @@
-# DB schema (verified against live Neon + schema.sql + migrations 001–002)
+# DB schema (schema.sql + migrations 001–005; Neon verified up to 001 on 2026-11-09)
 
-Apply order on a fresh DB: `schema.sql` → `migrations/001_parent_portal.sql` → `migrations/002_fix_registration_no_overflow.sql`.
+Apply order on a fresh DB: `schema.sql` → `migrations/001…005` in number order (tests/db/sql-files.ts does exactly this).
+Migrations: 001 parent portal · 002 registration_no overflow · 003 entry snapshot · 004 chest_no unique · 005 repair double-encoded JSONB.
+Pending on Neon (2026-11-09): 002, 003, 004, 005 — see the run-order note in the final report / migration headers.
 IDs are UUID (`gen_random_uuid()`). Neon runs Postgres 18; local Docker uses 16 (same behaviour).
 
 ## users  (ALL roles incl. parents)
@@ -18,7 +20,7 @@ coach_id → users, name, city, slug UNIQUE (join URL `/join/<slug>`), join_code
 ## students  (athletes)
 dojo_id, **parent_id → users** (the registering parent; NULL for coach-created), name, gender, date_of_birth, weight, rank,
 registration_no UNIQUE (trigger, `SK26-0001`; migration 002 fixes overflow past 9,999), photo_url, phone, school_or_city,
-dob_locked, consent_given_at/version/by, membership_status (`active|removed`), removed_at/by/reason, is_active
+dob_locked (**unused**, superseded by the entry snapshot), consent_given_at/version/by, membership_status (`active|removed`), removed_at/by/reason, is_active
 (trigger-managed), generic_checked.
 
 ## events
@@ -36,8 +38,11 @@ whose application for their dojo's coach is `approved` (or the coach is the orga
 event_id, coach_id, student_id, category_id NULL, event_day_id NULL, participation_type (`both|kata|kumite|…,team_kata,team_kumite`),
 **status** CHECK: `draft | pending_coach | submitted | approved | rejected | correction_needed | coach_declined | withdrawn`,
 chest_no (trigger on approval), generic_checked, submitted_by, coach_reviewed_by/at, coach_notes, org_reviewed_by/at,
-rejection_reason, qr_token (unique partial), checked_in_at/by, declared_weight_kg, category_snapshot JSONB.
-UNIQUE(student_id, event_id).
+rejection_reason, qr_token (unique partial), checked_in_at/by, declared_weight_kg, category_snapshot JSONB
+(`lib/category.ts` result: ageGroup, genderLabel, weightClass, displayName, ageYears).
+**Snapshot (migration 003)**: snap_name, snap_gender, snap_dob, snap_rank, snap_school_or_city, snap_taken_at — the athlete as entered.
+Event-context reads use `COALESCE(e.snap_*, s.*)` and `COALESCE(e.declared_weight_kg, s.weight)`.
+UNIQUE(student_id, event_id). **UNIQUE(event_id, chest_no) WHERE chest_no IS NOT NULL** (`idx_entries_event_chest`, migration 004).
 
 ## Others
 event_collaborators / dojo_collaborators (user_id, permission read|write), contacts (public form),
@@ -48,5 +53,6 @@ audit_log (actor_type, actor_id, action, entity_type, entity_id, details JSONB, 
 | Name | On | Effect | Caveat |
 |---|---|---|---|
 | tr_generate_student_registration_no | students BEFORE INSERT | `SK<yy>-<seq>` | pad only <10000 (mig. 002) |
-| tr_assign_chest_no_on_approval | entries BEFORE UPDATE | chest_no = MAX+1 per event on →approved | no lock/unique index: concurrent approvals can duplicate |
+| tr_assign_chest_no_on_approval | entries BEFORE UPDATE | chest_no = MAX+1 per event on first →approved (only if NULL) | per-event `pg_advisory_xact_lock` + unique index (mig. 004). Rejected/withdrawn keep their number; re-approval keeps it; only a manual organiser edit frees a number |
+| tr_fill_entry_snapshot | entries BEFORE INSERT/UPDATE | fills snap_* (+declared_weight_kg if NULL) on insert; re-takes it on draft/withdrawn/coach_declined/rejected → pending_coach/submitted | skipped when the statement sets snap_taken_at itself (app-written snapshot) |
 | evaluate_activity_on_entry | entries AFTER INS/UPD/DEL (per row) | recompute students.is_active for the dojo | per-row; ~1 ms/row at 3k entries, grows with dojo size |
