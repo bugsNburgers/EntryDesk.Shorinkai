@@ -86,25 +86,25 @@ export default async function AddChildPage({ searchParams }: AddChildPageProps) 
             {/* Back link */}
             <Link
                 href="/athlete"
-                className="inline-flex items-center gap-1.5 text-sm font-medium text-[#57534e] hover:text-[#1c1917] dark:text-[#8a99ab] dark:hover:text-[#e8eef5] transition-colors group"
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground dark:text-muted-foreground dark:hover:text-foreground transition-colors group"
             >
                 <ArrowLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
                 Back to my profile(s)
             </Link>
 
             <div className="flex items-center gap-3.5">
-                <div className="p-2 rounded-2xl border border-[#ded8cb] dark:border-[#1f2b40] bg-white dark:bg-[#111a2b] shadow-xs shrink-0 flex items-center justify-center">
+                <div className="p-2 rounded-2xl border border-border bg-card shadow-xs shrink-0 flex items-center justify-center">
                     <AthleteIcon size={40} />
                 </div>
                 <div className="space-y-1">
-                    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#1c1917] dark:text-[#e8eef5]">Add a profile</h1>
-                    <p className="text-sm text-[#57534e] dark:text-[#8a99ab]">
+                    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Add a profile</h1>
+                    <p className="text-sm text-muted-foreground">
                         Your coach will see these details in their roster and approve tournament entries.
                     </p>
                 </div>
             </div>
 
-            <div className="bg-white border border-[#ded8cb] dark:bg-[#111a2b] dark:border-[#1f2b40] rounded-[20px] p-5 sm:p-7 shadow-xs">
+            <div className="bg-white border border-border dark:bg-card dark:border-border rounded-[20px] p-5 sm:p-7 shadow-xs">
                 <AddChildForm dojos={availableDojos} />
             </div>
         </div>

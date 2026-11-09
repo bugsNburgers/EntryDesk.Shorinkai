@@ -96,15 +96,15 @@ export default async function ParentHome({ searchParams }: ParentHomeProps) {
             {/* Header */}
             <div className="flex items-center justify-between pt-1">
                 <div>
-                    <h1 className="text-2xl font-bold text-[#1c1917] dark:text-[#e8eef5]">My Profile(s)</h1>
-                    <p className="text-sm text-[#57534e] dark:text-[#8a99ab] mt-0.5">
+                    <h1 className="text-2xl font-bold text-foreground">My Profile(s)</h1>
+                    <p className="text-sm text-muted-foreground mt-0.5">
                         {children.length === 0
                             ? 'Add yourself or your child to get started'
                             : `${children.length} ${children.length === 1 ? 'profile' : 'profiles'} registered`}
                     </p>
                 </div>
                 <Link href={addAthleteHref}>
-                    <Button size="sm" className="gap-2 h-9 rounded-xl bg-[#0d9488] text-white hover:bg-[#0f766e] dark:bg-[#2dd4b4] dark:text-[#04231e] dark:hover:bg-[#25c4a5] font-bold shadow-xs">
+                    <Button size="sm" className="gap-2 h-9 rounded-xl bg-primary text-white hover:bg-primary/90 dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90 font-bold shadow-xs">
                         <AthleteIcon size={16} />
                         Add profile
                     </Button>
@@ -113,16 +113,16 @@ export default async function ParentHome({ searchParams }: ParentHomeProps) {
 
             {/* Empty state */}
             {children.length === 0 && (
-                <div className="mx-auto max-w-md rounded-[20px] border border-dashed border-[#ded8cb] bg-white dark:border-[#1f2b40] dark:bg-[#111a2b] py-14 px-6 text-center shadow-sm">
-                    <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-2xl bg-[#f2eee5] border border-[#ded8cb] dark:bg-[#16233a] dark:border-[#1f2b40] p-3 shadow-xs">
+                <div className="mx-auto max-w-md rounded-[20px] border border-dashed border-border bg-white dark:border-border dark:bg-card py-14 px-6 text-center shadow-sm">
+                    <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-2xl bg-muted border border-border dark:bg-muted dark:border-border p-3 shadow-xs">
                         <AthleteIcon size={64} />
                     </div>
-                    <h2 className="text-lg font-bold text-[#1c1917] dark:text-[#e8eef5] mb-1.5">No profiles added yet</h2>
-                    <p className="text-sm text-[#57534e] dark:text-[#8a99ab] mb-6 max-w-sm mx-auto">
+                    <h2 className="text-lg font-bold text-foreground mb-1.5">No profiles added yet</h2>
+                    <p className="text-sm text-muted-foreground mb-6 max-w-sm mx-auto">
                         Add your or your child&apos;s details to register for tournaments and view live entry progress.
                     </p>
                     <Link href={addAthleteHref}>
-                        <Button className="gap-2 rounded-xl bg-[#0d9488] text-white hover:bg-[#0f766e] dark:bg-[#2dd4b4] dark:text-[#04231e] dark:hover:bg-[#25c4a5] font-bold px-6 h-11 shadow-sm">
+                        <Button className="gap-2 rounded-xl bg-primary text-white hover:bg-primary/90 dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90 font-bold px-6 h-11 shadow-sm">
                             <AthleteIcon size={20} />
                             Add profile
                         </Button>
@@ -160,7 +160,7 @@ export default async function ParentHome({ searchParams }: ParentHomeProps) {
 
             {/* Bottom hint */}
             {children.length > 0 && (
-                <p className="text-center text-xs text-[#57534e] dark:text-[#8a99ab] pt-2 pb-4">
+                <p className="text-center text-xs text-muted-foreground pt-2 pb-4">
                     Click any athlete profile to manage tournament entries and access official ID cards.
                 </p>
             )}

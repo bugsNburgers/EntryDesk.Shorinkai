@@ -144,12 +144,12 @@ export function EditAthleteDialog({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-md bg-white border-[#ded8cb] text-[#1c1917] dark:bg-[#111a2b] dark:border-[#1f2b40] dark:text-[#e8eef5] p-6 rounded-2xl shadow-2xl">
+            <DialogContent className="sm:max-w-md bg-white border-border text-foreground dark:bg-card dark:border-border dark:text-foreground p-6 rounded-2xl shadow-2xl">
                 <DialogHeader className="text-left">
-                    <DialogTitle className="text-xl font-bold text-[#1c1917] dark:text-[#e8eef5]">
+                    <DialogTitle className="text-xl font-bold text-foreground">
                         {currentConfig.title}
                     </DialogTitle>
-                    <DialogDescription className="text-[13px] text-[#57534e] dark:text-[#8a99ab]">
+                    <DialogDescription className="text-[13px] text-muted-foreground">
                         {currentConfig.description}
                     </DialogDescription>
                 </DialogHeader>
@@ -165,7 +165,7 @@ export function EditAthleteDialog({
                     {showBasic && (
                         <>
                             <div className="space-y-1.5">
-                                <Label htmlFor="edit-name" className="text-xs font-semibold text-[#57534e] dark:text-[#8a99ab] uppercase tracking-wider">
+                                <Label htmlFor="edit-name" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                     Full Name <span className="text-rose-500 dark:text-rose-400">*</span>
                                 </Label>
                                 <Input
@@ -173,12 +173,12 @@ export function EditAthleteDialog({
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
                                     required
-                                    className="bg-white border-[#ded8cb] text-[#1c1917] focus:border-emerald-600 focus:ring-emerald-500/20 dark:bg-[#0d1626] dark:border-[#1f2b40] dark:text-[#e8eef5] dark:focus:border-[#2dd4b4] dark:focus:ring-[#2dd4b4]/20 rounded-md h-10"
+                                    className="bg-white border-border text-foreground focus:border-emerald-600 focus:ring-emerald-500/20 dark:bg-card dark:border-border dark:text-foreground dark:focus:border-primary dark:focus:ring-primary/20 rounded-md h-10"
                                 />
                             </div>
 
                             <div className="space-y-1.5">
-                                <Label className="text-xs font-semibold text-[#57534e] dark:text-[#8a99ab] uppercase tracking-wider">
+                                <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                     Gender
                                 </Label>
                                 <div className="grid grid-cols-2 gap-2">
@@ -189,8 +189,8 @@ export function EditAthleteDialog({
                                             onClick={() => setGender(g)}
                                             className={`h-10 rounded-md text-xs font-bold capitalize transition-all border ${
                                                 gender === g
-                                                    ? 'bg-emerald-600 text-white border-emerald-600 dark:bg-[#2dd4b4] dark:text-[#04231e] dark:border-[#2dd4b4]'
-                                                    : 'bg-white text-[#57534e] border-[#ded8cb] hover:text-[#1c1917] dark:bg-[#0d1626] dark:text-[#8a99ab] dark:border-[#1f2b40] dark:hover:text-[#e8eef5]'
+                                                    ? 'bg-emerald-600 text-white border-emerald-600 dark:bg-primary dark:text-primary-foreground dark:border-primary'
+                                                    : 'bg-white text-muted-foreground border-border hover:text-foreground dark:bg-card dark:text-muted-foreground dark:border-border dark:hover:text-foreground'
                                             }`}
                                         >
                                             {g}
@@ -206,7 +206,7 @@ export function EditAthleteDialog({
                         <>
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="space-y-1.5">
-                                    <Label htmlFor="edit-rank" className="text-xs font-semibold text-[#57534e] dark:text-[#8a99ab] uppercase tracking-wider">
+                                    <Label htmlFor="edit-rank" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                         Belt / Rank
                                     </Label>
                                     <Input
@@ -214,12 +214,12 @@ export function EditAthleteDialog({
                                         value={rank}
                                         onChange={(e) => setRank(e.target.value)}
                                         placeholder="e.g. Yellow Belt"
-                                        className="bg-white border-[#ded8cb] text-[#1c1917] focus:border-emerald-600 focus:ring-emerald-500/20 dark:bg-[#0d1626] dark:border-[#1f2b40] dark:text-[#e8eef5] dark:focus:border-[#2dd4b4] dark:focus:ring-[#2dd4b4]/20 rounded-md h-10 text-xs"
+                                        className="bg-white border-border text-foreground focus:border-emerald-600 focus:ring-emerald-500/20 dark:bg-card dark:border-border dark:text-foreground dark:focus:border-primary dark:focus:ring-primary/20 rounded-md h-10 text-xs"
                                     />
                                 </div>
 
                                 <div className="space-y-1.5">
-                                    <Label htmlFor="edit-weight" className="text-xs font-semibold text-[#57534e] dark:text-[#8a99ab] uppercase tracking-wider">
+                                    <Label htmlFor="edit-weight" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                         Weight (kg)
                                     </Label>
                                     <Input
@@ -231,13 +231,13 @@ export function EditAthleteDialog({
                                         value={weight}
                                         onChange={(e) => setWeight(e.target.value)}
                                         placeholder="e.g. 44"
-                                        className="bg-white border-[#ded8cb] text-[#1c1917] focus:border-emerald-600 focus:ring-emerald-500/20 dark:bg-[#0d1626] dark:border-[#1f2b40] dark:text-[#e8eef5] dark:focus:border-[#2dd4b4] dark:focus:ring-[#2dd4b4]/20 rounded-md h-10 text-xs"
+                                        className="bg-white border-border text-foreground focus:border-emerald-600 focus:ring-emerald-500/20 dark:bg-card dark:border-border dark:text-foreground dark:focus:border-primary dark:focus:ring-primary/20 rounded-md h-10 text-xs"
                                     />
                                 </div>
                             </div>
 
                             <div className="space-y-1.5">
-                                <Label htmlFor="edit-dob" className="text-xs font-semibold text-[#57534e] dark:text-[#8a99ab] uppercase tracking-wider">
+                                <Label htmlFor="edit-dob" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                     Date of Birth
                                 </Label>
                                 <Input
@@ -245,12 +245,12 @@ export function EditAthleteDialog({
                                     type="date"
                                     value={dob}
                                     onChange={(e) => setDob(e.target.value)}
-                                    className="bg-white border-[#ded8cb] text-[#1c1917] focus:border-emerald-600 focus:ring-emerald-500/20 dark:bg-[#0d1626] dark:border-[#1f2b40] dark:text-[#e8eef5] dark:focus:border-[#2dd4b4] dark:focus:ring-[#2dd4b4]/20 rounded-md h-10 text-xs"
+                                    className="bg-white border-border text-foreground focus:border-emerald-600 focus:ring-emerald-500/20 dark:bg-card dark:border-border dark:text-foreground dark:focus:border-primary dark:focus:ring-primary/20 rounded-md h-10 text-xs"
                                 />
                             </div>
 
                             <div className="space-y-1.5">
-                                <Label htmlFor="edit-school" className="text-xs font-semibold text-[#57534e] dark:text-[#8a99ab] uppercase tracking-wider">
+                                <Label htmlFor="edit-school" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                     City / School
                                 </Label>
                                 <Input
@@ -258,7 +258,7 @@ export function EditAthleteDialog({
                                     value={schoolOrCity}
                                     onChange={(e) => setSchoolOrCity(e.target.value)}
                                     placeholder="e.g. Pune · St. Mary's School"
-                                    className="bg-white border-[#ded8cb] text-[#1c1917] focus:border-emerald-600 focus:ring-emerald-500/20 dark:bg-[#0d1626] dark:border-[#1f2b40] dark:text-[#e8eef5] dark:focus:border-[#2dd4b4] dark:focus:ring-[#2dd4b4]/20 rounded-md h-10 text-xs"
+                                    className="bg-white border-border text-foreground focus:border-emerald-600 focus:ring-emerald-500/20 dark:bg-card dark:border-border dark:text-foreground dark:focus:border-primary dark:focus:ring-primary/20 rounded-md h-10 text-xs"
                                 />
                             </div>
                         </>
@@ -267,7 +267,7 @@ export function EditAthleteDialog({
                     {/* SECTION 3: Contact (Phone) */}
                     {showContact && (
                         <div className="space-y-1.5">
-                            <Label htmlFor="edit-phone" className="text-xs font-semibold text-[#57534e] dark:text-[#8a99ab] uppercase tracking-wider">
+                            <Label htmlFor="edit-phone" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                 Phone Number
                             </Label>
                             <Input
@@ -276,29 +276,29 @@ export function EditAthleteDialog({
                                 value={phone}
                                 onChange={(e) => setPhone(e.target.value)}
                                 placeholder="+91 00000 00000"
-                                className="bg-white border-[#ded8cb] text-[#1c1917] focus:border-emerald-600 focus:ring-emerald-500/20 dark:bg-[#0d1626] dark:border-[#1f2b40] dark:text-[#e8eef5] dark:focus:border-[#2dd4b4] dark:focus:ring-[#2dd4b4]/20 rounded-md h-10 text-xs"
+                                className="bg-white border-border text-foreground focus:border-emerald-600 focus:ring-emerald-500/20 dark:bg-card dark:border-border dark:text-foreground dark:focus:border-primary dark:focus:ring-primary/20 rounded-md h-10 text-xs"
                             />
-                            <p className="text-[11.5px] text-[#57534e] dark:text-[#8a99ab] pt-0.5">
+                            <p className="text-[11.5px] text-muted-foreground pt-0.5">
                                 Used by tournament organizers and coaches for entry updates and verification.
                             </p>
                         </div>
                     )}
 
                     {/* Submit Actions */}
-                    <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-[#ded8cb] dark:border-[#1f2b40]">
+                    <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-border">
                         <Button
                             type="button"
                             variant="ghost"
                             onClick={() => onOpenChange(false)}
                             disabled={isPending}
-                            className="rounded-md text-[#57534e] hover:text-[#1c1917] hover:bg-[#ded8cb]/40 dark:text-[#8a99ab] dark:hover:text-[#e8eef5] dark:hover:bg-[#16233a]"
+                            className="rounded-md text-muted-foreground hover:text-foreground hover:bg-border/40 dark:text-muted-foreground dark:hover:text-foreground dark:hover:bg-muted"
                         >
                             Cancel
                         </Button>
                         <Button
                             type="submit"
                             disabled={isPending}
-                            className="rounded-md bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-[#2dd4b4] dark:text-[#04231e] dark:hover:bg-[#25c4a5] font-bold px-5"
+                            className="rounded-md bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90 font-bold px-5"
                         >
                             {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             {currentConfig.submitLabel}
@@ -326,7 +326,7 @@ export function EditAthleteTrigger({
             <button
                 type="button"
                 onClick={() => setOpen(true)}
-                className={`inline-flex items-center gap-1.5 text-[13px] font-semibold text-emerald-700 dark:text-[#2dd4b4] border border-[#ded8cb] dark:border-[#2a3b57] hover:border-emerald-600 dark:hover:border-[#2dd4b4] hover:bg-emerald-500/10 dark:hover:bg-[#2dd4b4]/10 rounded-md px-3 py-1.5 transition-all shrink-0 active:scale-95 ${className}`}
+                className={`inline-flex items-center gap-1.5 text-[13px] font-semibold text-emerald-700 dark:text-primary border border-border hover:border-emerald-600 dark:hover:border-primary hover:bg-emerald-500/10 dark:hover:bg-primary/10 rounded-md px-3 py-1.5 transition-all shrink-0 active:scale-95 ${className}`}
                 title="Edit details"
             >
                 <svg

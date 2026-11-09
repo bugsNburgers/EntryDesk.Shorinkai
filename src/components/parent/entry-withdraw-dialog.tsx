@@ -93,10 +93,10 @@ export function EntryWithdrawSection({
         <div className="pt-2 space-y-3">
             {/* If approved by organiser: notice to contact coach */}
             {isApproved && (
-                <div className="bg-white border border-[#ded8cb] dark:bg-[#111a2b] dark:border-[#1f2b40] rounded-[16px] p-4 text-[13.5px] text-[#57534e] dark:text-[#8a99ab] flex items-start gap-3 shadow-xs">
+                <div className="bg-white border border-border dark:bg-card dark:border-border rounded-[16px] p-4 text-[13.5px] text-muted-foreground flex items-start gap-3 shadow-xs">
                     <span className="text-amber-500 dark:text-amber-400 font-bold text-base leading-none mt-0.5">ℹ</span>
                     <div className="leading-[1.45]">
-                        <span className="font-semibold text-[#1c1917] dark:text-[#e8eef5] block mb-0.5">
+                        <span className="font-semibold text-foreground block mb-0.5">
                             Approved by Organiser
                         </span>
                         This entry has been approved by the organiser. To withdraw, please contact your coach. Coaches can withdraw entries from the organiser before the tournament deadline.
@@ -108,7 +108,7 @@ export function EntryWithdrawSection({
             {canEdit && (
                 <Link
                     href={`/athlete/${studentId}/register?event=${eventId}`}
-                    className="w-full h-[48px] rounded-[14px] bg-emerald-600 hover:bg-emerald-700 text-white dark:bg-[#2dd4b4] dark:hover:bg-[#25c4a5] dark:text-[#04231e] font-bold text-[15px] flex items-center justify-center gap-2 transition-all active:scale-[0.99] shadow-xs"
+                    className="w-full h-[48px] rounded-[14px] bg-emerald-600 hover:bg-emerald-700 text-white dark:bg-primary dark:hover:bg-primary/90 dark:text-primary-foreground font-bold text-[15px] flex items-center justify-center gap-2 transition-all active:scale-[0.99] shadow-xs"
                 >
                     <Edit3 className="w-4 h-4" />
                     <span>Update Registration</span>
@@ -121,13 +121,13 @@ export function EntryWithdrawSection({
                 <div className="space-y-2">
                     <Link
                         href={`/athlete/${studentId}/register?event=${eventId}`}
-                        className="w-full h-[44px] rounded-md bg-emerald-600 hover:bg-emerald-700 text-white dark:bg-[#2dd4b4] dark:hover:bg-[#25c4a5] dark:text-[#04231e] font-bold text-[15px] flex items-center justify-center gap-2 transition-all active:scale-[0.99] shadow-xs"
+                        className="w-full h-[44px] rounded-md bg-emerald-600 hover:bg-emerald-700 text-white dark:bg-primary dark:hover:bg-primary/90 dark:text-primary-foreground font-bold text-[15px] flex items-center justify-center gap-2 transition-all active:scale-[0.99] shadow-xs"
                     >
                         <RotateCcw className="w-4 h-4" />
                         <span>Apply Again for Tournament</span>
                         <ArrowRight className="w-4 h-4" />
                     </Link>
-                    <p className="text-[12.5px] text-[#57534e] dark:text-[#8a99ab] text-center">
+                    <p className="text-[12.5px] text-muted-foreground text-center">
                         Registration is still open. You can apply again before the deadline.
                     </p>
                 </div>
@@ -145,21 +145,21 @@ export function EntryWithdrawSection({
                     </button>
 
                     <Dialog open={isWithdrawOpen} onOpenChange={setIsWithdrawOpen}>
-                        <DialogContent className="max-w-[400px] bg-white border-[#ded8cb] text-[#1c1917] dark:bg-[#111a2b] dark:border-[#1f2b40] dark:text-[#e8eef5] p-5 rounded-lg shadow-2xl">
+                        <DialogContent className="max-w-[400px] bg-white border-border text-foreground dark:bg-card dark:border-border dark:text-foreground p-5 rounded-lg shadow-2xl">
                             {step === 1 ? (
                                 /* ─── STEP 1: Reason Input (Optional) ─── */
                                 <>
                                     <DialogHeader className="text-left space-y-1.5">
-                                        <DialogTitle className="text-[19px] font-bold text-[#1c1917] dark:text-[#e8eef5]">
+                                        <DialogTitle className="text-[19px] font-bold text-foreground">
                                             Withdraw Tournament Entry
                                         </DialogTitle>
-                                        <DialogDescription className="text-[13.5px] text-[#57534e] dark:text-[#8a99ab] leading-snug">
+                                        <DialogDescription className="text-[13.5px] text-muted-foreground leading-snug">
                                             Are you sure you want to withdraw{' '}
-                                            <span className="font-semibold text-[#1c1917] dark:text-[#e8eef5]">
+                                            <span className="font-semibold text-foreground">
                                                 {studentName}
                                             </span>{' '}
                                             from{' '}
-                                            <span className="font-semibold text-[#1c1917] dark:text-[#e8eef5]">
+                                            <span className="font-semibold text-foreground">
                                                 {eventTitle}
                                             </span>
                                             ? You can apply again before the registration deadline.
@@ -174,14 +174,14 @@ export function EntryWithdrawSection({
                                     )}
 
                                     <div className="space-y-1.5 py-1 text-left">
-                                        <label className="text-[12px] font-medium text-[#57534e] dark:text-[#8a99ab]">
+                                        <label className="text-[12px] font-medium text-muted-foreground">
                                             Reason (optional)
                                         </label>
                                         <Input
                                             value={withdrawReason}
                                             onChange={(e) => setWithdrawReason(e.target.value)}
                                             placeholder="e.g. Schedule conflict, illness"
-                                            className="bg-white border-[#ded8cb] text-[#1c1917] placeholder:text-[#57534e]/50 dark:bg-[#0a1220] dark:border-[#1f2b40] dark:text-[#e8eef5] text-[14px] rounded-md h-10 dark:placeholder:text-[#8a99ab]/60 focus-visible:ring-1 focus-visible:ring-emerald-500 dark:focus-visible:ring-[#2dd4b4]"
+                                            className="bg-white border-border text-foreground placeholder:text-muted-foreground/50 dark:bg-background dark:border-border dark:text-foreground text-[14px] rounded-md h-10 dark:placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-emerald-500 dark:focus-visible:ring-primary"
                                         />
                                     </div>
 
@@ -189,7 +189,7 @@ export function EntryWithdrawSection({
                                         <button
                                             type="button"
                                             onClick={() => setIsWithdrawOpen(false)}
-                                            className="flex-1 h-[40px] rounded-md border border-[#ded8cb] bg-[#eee9df] text-[#57534e] hover:text-[#1c1917] hover:bg-[#ece6db] dark:border-[#1f2b40] dark:bg-[#1a2a44] dark:text-[#8a99ab] dark:hover:text-[#e8eef5] text-[14px] font-semibold transition-colors"
+                                            className="flex-1 h-[40px] rounded-md border border-border bg-muted text-muted-foreground hover:text-foreground hover:bg-[#ece6db] dark:border-border dark:bg-muted dark:text-muted-foreground dark:hover:text-foreground text-[14px] font-semibold transition-colors"
                                         >
                                             Cancel
                                         </button>
@@ -209,9 +209,9 @@ export function EntryWithdrawSection({
                                         <DialogTitle className="text-[19px] font-bold text-rose-600 dark:text-rose-400">
                                             Confirm Withdrawal
                                         </DialogTitle>
-                                        <DialogDescription className="text-[13.5px] text-[#57534e] dark:text-[#8a99ab] leading-snug">
+                                        <DialogDescription className="text-[13.5px] text-muted-foreground leading-snug">
                                             To prevent accidental withdrawal, please type{' '}
-                                            <span className="font-bold text-[#1c1917] bg-[#eee9df] dark:text-[#e8eef5] dark:bg-[#1a2a44] px-1.5 py-0.5 rounded">
+                                            <span className="font-bold text-foreground bg-muted dark:text-foreground dark:bg-muted px-1.5 py-0.5 rounded">
                                                 confirm
                                             </span>{' '}
                                             below to complete the request:
@@ -226,7 +226,7 @@ export function EntryWithdrawSection({
                                     )}
 
                                     <div className="space-y-1.5 py-2 text-left">
-                                        <label className="text-[12px] font-medium text-[#57534e] dark:text-[#8a99ab]">
+                                        <label className="text-[12px] font-medium text-muted-foreground">
                                             Type confirm to proceed
                                         </label>
                                         <Input
@@ -234,7 +234,7 @@ export function EntryWithdrawSection({
                                             onChange={(e) => setConfirmText(e.target.value)}
                                             placeholder='Type "confirm"'
                                             autoFocus
-                                            className="bg-white border-[#ded8cb] text-[#1c1917] placeholder:text-[#57534e]/50 dark:bg-[#0a1220] dark:border-[#1f2b40] dark:text-[#e8eef5] text-[14px] rounded-md h-10 dark:placeholder:text-[#8a99ab]/60 focus-visible:ring-1 focus-visible:ring-rose-500 font-mono"
+                                            className="bg-white border-border text-foreground placeholder:text-muted-foreground/50 dark:bg-background dark:border-border dark:text-foreground text-[14px] rounded-md h-10 dark:placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-rose-500 font-mono"
                                         />
                                     </div>
 
@@ -243,7 +243,7 @@ export function EntryWithdrawSection({
                                             type="button"
                                             onClick={() => setStep(1)}
                                             disabled={isPending}
-                                            className="flex-1 h-[40px] rounded-md border border-[#ded8cb] bg-[#eee9df] text-[#57534e] hover:text-[#1c1917] hover:bg-[#ece6db] dark:border-[#1f2b40] dark:bg-[#1a2a44] dark:text-[#8a99ab] dark:hover:text-[#e8eef5] text-[14px] font-semibold transition-colors"
+                                            className="flex-1 h-[40px] rounded-md border border-border bg-muted text-muted-foreground hover:text-foreground hover:bg-[#ece6db] dark:border-border dark:bg-muted dark:text-muted-foreground dark:hover:text-foreground text-[14px] font-semibold transition-colors"
                                         >
                                             Back
                                         </button>

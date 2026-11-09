@@ -209,7 +209,7 @@ export default async function RegisterTournamentPage({
             <div>
                 <Link
                     href={`/athlete/${child.id}`}
-                    className="inline-flex items-center gap-1.5 text-sm font-medium text-[#57534e] hover:text-[#1c1917] dark:text-[#8a99ab] dark:hover:text-[#e8eef5] transition-colors group"
+                    className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground dark:text-muted-foreground dark:hover:text-foreground transition-colors group"
                 >
                     <ChevronLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
                     Back to {child.name}’s profile
@@ -219,15 +219,15 @@ export default async function RegisterTournamentPage({
             {/* Header */}
             <div className="space-y-1">
                 <div className="flex items-center gap-2.5">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:bg-[#2dd4b4]/15 dark:border-[#2dd4b4]/30 dark:text-[#2dd4b4]">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:bg-primary/15 dark:border-primary/30 dark:text-primary">
                         <Trophy className="h-5 w-5" />
                     </span>
-                    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#1c1917] dark:text-[#e8eef5]">
+                    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
                         Register for Tournament
                     </h1>
                 </div>
-                <p className="text-sm text-[#57534e] dark:text-[#8a99ab] max-w-2xl">
-                    Register <span className="font-semibold text-[#1c1917] dark:text-[#e8eef5]">{child.name}</span> ({child.dojo_name}) for championship events.
+                <p className="text-sm text-muted-foreground max-w-2xl">
+                    Register <span className="font-semibold text-foreground">{child.name}</span> ({child.dojo_name}) for championship events.
                 </p>
             </div>
 
@@ -236,13 +236,13 @@ export default async function RegisterTournamentPage({
                 {/* Left Column: Athlete Profile Card & Policy Guidelines */}
                 <div className="lg:col-span-4 2xl:col-span-3 space-y-4 lg:sticky lg:top-20">
                     {/* Athlete Summary Card */}
-                    <div className="bg-white border border-[#ded8cb] dark:bg-[#111a2b] dark:border-[#1f2b40] rounded-[18px] p-5 shadow-xs space-y-4">
-                        <div className="text-[11.5px] font-bold tracking-[0.14em] uppercase text-emerald-700 dark:text-[#2dd4b4]">
+                    <div className="bg-white border border-border dark:bg-card dark:border-border rounded-[18px] p-5 shadow-xs space-y-4">
+                        <div className="text-[11.5px] font-bold tracking-[0.14em] uppercase text-emerald-700 dark:text-primary">
                             Athlete Summary
                         </div>
                         <div className="flex items-center gap-3.5">
                             {child.photo_url ? (
-                                <div className="relative h-14 w-14 rounded-full overflow-hidden border-2 border-emerald-500 dark:border-[#2dd4b4] bg-[#eee9df] dark:bg-[#16233a] shrink-0">
+                                <div className="relative h-14 w-14 rounded-full overflow-hidden border-2 border-emerald-500 dark:border-primary bg-muted shrink-0">
                                     <Image
                                         src={child.photo_url}
                                         alt={child.name}
@@ -251,21 +251,21 @@ export default async function RegisterTournamentPage({
                                     />
                                 </div>
                             ) : (
-                                <div className="h-14 w-14 rounded-full border-2 border-emerald-500 dark:border-[#2dd4b4] bg-emerald-50 dark:bg-[#16233a] flex items-center justify-center text-emerald-700 dark:text-[#2dd4b4] font-bold text-xl shrink-0">
+                                <div className="h-14 w-14 rounded-full border-2 border-emerald-500 dark:border-primary bg-emerald-50 dark:bg-muted flex items-center justify-center text-emerald-700 dark:text-primary font-bold text-xl shrink-0">
                                     {child.name.charAt(0).toUpperCase()}
                                 </div>
                             )}
                             <div className="min-w-0 flex-1">
-                                <h3 className="font-bold text-base text-[#1c1917] dark:text-[#e8eef5] truncate">{child.name}</h3>
-                                <p className="text-xs text-[#57534e] dark:text-[#8a99ab] truncate">{child.dojo_name}</p>
+                                <h3 className="font-bold text-base text-foreground truncate">{child.name}</h3>
+                                <p className="text-xs text-muted-foreground truncate">{child.dojo_name}</p>
                                 <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                                     {child.rank && (
-                                        <span className="text-[11px] font-semibold bg-[#eee9df] text-[#1c1917] dark:bg-[#1a2a44] dark:text-[#e8eef5] rounded px-2 py-0.5">
+                                        <span className="text-[11px] font-semibold bg-muted text-foreground dark:bg-muted dark:text-foreground rounded px-2 py-0.5">
                                             {child.rank}
                                         </span>
                                     )}
                                     {child.weight && (
-                                        <span className="text-[11px] font-semibold bg-[#eee9df] text-[#57534e] dark:bg-[#1a2a44] dark:text-[#8a99ab] rounded px-2 py-0.5">
+                                        <span className="text-[11px] font-semibold bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground rounded px-2 py-0.5">
                                             {child.weight} kg
                                         </span>
                                     )}
@@ -274,37 +274,37 @@ export default async function RegisterTournamentPage({
                         </div>
 
                         {child.coach_name && (
-                            <div className="pt-3 border-t border-[#ded8cb] dark:border-[#1f2b40] text-xs flex justify-between items-center text-[#57534e] dark:text-[#8a99ab]">
+                            <div className="pt-3 border-t border-border text-xs flex justify-between items-center text-muted-foreground">
                                 <span>Assigned Coach</span>
-                                <span className="font-medium text-[#1c1917] dark:text-[#e8eef5]">{child.coach_name}</span>
+                                <span className="font-medium text-foreground">{child.coach_name}</span>
                             </div>
                         )}
                     </div>
 
                     {/* How It Works Card */}
-                    <div className="bg-white border border-[#ded8cb] dark:bg-[#111a2b] dark:border-[#1f2b40] rounded-[18px] p-5 shadow-xs space-y-3">
-                        <div className="text-[11.5px] font-bold tracking-[0.14em] uppercase text-[#57534e] dark:text-[#8a99ab]">
+                    <div className="bg-white border border-border dark:bg-card dark:border-border rounded-[18px] p-5 shadow-xs space-y-3">
+                        <div className="text-[11.5px] font-bold tracking-[0.14em] uppercase text-muted-foreground">
                             Registration Flow
                         </div>
-                        <div className="space-y-3 text-xs text-[#57534e] dark:text-[#8a99ab] leading-relaxed">
+                        <div className="space-y-3 text-xs text-muted-foreground leading-relaxed">
                             <div className="flex gap-2.5 items-start">
-                                <span className="flex h-5 w-5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 dark:bg-[#2dd4b4]/15 dark:border-[#2dd4b4]/30 dark:text-[#2dd4b4] text-[11px] font-bold items-center justify-center shrink-0 mt-0.5">1</span>
-                                <p><strong className="text-[#1c1917] dark:text-[#e8eef5]">Apply:</strong> Select category &amp; confirm weight. Your entry is sent to your coach.</p>
+                                <span className="flex h-5 w-5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 dark:bg-primary/15 dark:border-primary/30 dark:text-primary text-[11px] font-bold items-center justify-center shrink-0 mt-0.5">1</span>
+                                <p><strong className="text-foreground">Apply:</strong> Select category &amp; confirm weight. Your entry is sent to your coach.</p>
                             </div>
                             <div className="flex gap-2.5 items-start">
                                 <span className="flex h-5 w-5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:bg-[#f5c542]/15 dark:border-[#f5c542]/30 dark:text-[#f5c542] text-[11px] font-bold items-center justify-center shrink-0 mt-0.5">2</span>
-                                <p><strong className="text-[#1c1917] dark:text-[#e8eef5]">Coach Review:</strong> Coach verifies your eligibility and forwards to the organiser.</p>
+                                <p><strong className="text-foreground">Coach Review:</strong> Coach verifies your eligibility and forwards to the organiser.</p>
                             </div>
                             <div className="flex gap-2.5 items-start">
-                                <span className="flex h-5 w-5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 dark:bg-[#2dd4b4]/15 dark:border-[#2dd4b4]/30 dark:text-[#2dd4b4] text-[11px] font-bold items-center justify-center shrink-0 mt-0.5">3</span>
-                                <p><strong className="text-[#1c1917] dark:text-[#e8eef5]">Chest Number:</strong> Once organiser confirms, your official digital pass is issued.</p>
+                                <span className="flex h-5 w-5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 dark:bg-primary/15 dark:border-primary/30 dark:text-primary text-[11px] font-bold items-center justify-center shrink-0 mt-0.5">3</span>
+                                <p><strong className="text-foreground">Chest Number:</strong> Once organiser confirms, your official digital pass is issued.</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Right Column: Registration Form */}
-                <div className="lg:col-span-8 2xl:col-span-9 bg-white border border-[#ded8cb] dark:bg-[#111a2b] dark:border-[#1f2b40] rounded-[18px] p-5 sm:p-7 2xl:p-8 shadow-xs">
+                <div className="lg:col-span-8 2xl:col-span-9 bg-white border border-border dark:bg-card dark:border-border rounded-[18px] p-5 sm:p-7 2xl:p-8 shadow-xs">
                     <RegistrationForm
                         child={child}
                         tournaments={tournaments}

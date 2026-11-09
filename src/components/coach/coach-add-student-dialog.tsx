@@ -269,7 +269,7 @@ export function CoachAddStudentDialog({
                 {/* ── Header ── */}
                 <div className="px-6 py-4 border-b border-border/60 bg-gradient-to-r from-muted/30 via-background to-muted/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shrink-0">
                     <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-2xl bg-[#0d9488]/10 dark:bg-[#2dd4b4]/10 border border-[#0d9488]/20 flex items-center justify-center p-1.5 shadow-xs">
+                        <div className="h-10 w-10 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center p-1.5 shadow-xs">
                             <AthleteIcon size={32} />
                         </div>
                         <div>

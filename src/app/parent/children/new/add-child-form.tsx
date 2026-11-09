@@ -37,7 +37,7 @@ function SubmitButton() {
         <Button
             type="submit"
             disabled={pending}
-            className="h-12 w-full text-base font-bold bg-[#2dd4b4] text-[#04231e] hover:bg-[#25c4a5] rounded-xl shadow-sm transition-all"
+            className="h-12 w-full text-base font-bold bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl shadow-sm transition-all"
         >
             {pending ? (
                 <>

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Shippori_Mincho } from "next/font/google";
 import "./globals.css";
 import { AppNavigationProvider } from "@/components/app/navigation-provider";
 import { Suspense } from "react";
@@ -12,6 +12,13 @@ import { Analytics } from "@vercel/analytics/next";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+});
+
+const display = Shippori_Mincho({
+  variable: "--font-display",
+  subsets: ["latin"],
+  weight: ["600", "700"],
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
@@ -43,7 +50,7 @@ export default function RootLayout({
         <ThemeScript />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${display.variable} antialiased`}
       >
         <Suspense fallback={null}>
           <AppNavigationProvider>

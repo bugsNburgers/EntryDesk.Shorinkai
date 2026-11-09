@@ -38,12 +38,12 @@ function getEntryCardState(status: string) {
     if (status === 'approved') {
         return {
             statusText: 'Pass ready · Confirmed',
-            dotClass: 'bg-emerald-600 dark:bg-[#2dd4b4]',
-            textClass: 'text-emerald-700 dark:text-[#2dd4b4]',
+            dotClass: 'bg-emerald-600 dark:bg-primary',
+            textClass: 'text-emerald-700 dark:text-primary',
             stepLabel: 'Step 3 of 3',
-            step1: 'bg-emerald-600 dark:bg-[#2dd4b4]',
-            step2: 'bg-emerald-600 dark:bg-[#2dd4b4]',
-            step3: 'bg-emerald-600 dark:bg-[#2dd4b4]',
+            step1: 'bg-emerald-600 dark:bg-primary',
+            step2: 'bg-emerald-600 dark:bg-primary',
+            step3: 'bg-emerald-600 dark:bg-primary',
             actionInfo: 'View pass',
         }
     }
@@ -53,8 +53,8 @@ function getEntryCardState(status: string) {
             dotClass: 'bg-sky-500 dark:bg-[#38bdf8]',
             textClass: 'text-sky-700 dark:text-[#38bdf8]',
             stepLabel: 'Step 2 of 3',
-            step1: 'bg-emerald-600 dark:bg-[#2dd4b4]',
-            step2: 'bg-emerald-600 dark:bg-[#2dd4b4]',
+            step1: 'bg-emerald-600 dark:bg-primary',
+            step2: 'bg-emerald-600 dark:bg-primary',
             step3: 'bg-sky-500 dark:bg-[#38bdf8]',
             actionInfo: 'View status',
         }
@@ -65,9 +65,9 @@ function getEntryCardState(status: string) {
             dotClass: 'bg-orange-500',
             textClass: 'text-orange-700 dark:text-orange-400',
             stepLabel: 'Action required',
-            step1: 'bg-emerald-600 dark:bg-[#2dd4b4]',
+            step1: 'bg-emerald-600 dark:bg-primary',
             step2: 'bg-orange-500',
-            step3: 'bg-[#ded8cb] dark:bg-[#243349]',
+            step3: 'bg-border',
             actionInfo: 'Update entry',
         }
     }
@@ -77,9 +77,9 @@ function getEntryCardState(status: string) {
             dotClass: 'bg-rose-500',
             textClass: 'text-rose-700 dark:text-rose-400',
             stepLabel: 'Declined',
-            step1: 'bg-[#ded8cb] dark:bg-[#243349]',
+            step1: 'bg-border',
             step2: 'bg-rose-500',
-            step3: 'bg-[#ded8cb] dark:bg-[#243349]',
+            step3: 'bg-border',
             actionInfo: 'View details',
         }
     }
@@ -89,9 +89,9 @@ function getEntryCardState(status: string) {
         dotClass: 'bg-amber-500 dark:bg-[#f5c542]',
         textClass: 'text-amber-700 dark:text-[#f5c542]',
         stepLabel: 'Step 2 of 3',
-        step1: 'bg-emerald-600 dark:bg-[#2dd4b4]',
+        step1: 'bg-emerald-600 dark:bg-primary',
         step2: 'bg-amber-400 dark:bg-[#f5c542]',
-        step3: 'bg-[#ded8cb] dark:bg-[#243349]',
+        step3: 'bg-border',
         actionInfo: 'View timeline',
     }
 }
@@ -261,17 +261,17 @@ export default async function ChildDetailPage({ params }: ChildPageProps) {
     })
 
     return (
-        <div className="w-full min-h-screen text-[#1c1917] dark:text-[#e8eef5] space-y-4 pb-14 font-sans select-none">
+        <div className="w-full min-h-screen text-foreground space-y-4 pb-14 font-sans select-none">
             {/* 1. Top Navigation Bar */}
             <div className="flex items-center justify-between py-1 px-1">
                 <Link
                     href="/athlete"
-                    className="inline-flex items-center gap-1.5 text-[14.5px] font-medium text-[#57534e] hover:text-[#1c1917] dark:text-[#8a99ab] dark:hover:text-[#e8eef5] transition-colors group"
+                    className="inline-flex items-center gap-1.5 text-[14.5px] font-medium text-muted-foreground hover:text-foreground dark:text-muted-foreground dark:hover:text-foreground transition-colors group"
                 >
                     <span className="text-xl leading-none font-light group-hover:-translate-x-0.5 transition-transform">‹</span>
                     <span>All profiles</span>
                 </Link>
-                <span className="text-[12px] font-mono tracking-tight text-[#57534e] border border-[#ded8cb] rounded-md px-2.5 py-0.5 tabular-nums bg-white shadow-2xs dark:text-[#8a99ab] dark:border-[#1f2b40] dark:bg-[#111a2b]/80">
+                <span className="text-[12px] font-mono tracking-tight text-muted-foreground border border-border rounded-md px-2.5 py-0.5 tabular-nums bg-white shadow-2xs dark:text-muted-foreground dark:border-border dark:bg-card/80">
                     ID {child.id.slice(0, 8)}
                 </span>
             </div>
@@ -281,7 +281,7 @@ export default async function ChildDetailPage({ params }: ChildPageProps) {
                 {/* Left Column: Athlete Profile Card, Personal Details & Contact */}
                 <div className="lg:col-span-5 xl:col-span-4 2xl:col-span-3 space-y-4 lg:sticky lg:top-20">
                     {/* Athlete Header Card */}
-                    <div className="bg-white border border-[#ded8cb] dark:bg-[#111a2b] dark:border-[#1f2b40] rounded-[18px] p-5 shadow-xs">
+                    <div className="bg-white border border-border dark:bg-card dark:border-border rounded-[18px] p-5 shadow-xs">
                         <div className="flex items-center gap-4">
                             {/* 84x84 Circular Avatar with interactive upload */}
                             <ChildPhotoAvatar
@@ -292,7 +292,7 @@ export default async function ChildDetailPage({ params }: ChildPageProps) {
 
                             <div className="min-w-0 flex-1">
                                 <div className="flex items-start justify-between gap-2">
-                                    <h1 className="text-[22px] sm:text-[25px] font-bold leading-[1.1] text-[#1c1917] dark:text-[#e8eef5] truncate">
+                                    <h1 className="text-[22px] sm:text-[25px] font-bold leading-[1.1] text-foreground truncate">
                                         {child.name}
                                     </h1>
                                     <EditAthleteTrigger
@@ -303,25 +303,25 @@ export default async function ChildDetailPage({ params }: ChildPageProps) {
 
                                 {/* Chips: Gender & Calculated Age */}
                                 <div className="flex items-center gap-2 mt-2">
-                                    <span className="text-[13px] font-semibold bg-[#eee9df] text-[#1c1917] dark:bg-[#1a2a44] dark:text-[#e8eef5] rounded-md px-2.5 py-0.5 capitalize shadow-2xs">
+                                    <span className="text-[13px] font-semibold bg-muted text-foreground dark:bg-muted dark:text-foreground rounded-md px-2.5 py-0.5 capitalize shadow-2xs">
                                         {child.gender}
                                     </span>
                                     {ageString && (
-                                        <span className="text-[13px] font-semibold bg-[#eee9df] text-[#1c1917] dark:bg-[#1a2a44] dark:text-[#e8eef5] rounded-md px-2.5 py-0.5 shadow-2xs">
+                                        <span className="text-[13px] font-semibold bg-muted text-foreground dark:bg-muted dark:text-foreground rounded-md px-2.5 py-0.5 shadow-2xs">
                                             {ageString}
                                         </span>
                                     )}
                                 </div>
 
                                 {/* Dojo name */}
-                                <div className="text-[13.5px] mt-2 text-[#1c1917] dark:text-[#e8eef5] truncate">
-                                    <span className="text-[#57534e] dark:text-[#8a99ab] mr-1.5 font-normal">Dojo</span>
+                                <div className="text-[13.5px] mt-2 text-foreground truncate">
+                                    <span className="text-muted-foreground mr-1.5 font-normal">Dojo</span>
                                     <span className="font-semibold">{child.dojo_name}</span>
                                 </div>
 
                                 {/* Coach name */}
-                                <div className="text-[13.5px] mt-0.5 text-[#1c1917] dark:text-[#e8eef5] truncate">
-                                    <span className="text-[#57534e] dark:text-[#8a99ab] mr-1.5 font-normal">Coach</span>
+                                <div className="text-[13.5px] mt-0.5 text-foreground truncate">
+                                    <span className="text-muted-foreground mr-1.5 font-normal">Coach</span>
                                     <span className="font-medium">{child.coach_name || '—'}</span>
                                 </div>
                             </div>
@@ -329,9 +329,9 @@ export default async function ChildDetailPage({ params }: ChildPageProps) {
                     </div>
 
                     {/* Personal Details Card */}
-                    <div className="bg-white border border-[#ded8cb] dark:bg-[#111a2b] dark:border-[#1f2b40] rounded-[18px] p-[16px_20px] shadow-xs">
+                    <div className="bg-white border border-border dark:bg-card dark:border-border rounded-[18px] p-[16px_20px] shadow-xs">
                         <div className="flex items-center justify-between mb-1">
-                            <div className="text-[11.5px] font-bold tracking-[0.14em] uppercase text-[#0d9488] dark:text-[#2dd4b4]">
+                            <div className="text-[11.5px] font-bold tracking-[0.14em] uppercase text-primary">
                                 Personal details
                             </div>
                             <EditAthleteTrigger
@@ -340,28 +340,28 @@ export default async function ChildDetailPage({ params }: ChildPageProps) {
                             />
                         </div>
 
-                        <div className="divide-y divide-[#ded8cb] dark:divide-[#1f2b40]">
+                        <div className="divide-y divide-border">
                             <div className="flex items-baseline justify-between gap-3.5 py-3">
-                                <span className="text-[14px] text-[#57534e] dark:text-[#8a99ab] shrink-0">Belt</span>
-                                <b className="text-[15.5px] font-semibold text-right text-[#1c1917] dark:text-[#e8eef5] break-words">
+                                <span className="text-[14px] text-muted-foreground shrink-0">Belt</span>
+                                <b className="text-[15.5px] font-semibold text-right text-foreground break-words">
                                     {child.rank || '—'}
                                 </b>
                             </div>
                             <div className="flex items-baseline justify-between gap-3.5 py-3">
-                                <span className="text-[14px] text-[#57534e] dark:text-[#8a99ab] shrink-0">Weight</span>
-                                <b className="text-[15.5px] font-semibold text-right text-[#1c1917] dark:text-[#e8eef5] break-words">
+                                <span className="text-[14px] text-muted-foreground shrink-0">Weight</span>
+                                <b className="text-[15.5px] font-semibold text-right text-foreground break-words">
                                     {child.weight ? `${child.weight} kg` : '—'}
                                 </b>
                             </div>
                             <div className="flex items-baseline justify-between gap-3.5 py-3">
-                                <span className="text-[14px] text-[#57534e] dark:text-[#8a99ab] shrink-0">Date of birth</span>
-                                <b className="text-[15.5px] font-semibold text-right text-[#1c1917] dark:text-[#e8eef5] break-words">
+                                <span className="text-[14px] text-muted-foreground shrink-0">Date of birth</span>
+                                <b className="text-[15.5px] font-semibold text-right text-foreground break-words">
                                     {dobFormattedLong || '—'}
                                 </b>
                             </div>
                             <div className="flex items-baseline justify-between gap-3.5 py-3">
-                                <span className="text-[14px] text-[#57534e] dark:text-[#8a99ab] shrink-0">City / School</span>
-                                <b className="text-[15.5px] font-semibold text-right text-[#1c1917] dark:text-[#e8eef5] break-words">
+                                <span className="text-[14px] text-muted-foreground shrink-0">City / School</span>
+                                <b className="text-[15.5px] font-semibold text-right text-foreground break-words">
                                     {citySchoolText}
                                 </b>
                             </div>
@@ -369,9 +369,9 @@ export default async function ChildDetailPage({ params }: ChildPageProps) {
                     </div>
 
                     {/* Contact Card */}
-                    <div className="bg-white border border-[#ded8cb] dark:bg-[#111a2b] dark:border-[#1f2b40] rounded-[18px] p-[16px_20px] shadow-xs">
+                    <div className="bg-white border border-border dark:bg-card dark:border-border rounded-[18px] p-[16px_20px] shadow-xs">
                         <div className="flex items-center justify-between mb-1">
-                            <div className="text-[11.5px] font-bold tracking-[0.14em] uppercase text-[#0d9488] dark:text-[#2dd4b4]">
+                            <div className="text-[11.5px] font-bold tracking-[0.14em] uppercase text-primary">
                                 Contact
                             </div>
                             <EditAthleteTrigger
@@ -380,16 +380,16 @@ export default async function ChildDetailPage({ params }: ChildPageProps) {
                             />
                         </div>
 
-                        <div className="divide-y divide-[#ded8cb] dark:divide-[#1f2b40]">
+                        <div className="divide-y divide-border">
                             <div className="flex items-baseline justify-between gap-3.5 py-3">
-                                <span className="text-[14px] text-[#57534e] dark:text-[#8a99ab] shrink-0">Email</span>
-                                <b className="text-[15.5px] font-semibold text-right text-[#1c1917] dark:text-[#e8eef5] break-words">
+                                <span className="text-[14px] text-muted-foreground shrink-0">Email</span>
+                                <b className="text-[15.5px] font-semibold text-right text-foreground break-words">
                                     {user.email || '—'}
                                 </b>
                             </div>
                             <div className="flex items-baseline justify-between gap-3.5 py-3">
-                                <span className="text-[14px] text-[#57534e] dark:text-[#8a99ab] shrink-0">Phone</span>
-                                <b className="text-[15.5px] font-semibold text-right text-[#1c1917] dark:text-[#e8eef5] break-words">
+                                <span className="text-[14px] text-muted-foreground shrink-0">Phone</span>
+                                <b className="text-[15.5px] font-semibold text-right text-foreground break-words">
                                     {child.phone || '—'}
                                 </b>
                             </div>
@@ -401,8 +401,8 @@ export default async function ChildDetailPage({ params }: ChildPageProps) {
                 <div className="lg:col-span-7 xl:col-span-8 2xl:col-span-9 space-y-6">
                     {/* Active Tournaments Section (Open & Registered) */}
                     <div>
-                        <div className="text-[22px] font-bold text-[#1c1917] dark:text-[#e8eef5]">Tournaments</div>
-                        <div className="text-[14.5px] text-[#57534e] dark:text-[#8a99ab] mt-1 mb-3.5">
+                        <div className="text-[22px] font-bold text-foreground">Tournaments</div>
+                        <div className="text-[14.5px] text-muted-foreground mt-1 mb-3.5">
                             Your active registrations &amp; upcoming tournaments.
                         </div>
 
@@ -415,7 +415,7 @@ export default async function ChildDetailPage({ params }: ChildPageProps) {
                                     <Link
                                         key={entry.id}
                                         href={`/athlete/entries/${entry.id}`}
-                                        className="group min-w-0 bg-white border border-[#ded8cb] dark:bg-[#111a2b] dark:border-[#1f2b40] rounded-[16px] p-4 sm:p-[16px_16px_16px_18px] shadow-xs hover:shadow-md hover:border-[#0d9488]/40 dark:hover:border-[#2dd4b4]/40 transition-all flex items-center gap-4 text-left"
+                                        className="group min-w-0 bg-white border border-border dark:bg-card dark:border-border rounded-[16px] p-4 sm:p-[16px_16px_16px_18px] shadow-xs hover:shadow-md hover:border-primary/40 transition-all flex items-center gap-4 text-left"
                                     >
                                         <div className="flex-1 min-w-0">
                                             {/* Status line with dot */}
@@ -426,14 +426,14 @@ export default async function ChildDetailPage({ params }: ChildPageProps) {
 
                                             {/* Tournament Name strictly on 1 line with ellipsis */}
                                             <div
-                                                className="text-[19px] font-bold text-[#1c1917] dark:text-[#e8eef5] mt-2 leading-[1.2] truncate"
+                                                className="text-[19px] font-bold text-foreground mt-2 leading-[1.2] truncate"
                                                 title={entry.event_title}
                                             >
                                                 {entry.event_title}
                                             </div>
 
                                             {/* Metadata row with SVG icons matching reference */}
-                                            <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 mt-2 text-[14px] text-[#57534e] dark:text-[#8a99ab]">
+                                            <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 mt-2 text-[14px] text-muted-foreground">
                                                 <span className="inline-flex items-center gap-1.5 shrink-0">
                                                     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" className="shrink-0">
                                                         <rect x="1.5" y="2.5" width="11" height="10" rx="2" />
@@ -453,7 +453,7 @@ export default async function ChildDetailPage({ params }: ChildPageProps) {
                                                     </span>
                                                 )}
                                                 {entry.event_day_name && (
-                                                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-[#2dd4b4] border border-emerald-500/20 text-xs font-semibold shrink-0">
+                                                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-primary border border-emerald-500/20 text-xs font-semibold shrink-0">
                                                         <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" className="shrink-0">
                                                             <rect x="1.5" y="2.5" width="11" height="10" rx="2" />
                                                             <path d="M1.5 6h11M4.5 1v3M9.5 1v3" />
@@ -470,7 +470,7 @@ export default async function ChildDetailPage({ params }: ChildPageProps) {
 
                                             {/* Coach note callout if present */}
                                             {(entry.coach_notes || entry.rejection_reason) && (
-                                                <div className="rounded-xl bg-[#fff8ea] border border-amber-200 dark:bg-[#0d1626] dark:border-[#1f2b40] p-2.5 text-xs mt-2.5">
+                                                <div className="rounded-xl bg-[#fff8ea] border border-amber-200 dark:bg-card dark:border-border p-2.5 text-xs mt-2.5">
                                                     {entry.coach_notes && (
                                                         <p className="text-amber-800 dark:text-amber-400 truncate">
                                                             <span className="font-semibold">Coach note: </span>{entry.coach_notes}
@@ -491,14 +491,14 @@ export default async function ChildDetailPage({ params }: ChildPageProps) {
                                                     <i className={`flex-1 h-1 rounded-[2px] ${cardState.step2}`} />
                                                     <i className={`flex-1 h-1 rounded-[2px] ${cardState.step3}`} />
                                                 </div>
-                                                <span className="text-[12.5px] text-[#57534e] dark:text-[#8a99ab] whitespace-nowrap font-medium">
+                                                <span className="text-[12.5px] text-muted-foreground whitespace-nowrap font-medium">
                                                     {cardState.stepLabel}
                                                 </span>
                                             </div>
                                         </div>
 
                                         {/* Right: info text before arrow + side arrow > */}
-                                        <div className="flex items-center gap-1.5 shrink-0 text-[12.5px] sm:text-[13px] font-semibold text-[#57534e] dark:text-[#8a99ab] group-hover:text-emerald-700 dark:group-hover:text-[#2dd4b4] transition-colors">
+                                        <div className="flex items-center gap-1.5 shrink-0 text-[12.5px] sm:text-[13px] font-semibold text-muted-foreground group-hover:text-emerald-700 dark:group-hover:text-primary transition-colors">
                                             <span className="whitespace-nowrap">{cardState.actionInfo}</span>
                                             <svg
                                                 width="18"
@@ -509,7 +509,7 @@ export default async function ChildDetailPage({ params }: ChildPageProps) {
                                                 strokeWidth="2"
                                                 strokeLinecap="round"
                                                 strokeLinejoin="round"
-                                                className="text-[#8a99ab] dark:text-[#6b7b8f] group-hover:text-emerald-700 dark:group-hover:text-[#2dd4b4] transition-all group-hover:translate-x-0.5 shrink-0"
+                                                className="text-muted-foreground group-hover:text-emerald-700 dark:group-hover:text-primary transition-all group-hover:translate-x-0.5 shrink-0"
                                             >
                                                 <path d="M6 3l5 5-5 5" />
                                             </svg>
@@ -525,17 +525,17 @@ export default async function ChildDetailPage({ params }: ChildPageProps) {
                                 return (
                                     <div
                                         key={t.id}
-                                        className="min-w-0 bg-white border border-[#ded8cb] dark:bg-[#111a2b] dark:border-[#1f2b40] rounded-[16px] p-4 sm:p-[16px_16px_16px_18px] shadow-xs flex flex-col justify-between"
+                                        className="min-w-0 bg-white border border-border dark:bg-card dark:border-border rounded-[16px] p-4 sm:p-[16px_16px_16px_18px] shadow-xs flex flex-col justify-between"
                                     >
                                         <div className="min-w-0">
                                             {/* Status line with green dot and close date */}
                                             <div className="flex items-center justify-between gap-2">
-                                                <div className="flex items-center gap-2 text-[13px] font-semibold text-emerald-800 dark:text-[#2dd4b4]">
-                                                    <span className="w-2 h-2 rounded-full bg-emerald-600 dark:bg-[#2dd4b4] shrink-0" />
+                                                <div className="flex items-center gap-2 text-[13px] font-semibold text-emerald-800 dark:text-primary">
+                                                    <span className="w-2 h-2 rounded-full bg-emerald-600 dark:bg-primary shrink-0" />
                                                     <span>Registration open</span>
                                                 </div>
                                                 {closeDateBadge && (
-                                                    <span className="text-[12.5px] text-[#57534e] dark:text-[#8a99ab] shrink-0">
+                                                    <span className="text-[12.5px] text-muted-foreground shrink-0">
                                                         Closes {closeDateBadge}
                                                     </span>
                                                 )}
@@ -543,14 +543,14 @@ export default async function ChildDetailPage({ params }: ChildPageProps) {
 
                                             {/* Tournament Name strictly on 1 line with ellipsis */}
                                             <div
-                                                className="text-[19px] font-bold text-[#1c1917] dark:text-[#e8eef5] mt-2 leading-[1.2] truncate"
+                                                className="text-[19px] font-bold text-foreground mt-2 leading-[1.2] truncate"
                                                 title={t.title}
                                             >
                                                 {t.title}
                                             </div>
 
                                             {/* Metadata row with SVG icons */}
-                                            <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 mt-2 text-[14px] text-[#57534e] dark:text-[#8a99ab]">
+                                            <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 mt-2 text-[14px] text-muted-foreground">
                                                 <span className="inline-flex items-center gap-1.5 shrink-0">
                                                     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" className="shrink-0">
                                                         <rect x="1.5" y="2.5" width="11" height="10" rx="2" />
@@ -571,10 +571,10 @@ export default async function ChildDetailPage({ params }: ChildPageProps) {
                                         </div>
 
                                         {/* Bottom button below (NO progress bar, NO side arrow) */}
-                                        <div className="mt-4 pt-3 border-t border-[#ded8cb]/60 dark:border-[#1f2b40]/60 flex items-center justify-start">
+                                        <div className="mt-4 pt-3 border-t border-border/60 flex items-center justify-start">
                                             <Link
                                                 href={`/athlete/${child.id}/register?event=${t.id}`}
-                                                className="w-full sm:w-auto sm:min-w-[180px] h-[46px] px-6 rounded-md bg-[#0d9488] hover:bg-[#0f766e] text-white dark:bg-[#2dd4b4] dark:hover:bg-[#25c4a5] dark:text-[#04231e] text-[15px] font-bold flex items-center justify-center transition-all duration-150 active:scale-[0.99] shadow-sm"
+                                                className="w-full sm:w-auto sm:min-w-[180px] h-[46px] px-6 rounded-md bg-primary hover:bg-primary/90 text-white dark:bg-primary dark:hover:bg-primary/90 dark:text-primary-foreground text-[15px] font-bold flex items-center justify-center transition-all duration-150 active:scale-[0.99] shadow-sm"
                                             >
                                                 Register for Tournament
                                             </Link>
@@ -585,9 +585,9 @@ export default async function ChildDetailPage({ params }: ChildPageProps) {
 
                             {/* Empty State when no active entries and no open tournaments */}
                             {openTournaments.length === 0 && activeEntries.length === 0 && (
-                                <div className="bg-white border border-[#ded8cb] dark:bg-[#111a2b] dark:border-[#1f2b40] rounded-[16px] p-6 text-center shadow-xs 2xl:col-span-2">
-                                    <p className="text-[15px] font-semibold text-[#1c1917] dark:text-[#e8eef5]">No open tournaments right now</p>
-                                    <p className="text-[13px] text-[#57534e] dark:text-[#8a99ab] mt-1">
+                                <div className="bg-white border border-border dark:bg-card dark:border-border rounded-[16px] p-6 text-center shadow-xs 2xl:col-span-2">
+                                    <p className="text-[15px] font-semibold text-foreground">No open tournaments right now</p>
+                                    <p className="text-[13px] text-muted-foreground mt-1">
                                         Tournaments open for {child.dojo_name} will appear here when announced.
                                     </p>
                                 </div>
@@ -598,8 +598,8 @@ export default async function ChildDetailPage({ params }: ChildPageProps) {
                     {/* Past Events Section — Only events the athlete actually participated in */}
                     {pastParticipatedEntries.length > 0 && (
                         <div className="pt-6">
-                            <div className="text-[22px] font-bold text-[#1c1917] dark:text-[#e8eef5]">Past events</div>
-                            <div className="text-[14.5px] text-[#57534e] dark:text-[#8a99ab] mt-1 mb-3.5">
+                            <div className="text-[22px] font-bold text-foreground">Past events</div>
+                            <div className="text-[14.5px] text-muted-foreground mt-1 mb-3.5">
                                 Completed tournaments and past registrations.
                             </div>
 
@@ -607,24 +607,24 @@ export default async function ChildDetailPage({ params }: ChildPageProps) {
                                 {pastParticipatedEntries.map((entry) => (
                                     <div
                                         key={entry.id}
-                                        className="min-w-0 bg-[#f2eee5]/80 border border-[#ded8cb] dark:bg-[#0d1626] dark:border-[#1f2b40] rounded-[16px] p-4 sm:p-[14px_16px_14px_18px] shadow-2xs"
+                                        className="min-w-0 bg-muted/80 border border-border dark:bg-card dark:border-border rounded-[16px] p-4 sm:p-[14px_16px_14px_18px] shadow-2xs"
                                     >
                                         <div className="min-w-0">
                                             {/* Status: Completed (NO tick mark!) */}
-                                            <div className="text-[13px] font-semibold text-[#57534e] dark:text-[#8a99ab]">
+                                            <div className="text-[13px] font-semibold text-muted-foreground">
                                                 Completed
                                             </div>
 
                                             {/* Tournament Name strictly on 1 line with ellipsis */}
                                             <div
-                                                className="text-[17px] font-semibold text-[#1c1917]/90 dark:text-[#c9d3df] mt-1.5 leading-[1.2] truncate"
+                                                className="text-[17px] font-semibold text-foreground/90 dark:text-foreground mt-1.5 leading-[1.2] truncate"
                                                 title={entry.event_title}
                                             >
                                                 {entry.event_title}
                                             </div>
 
                                             {/* Metadata row with SVG icons */}
-                                            <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 mt-2 text-[14px] text-[#57534e]/85 dark:text-[#6b7b8f]">
+                                            <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 mt-2 text-[14px] text-muted-foreground/85 dark:text-muted-foreground">
                                                 <span className="inline-flex items-center gap-1.5 shrink-0">
                                                     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" className="shrink-0">
                                                         <rect x="1.5" y="2.5" width="11" height="10" rx="2" />

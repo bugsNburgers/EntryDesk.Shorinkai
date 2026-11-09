@@ -190,12 +190,12 @@ export default async function ParentEntryDetailPage({ params }: EntryPageProps) 
     const canReapply = isWithdrawn && !isClosed
 
     return (
-        <div className="w-full min-h-screen text-[#1c1917] dark:text-[#e8eef5] space-y-4 pb-14 font-sans select-none">
+        <div className="w-full min-h-screen text-foreground space-y-4 pb-14 font-sans select-none">
             {/* Top Navigation: ‹ Back to [Athlete Name]'s profile */}
             <div className="py-1 px-1">
                 <Link
                     href={`/athlete/${entry.student_id}`}
-                    className="inline-flex items-center gap-1.5 text-[14.5px] font-medium text-[#57534e] hover:text-[#1c1917] dark:text-[#8a99ab] dark:hover:text-[#e8eef5] transition-colors group"
+                    className="inline-flex items-center gap-1.5 text-[14.5px] font-medium text-muted-foreground hover:text-foreground dark:text-muted-foreground dark:hover:text-foreground transition-colors group"
                 >
                     <span className="text-xl leading-none font-light group-hover:-translate-x-0.5 transition-transform">‹</span>
                     <span>Back to {entry.student_name}’s profile</span>
@@ -206,9 +206,9 @@ export default async function ParentEntryDetailPage({ params }: EntryPageProps) 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-8 2xl:gap-10 items-start">
                 {/* 1. Left Column Top: Tournament Header Card */}
                 <div className="lg:col-span-5 2xl:col-span-4 order-1">
-                    <div className="bg-white border border-[#ded8cb] dark:bg-[#111a2b] dark:border-[#1f2b40] rounded-[18px] p-5 sm:p-6 shadow-xs">
+                    <div className="bg-white border border-border dark:bg-card dark:border-border rounded-[18px] p-5 sm:p-6 shadow-xs">
                         <div className="flex justify-between items-center">
-                            <span className="text-[11.5px] font-bold tracking-[0.14em] uppercase text-[#0d9488] dark:text-[#2dd4b4]">
+                            <span className="text-[11.5px] font-bold tracking-[0.14em] uppercase text-primary">
                                 Tournament entry
                             </span>
 
@@ -224,7 +224,7 @@ export default async function ParentEntryDetailPage({ params }: EntryPageProps) 
                                 </span>
                             )}
                             {isApproved && (
-                                <span className="text-[12.5px] font-bold text-[#14532d] bg-[#dcfce7] border border-[#86efac] dark:text-[#2dd4b4] dark:bg-[#2dd4b4]/12 dark:border-[#2dd4b4]/35 rounded-md px-2.5 py-1">
+                                <span className="text-[12.5px] font-bold text-[#14532d] bg-[#dcfce7] border border-[#86efac] dark:text-primary dark:bg-primary/12 dark:border-primary/35 rounded-md px-2.5 py-1">
                                     Entry accepted
                                 </span>
                             )}
@@ -239,20 +239,20 @@ export default async function ParentEntryDetailPage({ params }: EntryPageProps) 
                                 </span>
                             )}
                             {isWithdrawn && (
-                                <span className="text-[12.5px] font-bold text-[#57534e] bg-[#eee9df] border border-[#ded8cb] dark:text-[#8a99ab] dark:bg-[#8a99ab]/12 dark:border-[#8a99ab]/35 rounded-md px-2.5 py-1">
+                                <span className="text-[12.5px] font-bold text-muted-foreground bg-muted border border-border dark:text-muted-foreground dark:bg-muted-foreground/12 dark:border-muted-foreground/35 rounded-md px-2.5 py-1">
                                     Withdrawn
                                 </span>
                             )}
                         </div>
 
-                        <div className="text-[23px] sm:text-[25px] font-bold leading-[1.15] mt-3.5 text-[#1c1917] dark:text-[#e8eef5]">
+                        <div className="text-[23px] sm:text-[25px] font-bold leading-[1.15] mt-3.5 text-foreground">
                             {entry.event_title}
                         </div>
 
                         <div className="mt-3 text-[14.5px] leading-[1.5]">
-                            <div className="text-[#1c1917] dark:text-[#e8eef5]">{datesFormatted}</div>
+                            <div className="text-foreground">{datesFormatted}</div>
                             {entry.event_location && (
-                                <div className="text-[#57534e] dark:text-[#8a99ab]">{entry.event_location}</div>
+                                <div className="text-muted-foreground">{entry.event_location}</div>
                             )}
                         </div>
                     </div>
@@ -265,22 +265,22 @@ export default async function ParentEntryDetailPage({ params }: EntryPageProps) 
                         <div className="relative overflow-hidden rounded-2xl p-5 sm:p-6 border border-emerald-500/40 bg-gradient-to-br from-[#0c2238] via-[#091b2c] to-[#040d18] text-white shadow-xl shadow-emerald-950/40 space-y-4">
                             {/* Ambient background glow accents */}
                             <div className="absolute -right-10 -top-10 w-44 h-44 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
-                            <div className="absolute -left-10 -bottom-10 w-44 h-44 bg-[#3fd8c3]/10 rounded-full blur-3xl pointer-events-none" />
+                            <div className="absolute -left-10 -bottom-10 w-44 h-44 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
 
                             <div className="relative z-10 flex items-center justify-between gap-2 flex-wrap">
-                                <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-black tracking-wider uppercase bg-emerald-500/20 text-[#3fd8c3] border border-emerald-500/40">
-                                    <span className="h-2 w-2 rounded-full bg-[#3fd8c3] animate-pulse" />
+                                <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-black tracking-wider uppercase bg-emerald-500/20 text-primary/90 border border-emerald-500/40">
+                                    <span className="h-2 w-2 rounded-full bg-primary/90 animate-pulse" />
                                     Official ID Pass Ready
                                 </span>
                                 {entry.chest_no && (
-                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs sm:text-sm font-mono font-black bg-emerald-400 text-[#04231e] shadow-sm">
+                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs sm:text-sm font-mono font-black bg-emerald-400 text-primary-foreground shadow-sm">
                                         Chest #{entry.chest_no}
                                     </span>
                                 )}
                             </div>
 
                             <div className="relative z-10 flex items-start gap-3.5">
-                                <div className="w-11 h-11 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center shrink-0 text-[#3fd8c3]">
+                                <div className="w-11 h-11 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center shrink-0 text-primary/90">
                                     <QrCode className="w-6 h-6" />
                                 </div>
                                 <div className="space-y-1">
@@ -297,7 +297,7 @@ export default async function ParentEntryDetailPage({ params }: EntryPageProps) 
                                 <Link href={`/parent/entries/${entry.id}/id-card`}>
                                     <Button
                                         size="default"
-                                        className="gap-2 rounded-xl font-bold bg-[#3fd8c3] hover:bg-[#25c4a5] text-[#04231e] shadow-lg shadow-[#3fd8c3]/20 h-10 px-5 text-xs sm:text-sm transition-all cursor-pointer"
+                                        className="gap-2 rounded-xl font-bold bg-primary/90 hover:bg-primary/90 text-primary-foreground shadow-lg shadow-[#3fd8c3]/20 h-10 px-5 text-xs sm:text-sm transition-all cursor-pointer"
                                     >
                                         <Smartphone className="h-4 w-4" />
                                         View Pass
@@ -316,8 +316,8 @@ export default async function ParentEntryDetailPage({ params }: EntryPageProps) 
                     )}
 
                     {/* Card 2: Registration Progress & Stepper */}
-                    <div className="bg-white border border-[#ded8cb] dark:bg-[#111a2b] dark:border-[#1f2b40] rounded-[18px] p-5 sm:p-6 shadow-xs">
-                        <div className="text-[11.5px] font-bold tracking-[0.14em] uppercase text-[#0d9488] dark:text-[#2dd4b4] mb-3">
+                    <div className="bg-white border border-border dark:bg-card dark:border-border rounded-[18px] p-5 sm:p-6 shadow-xs">
+                        <div className="text-[11.5px] font-bold tracking-[0.14em] uppercase text-primary mb-3">
                             Registration progress
                         </div>
 
@@ -327,10 +327,10 @@ export default async function ParentEntryDetailPage({ params }: EntryPageProps) 
                         <div className="text-[12px] text-amber-800 dark:text-[#f5c542] font-bold tracking-[0.08em] uppercase">
                             STEP 2 OF 3
                         </div>
-                        <div className="text-[19px] font-bold mt-1 text-[#1c1917] dark:text-[#e8eef5]">
+                        <div className="text-[19px] font-bold mt-1 text-foreground">
                             Waiting for your coach
                         </div>
-                        <div className="text-[14px] text-[#57534e] dark:text-[#c9d3df] mt-1 leading-[1.4]">
+                        <div className="text-[14px] text-muted-foreground dark:text-foreground mt-1 leading-[1.4]">
                             Your coach will review and forward your entry to the organiser.
                         </div>
                     </div>
@@ -341,24 +341,24 @@ export default async function ParentEntryDetailPage({ params }: EntryPageProps) 
                         <div className="text-[12px] text-amber-800 dark:text-[#f5c542] font-bold tracking-[0.08em] uppercase">
                             STEP 3 OF 3
                         </div>
-                        <div className="text-[19px] font-bold mt-1 text-[#1c1917] dark:text-[#e8eef5]">
+                        <div className="text-[19px] font-bold mt-1 text-foreground">
                             Waiting for organiser
                         </div>
-                        <div className="text-[14px] text-[#57534e] dark:text-[#c9d3df] mt-1 leading-[1.4]">
+                        <div className="text-[14px] text-muted-foreground dark:text-foreground mt-1 leading-[1.4]">
                             Coach verified and forwarded! Waiting for the tournament organiser to confirm your entry.
                         </div>
                     </div>
                 )}
 
                 {isApproved && (
-                    <div className="bg-[#dcfce7] border border-[#86efac] dark:bg-[#2dd4b4]/10 dark:border-[#2dd4b4]/35 rounded-[12px] p-[14px_16px] mb-5">
-                        <div className="text-[12px] text-[#14532d] dark:text-[#2dd4b4] font-bold tracking-[0.08em] uppercase">
+                    <div className="bg-[#dcfce7] border border-[#86efac] dark:bg-primary/10 dark:border-primary/35 rounded-[12px] p-[14px_16px] mb-5">
+                        <div className="text-[12px] text-[#14532d] dark:text-primary font-bold tracking-[0.08em] uppercase">
                             OFFICIALLY REGISTERED
                         </div>
-                        <div className="text-[19px] font-bold mt-1 text-[#14532d] dark:text-[#e8eef5]">
+                        <div className="text-[19px] font-bold mt-1 text-[#14532d] dark:text-foreground">
                             Entry Accepted!
                         </div>
-                        <div className="text-[14px] text-[#166534] dark:text-[#c9d3df] mt-1 leading-[1.4]">
+                        <div className="text-[14px] text-[#166534] dark:text-foreground mt-1 leading-[1.4]">
                             {entry.chest_no
                                 ? `Chest number #${entry.chest_no} assigned. Official ID Pass is ready below.`
                                 : 'The athlete is confirmed. Official ID Pass is ready below.'}
@@ -371,10 +371,10 @@ export default async function ParentEntryDetailPage({ params }: EntryPageProps) 
                         <div className="text-[12px] text-orange-800 dark:text-[#fb923c] font-bold tracking-[0.08em] uppercase">
                             ACTION NEEDED
                         </div>
-                        <div className="text-[19px] font-bold mt-1 text-[#1c1917] dark:text-[#e8eef5]">
+                        <div className="text-[19px] font-bold mt-1 text-foreground">
                             Updates requested by coach
                         </div>
-                        <div className="text-[14px] text-[#57534e] dark:text-[#c9d3df] mt-1 leading-[1.4]">
+                        <div className="text-[14px] text-muted-foreground dark:text-foreground mt-1 leading-[1.4]">
                             {entry.coach_notes
                                 ? `Note from coach: "${entry.coach_notes}"`
                                 : 'Your coach requested updates before approving this entry.'}
@@ -387,24 +387,24 @@ export default async function ParentEntryDetailPage({ params }: EntryPageProps) 
                         <div className="text-[12px] text-rose-800 dark:text-[#f87171] font-bold tracking-[0.08em] uppercase">
                             NOT ACCEPTED
                         </div>
-                        <div className="text-[19px] font-bold mt-1 text-[#1c1917] dark:text-[#e8eef5]">
+                        <div className="text-[19px] font-bold mt-1 text-foreground">
                             {isDeclined ? 'Entry declined by coach' : 'Entry not accepted'}
                         </div>
-                        <div className="text-[14px] text-[#57534e] dark:text-[#c9d3df] mt-1 leading-[1.4]">
+                        <div className="text-[14px] text-muted-foreground dark:text-foreground mt-1 leading-[1.4]">
                             {entry.rejection_reason || entry.coach_notes || 'This entry was not accepted for this event.'}
                         </div>
                     </div>
                 )}
 
                 {isWithdrawn && (
-                    <div className="bg-[#eee9df] border border-[#ded8cb] dark:bg-[#8a99ab]/10 dark:border-[#8a99ab]/35 rounded-[12px] p-[14px_16px] mb-5">
-                        <div className="text-[12px] text-[#57534e] dark:text-[#8a99ab] font-bold tracking-[0.08em] uppercase">
+                    <div className="bg-muted border border-border dark:bg-muted-foreground/10 dark:border-muted-foreground/35 rounded-[12px] p-[14px_16px] mb-5">
+                        <div className="text-[12px] text-muted-foreground font-bold tracking-[0.08em] uppercase">
                             STATUS
                         </div>
-                        <div className="text-[19px] font-bold mt-1 text-[#1c1917] dark:text-[#e8eef5]">
+                        <div className="text-[19px] font-bold mt-1 text-foreground">
                             Entry withdrawn
                         </div>
-                        <div className="text-[14px] text-[#57534e] dark:text-[#c9d3df] mt-1 leading-[1.4]">
+                        <div className="text-[14px] text-muted-foreground dark:text-foreground mt-1 leading-[1.4]">
                             {entry.rejection_reason || 'This registration was withdrawn by the parent.'}
                         </div>
                     </div>
@@ -415,7 +415,7 @@ export default async function ParentEntryDetailPage({ params }: EntryPageProps) 
                     {/* Step 1: Registration sent */}
                     <div className="flex gap-3.5 h-[70px]">
                         <div className="flex flex-col items-center w-[30px] shrink-0">
-                            <div className="w-[30px] h-[30px] rounded-full bg-[#2dd4b4] flex items-center justify-center shrink-0">
+                            <div className="w-[30px] h-[30px] rounded-full bg-primary flex items-center justify-center shrink-0">
                                 <svg width="14" height="14" viewBox="0 0 14 14">
                                     <path
                                         d="M2 7.5l3 3 7-7.5"
@@ -428,18 +428,18 @@ export default async function ParentEntryDetailPage({ params }: EntryPageProps) 
                             <div
                                 className={`w-[2px] flex-1 my-1 ${
                                     isPendingCoach || isCorrectionNeeded || isDeclined
-                                        ? 'bg-[#2dd4b4]'
+                                        ? 'bg-primary'
                                         : isSubmitted || isApproved || isRejected
-                                        ? 'bg-[#2dd4b4]'
-                                        : 'bg-[#243349]'
+                                        ? 'bg-primary'
+                                        : 'bg-border'
                                 }`}
                             />
                         </div>
                         <div className="pt-1 flex-1">
-                            <b className="text-[16px] font-semibold block text-[#e8eef5]">
+                            <b className="text-[16px] font-semibold block text-foreground">
                                 Registration sent
                             </b>
-                            <small className="text-[13.5px] text-[#8a99ab] block mt-0.5 leading-[1.4]">
+                            <small className="text-[13.5px] text-muted-foreground block mt-0.5 leading-[1.4]">
                                 {step1Date || 'Submitted'}
                             </small>
                         </div>
@@ -466,7 +466,7 @@ export default async function ParentEntryDetailPage({ params }: EntryPageProps) 
                             )}
 
                             {(isSubmitted || isApproved || isRejected) && (
-                                <div className="w-[30px] h-[30px] rounded-full bg-[#2dd4b4] flex items-center justify-center shrink-0">
+                                <div className="w-[30px] h-[30px] rounded-full bg-primary flex items-center justify-center shrink-0">
                                     <svg width="14" height="14" viewBox="0 0 14 14">
                                         <path
                                             d="M2 7.5l3 3 7-7.5"
@@ -513,14 +513,14 @@ export default async function ParentEntryDetailPage({ params }: EntryPageProps) 
                             )}
 
                             {isWithdrawn && (
-                                <div className="w-[30px] h-[30px] rounded-full border-2 border-[#34455f] text-[#8a99ab] text-[13px] font-bold flex items-center justify-center shrink-0">
+                                <div className="w-[30px] h-[30px] rounded-full border-2 border-border text-muted-foreground text-[13px] font-bold flex items-center justify-center shrink-0">
                                     2
                                 </div>
                             )}
 
                             <div
                                 className={`w-[2px] flex-1 my-1 ${
-                                    isApproved ? 'bg-[#2dd4b4]' : 'bg-[#243349]'
+                                    isApproved ? 'bg-primary' : 'bg-border'
                                 }`}
                             />
                         </div>
@@ -534,12 +534,12 @@ export default async function ParentEntryDetailPage({ params }: EntryPageProps) 
                                         ? 'text-[#fb923c]'
                                         : isDeclined
                                         ? 'text-[#f87171]'
-                                        : 'text-[#e8eef5]'
+                                        : 'text-foreground'
                                 }`}
                             >
                                 Coach review
                             </b>
-                            <small className="text-[13.5px] text-[#8a99ab] block mt-0.5 leading-[1.4]">
+                            <small className="text-[13.5px] text-muted-foreground block mt-0.5 leading-[1.4]">
                                 {isPendingCoach
                                     ? 'In progress'
                                     : isSubmitted || isApproved
@@ -559,7 +559,7 @@ export default async function ParentEntryDetailPage({ params }: EntryPageProps) 
                     <div className="flex gap-3.5 h-auto">
                         <div className="flex flex-col items-center w-[30px] shrink-0">
                             {isApproved ? (
-                                <div className="w-[30px] h-[30px] rounded-full bg-[#2dd4b4] flex items-center justify-center shrink-0">
+                                <div className="w-[30px] h-[30px] rounded-full bg-primary flex items-center justify-center shrink-0">
                                     <svg width="14" height="14" viewBox="0 0 14 14">
                                         <path
                                             d="M2 7.5l3 3 7-7.5"
@@ -599,7 +599,7 @@ export default async function ParentEntryDetailPage({ params }: EntryPageProps) 
                                     </svg>
                                 </div>
                             ) : (
-                                <div className="w-[30px] h-[30px] rounded-full border-2 border-[#34455f] text-[#8a99ab] text-[13px] font-bold flex items-center justify-center shrink-0">
+                                <div className="w-[30px] h-[30px] rounded-full border-2 border-border text-muted-foreground text-[13px] font-bold flex items-center justify-center shrink-0">
                                     3
                                 </div>
                             )}
@@ -609,17 +609,17 @@ export default async function ParentEntryDetailPage({ params }: EntryPageProps) 
                             <b
                                 className={`text-[16px] font-semibold block ${
                                     isApproved
-                                        ? 'text-[#2dd4b4]'
+                                        ? 'text-primary'
                                         : isSubmitted
                                         ? 'text-[#f5c542]'
                                         : isRejected
                                         ? 'text-[#f87171]'
-                                        : 'text-[#8a99ab]'
+                                        : 'text-muted-foreground'
                                 }`}
                             >
                                 Organiser acceptance
                             </b>
-                            <small className="text-[13.5px] text-[#8a99ab] block mt-0.5 leading-[1.4]">
+                            <small className="text-[13.5px] text-muted-foreground block mt-0.5 leading-[1.4]">
                                 {isApproved
                                     ? entry.chest_no
                                         ? `Confirmed · Chest #${entry.chest_no}`
@@ -639,38 +639,38 @@ export default async function ParentEntryDetailPage({ params }: EntryPageProps) 
         {/* 3. Left Column Bottom: Registration Details & Actions */}
         <div className="lg:col-span-5 2xl:col-span-4 order-3 lg:order-3 space-y-4">
                     {/* Card 3: Registration Details (matches Entry.dc.html lines 62-71) */}
-                    <div className="bg-white border border-[#ded8cb] dark:bg-[#111a2b] dark:border-[#1f2b40] rounded-[18px] p-5 sm:p-6 pb-2 shadow-xs">
-                        <div className="text-[11.5px] font-bold tracking-[0.14em] uppercase text-[#0d9488] dark:text-[#2dd4b4] mb-0.5">
+                    <div className="bg-white border border-border dark:bg-card dark:border-border rounded-[18px] p-5 sm:p-6 pb-2 shadow-xs">
+                        <div className="text-[11.5px] font-bold tracking-[0.14em] uppercase text-primary mb-0.5">
                             Registration details
                         </div>
 
-                <div className="divide-y divide-[#ded8cb] dark:divide-[#1f2b40]">
+                <div className="divide-y divide-border">
                     <div className="flex justify-between items-baseline gap-3.5 py-3">
-                        <span className="text-[14px] text-[#57534e] dark:text-[#8a99ab] shrink-0">Athlete</span>
-                        <b className="text-[15.5px] font-semibold text-right break-words text-[#1c1917] dark:text-[#e8eef5]">
+                        <span className="text-[14px] text-muted-foreground shrink-0">Athlete</span>
+                        <b className="text-[15.5px] font-semibold text-right break-words text-foreground">
                             {entry.student_name}
                         </b>
                     </div>
 
                     <div className="flex justify-between items-baseline gap-3.5 py-3">
-                        <span className="text-[14px] text-[#57534e] dark:text-[#8a99ab] shrink-0">Coach</span>
-                        <b className="text-[15.5px] font-semibold text-right break-words text-[#1c1917] dark:text-[#e8eef5]">
+                        <span className="text-[14px] text-muted-foreground shrink-0">Coach</span>
+                        <b className="text-[15.5px] font-semibold text-right break-words text-foreground">
                             {entry.coach_name || '—'}
                         </b>
                     </div>
 
                     {entry.category_name && (
                         <div className="flex justify-between items-baseline gap-3.5 py-3">
-                            <span className="text-[14px] text-[#57534e] dark:text-[#8a99ab] shrink-0">Category</span>
-                            <b className="text-[15.5px] font-semibold text-right break-words text-[#1c1917] dark:text-[#e8eef5]">
+                            <span className="text-[14px] text-muted-foreground shrink-0">Category</span>
+                            <b className="text-[15.5px] font-semibold text-right break-words text-foreground">
                                 {entry.category_name}
                             </b>
                         </div>
                     )}
 
                     <div className="flex justify-between items-baseline gap-3.5 py-3">
-                        <span className="text-[14px] text-[#57534e] dark:text-[#8a99ab] shrink-0">Weight</span>
-                        <b className="text-[15.5px] font-semibold text-right break-words text-[#1c1917] dark:text-[#e8eef5]">
+                        <span className="text-[14px] text-muted-foreground shrink-0">Weight</span>
+                        <b className="text-[15.5px] font-semibold text-right break-words text-foreground">
                             {entry.declared_weight_kg ? `${entry.declared_weight_kg} kg` : '—'}
                         </b>
                     </div>
@@ -686,15 +686,15 @@ export default async function ParentEntryDetailPage({ params }: EntryPageProps) 
                     />
 
                     <div className="flex justify-between items-baseline gap-3.5 py-3">
-                        <span className="text-[14px] text-[#57534e] dark:text-[#8a99ab] shrink-0">Submitted</span>
-                        <b className="text-[15.5px] font-semibold text-right break-words text-[#1c1917] dark:text-[#e8eef5]">
+                        <span className="text-[14px] text-muted-foreground shrink-0">Submitted</span>
+                        <b className="text-[15.5px] font-semibold text-right break-words text-foreground">
                             {submittedFormatted}
                         </b>
                     </div>
 
                     {/* Events applied 2x2 grid */}
                     <div className="py-3 pb-3.5">
-                        <div className="text-[14px] text-[#57534e] dark:text-[#8a99ab] mb-3">
+                        <div className="text-[14px] text-muted-foreground mb-3">
                             Events applied
                         </div>
                         <div className="grid grid-cols-2 gap-x-2.5 gap-y-3.5">
@@ -702,15 +702,15 @@ export default async function ParentEntryDetailPage({ params }: EntryPageProps) 
                             <div
                                 className={`flex items-center gap-2.5 text-[15.5px] ${
                                     applied.kata
-                                        ? 'font-semibold text-[#1c1917] dark:text-[#e8eef5]'
-                                        : 'font-medium text-[#57534e]/60 dark:text-[#6b7b8f]'
+                                        ? 'font-semibold text-foreground'
+                                        : 'font-medium text-muted-foreground/60 dark:text-muted-foreground'
                                 }`}
                             >
                                 <span
                                     className={`w-[22px] h-[22px] rounded-[7px] border-2 box-border flex items-center justify-center shrink-0 ${
                                         applied.kata
-                                            ? 'bg-[#0d9488] border-[#0d9488] dark:bg-[#2dd4b4] dark:border-[#2dd4b4]'
-                                            : 'border-[#ded8cb] dark:border-[#34455f]'
+                                            ? 'bg-primary border-primary dark:bg-primary dark:border-primary'
+                                            : 'border-border'
                                     }`}
                                 >
                                     {applied.kata && (
@@ -731,15 +731,15 @@ export default async function ParentEntryDetailPage({ params }: EntryPageProps) 
                             <div
                                 className={`flex items-center gap-2.5 text-[15.5px] ${
                                     applied.kumite
-                                        ? 'font-semibold text-[#1c1917] dark:text-[#e8eef5]'
-                                        : 'font-medium text-[#57534e]/60 dark:text-[#6b7b8f]'
+                                        ? 'font-semibold text-foreground'
+                                        : 'font-medium text-muted-foreground/60 dark:text-muted-foreground'
                                 }`}
                             >
                                 <span
                                     className={`w-[22px] h-[22px] rounded-[7px] border-2 box-border flex items-center justify-center shrink-0 ${
                                         applied.kumite
-                                            ? 'bg-[#0d9488] border-[#0d9488] dark:bg-[#2dd4b4] dark:border-[#2dd4b4]'
-                                            : 'border-[#ded8cb] dark:border-[#34455f]'
+                                            ? 'bg-primary border-primary dark:bg-primary dark:border-primary'
+                                            : 'border-border'
                                     }`}
                                 >
                                     {applied.kumite && (
@@ -760,15 +760,15 @@ export default async function ParentEntryDetailPage({ params }: EntryPageProps) 
                             <div
                                 className={`flex items-center gap-2.5 text-[15.5px] ${
                                     applied.teamKata
-                                        ? 'font-semibold text-[#1c1917] dark:text-[#e8eef5]'
-                                        : 'font-medium text-[#57534e]/60 dark:text-[#6b7b8f]'
+                                        ? 'font-semibold text-foreground'
+                                        : 'font-medium text-muted-foreground/60 dark:text-muted-foreground'
                                 }`}
                             >
                                 <span
                                     className={`w-[22px] h-[22px] rounded-[7px] border-2 box-border flex items-center justify-center shrink-0 ${
                                         applied.teamKata
-                                            ? 'bg-[#0d9488] border-[#0d9488] dark:bg-[#2dd4b4] dark:border-[#2dd4b4]'
-                                            : 'border-[#ded8cb] dark:border-[#34455f]'
+                                            ? 'bg-primary border-primary dark:bg-primary dark:border-primary'
+                                            : 'border-border'
                                     }`}
                                 >
                                     {applied.teamKata && (
@@ -789,15 +789,15 @@ export default async function ParentEntryDetailPage({ params }: EntryPageProps) 
                             <div
                                 className={`flex items-center gap-2.5 text-[15.5px] ${
                                     applied.teamKumite
-                                        ? 'font-semibold text-[#1c1917] dark:text-[#e8eef5]'
-                                        : 'font-medium text-[#57534e]/60 dark:text-[#6b7b8f]'
+                                        ? 'font-semibold text-foreground'
+                                        : 'font-medium text-muted-foreground/60 dark:text-muted-foreground'
                                 }`}
                             >
                                 <span
                                     className={`w-[22px] h-[22px] rounded-[7px] border-2 box-border flex items-center justify-center shrink-0 ${
                                         applied.teamKumite
-                                            ? 'bg-[#0d9488] border-[#0d9488] dark:bg-[#2dd4b4] dark:border-[#2dd4b4]'
-                                            : 'border-[#ded8cb] dark:border-[#34455f]'
+                                            ? 'bg-primary border-primary dark:bg-primary dark:border-primary'
+                                            : 'border-border'
                                     }`}
                                 >
                                     {applied.teamKumite && (

@@ -42,15 +42,15 @@ export function ChildCardItem({ child, latestStatus }: ChildCardItemProps) {
             href={`/athlete/${child.id}`}
             prefetch={true}
             onClick={handleClick}
-            className={`block relative overflow-hidden rounded-[16px] border bg-white dark:bg-[#111a2b] p-4 shadow-xs hover:shadow-md transition-all duration-150 active:scale-[0.98] ${
+            className={`block relative overflow-hidden rounded-[16px] border bg-card p-4 shadow-xs hover:shadow-md transition-all duration-150 active:scale-[0.98] ${
                 isSelected || isPending
-                    ? 'border-[#0d9488] ring-2 ring-[#0d9488]/30 dark:border-[#2dd4b4] dark:ring-[#2dd4b4]/30 shadow-md'
-                    : 'border-[#ded8cb] hover:border-[#0d9488]/50 hover:bg-[#faf8f3] dark:border-[#1f2b40] dark:hover:border-[#2dd4b4]/50 dark:hover:bg-[#131e32]'
+                    ? 'border-primary ring-2 ring-primary/30 dark:border-primary dark:ring-primary/30 shadow-md'
+                    : 'border-border hover:border-primary/50 hover:bg-background dark:border-border dark:hover:border-primary/50 dark:hover:bg-[#131e32]'
             }`}
         >
             {/* Top subtle selection indicator strip when clicked */}
             {(isSelected || isPending) && (
-                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#0d9488] to-[#0d9488]/60 dark:from-[#2dd4b4] dark:to-[#2dd4b4]/60 animate-pulse" />
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary to-primary/60 dark:from-primary dark:to-primary/60 animate-pulse" />
             )}
 
             <div className="flex items-center gap-3.5">
@@ -69,8 +69,8 @@ export function ChildCardItem({ child, latestStatus }: ChildCardItemProps) {
 
                     {/* Instant spinner overlay on avatar when selected */}
                     {(isSelected || isPending) && (
-                        <div className="absolute inset-0 bg-black/40 dark:bg-[#0a1220]/70 rounded-full flex items-center justify-center">
-                            <Loader2 className="h-5 w-5 text-white dark:text-[#2dd4b4] animate-spin" />
+                        <div className="absolute inset-0 bg-black/40 dark:bg-background/70 rounded-full flex items-center justify-center">
+                            <Loader2 className="h-5 w-5 text-white dark:text-primary animate-spin" />
                         </div>
                     )}
                 </div>
@@ -79,19 +79,19 @@ export function ChildCardItem({ child, latestStatus }: ChildCardItemProps) {
                     <div className="flex items-start justify-between gap-2">
                         <div>
                             <div className="flex items-center gap-2">
-                                <p className="font-bold text-[16.5px] truncate text-[#1c1917] dark:text-[#e8eef5]">{child.name}</p>
+                                <p className="font-bold text-[16.5px] truncate text-foreground">{child.name}</p>
                                 {(isSelected || isPending) && (
-                                    <span className="text-[10px] font-bold text-[#0d9488] bg-[#0d9488]/15 dark:text-[#2dd4b4] dark:bg-[#2dd4b4]/15 px-1.5 py-0.5 rounded animate-pulse">
+                                    <span className="text-[10px] font-bold text-primary bg-primary/15 dark:text-primary dark:bg-primary/15 px-1.5 py-0.5 rounded animate-pulse">
                                         Loading...
                                     </span>
                                 )}
                             </div>
                             <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
                                 {child.rank && (
-                                    <span className="text-xs text-[#57534e] dark:text-[#8a99ab] font-medium">{child.rank}</span>
+                                    <span className="text-xs text-muted-foreground font-medium">{child.rank}</span>
                                 )}
                                 {child.dojo_name && (
-                                    <span className="text-xs text-[#57534e] dark:text-[#8a99ab] truncate">
+                                    <span className="text-xs text-muted-foreground truncate">
                                         {child.rank ? '· ' : ''}{child.dojo_name}
                                     </span>
                                 )}
@@ -100,9 +100,9 @@ export function ChildCardItem({ child, latestStatus }: ChildCardItemProps) {
 
                         {/* Entry counts */}
                         {child.entry_count > 0 && (
-                            <div className="flex items-center gap-1 shrink-0 bg-[#eee9df] border border-[#ded8cb] dark:bg-[#16233a] dark:border-[#1f2b40] rounded-md px-2 py-0.5 shadow-2xs">
-                                <Trophy className="h-3 w-3 text-[#0d9488] dark:text-[#2dd4b4]" />
-                                <span className="text-xs font-semibold text-[#1c1917] dark:text-[#8a99ab]">
+                            <div className="flex items-center gap-1 shrink-0 bg-muted border border-border dark:bg-muted dark:border-border rounded-md px-2 py-0.5 shadow-2xs">
+                                <Trophy className="h-3 w-3 text-primary" />
+                                <span className="text-xs font-semibold text-foreground dark:text-muted-foreground">
                                     {child.entry_count}
                                 </span>
                             </div>
@@ -118,7 +118,7 @@ export function ChildCardItem({ child, latestStatus }: ChildCardItemProps) {
                         const isCorrection = statusKey === 'correction_needed' || labelLower.includes('correct')
 
                         const badgeColorClasses = isAccepted
-                            ? 'bg-[#dcfce7] text-[#14532d] border border-[#86efac] dark:text-[#2dd4b4] dark:bg-[#2dd4b4]/12 dark:border-[#2dd4b4]/35'
+                            ? 'bg-[#dcfce7] text-[#14532d] border border-[#86efac] dark:text-primary dark:bg-primary/12 dark:border-primary/35'
                             : isRejected
                             ? 'bg-rose-100 text-rose-800 border border-rose-300 dark:text-[#f87171] dark:bg-[#f87171]/12 dark:border-[#f87171]/35'
                             : isCorrection

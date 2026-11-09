@@ -389,7 +389,7 @@ export function CoachEntriesList({
                 ? 'text-rose-600 dark:text-rose-400'
                 : 'text-emerald-600 dark:text-emerald-400'
         }
-        return 'text-[#1c1917] dark:text-[#f8fafc]'
+        return 'text-foreground'
     }, [effectiveFilter, tabCounts.not_forwarded])
 
     const selectedEntries = useMemo(() => {
@@ -564,26 +564,26 @@ export function CoachEntriesList({
     }
 
     return (
-        <div className="w-full text-[#1c1917] dark:text-[#e8eef5] select-text font-['Google_Sans','Product_Sans',system-ui,sans-serif] space-y-4 pb-44 md:pb-28">
+        <div className="w-full text-foreground select-text font-['Google_Sans','Product_Sans',system-ui,sans-serif] space-y-4 pb-44 md:pb-28">
             {/* ========================================================================= */}
             {/* 1. SEARCH BAR & ACTION BUTTONS (IN LINE)                                  */}
             {/* ========================================================================= */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
                 {/* Single white search box (stretches to fill available space until buttons) */}
                 <div className="relative flex-1 min-w-[200px]">
-                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#78716c] dark:text-[#8a99ab]" />
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <input
                         type="text"
                         placeholder="Search student, dojo, belt..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full h-11 pl-10 pr-9 text-xs sm:text-sm rounded-xl bg-white dark:bg-[#111a2b] border border-[#ded8cb] dark:border-[#1f2b40] text-[#1c1917] dark:text-[#f8fafc] placeholder:text-[#a8a29e] dark:placeholder:text-[#6b7b8f] focus:outline-none focus:border-[#0d9488] dark:focus:border-[#2dd4b4] shadow-xs transition"
+                        className="w-full h-11 pl-10 pr-9 text-xs sm:text-sm rounded-xl bg-card border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary shadow-xs transition"
                     />
                     {searchQuery && (
                         <button
                             type="button"
                             onClick={() => setSearchQuery('')}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-[#78716c] hover:text-[#1c1917] dark:text-[#8a99ab] dark:hover:text-[#e8eef5] p-1 cursor-pointer"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground dark:text-muted-foreground dark:hover:text-foreground p-1 cursor-pointer"
                         >
                             <X className="h-3.5 w-3.5" />
                         </button>
@@ -597,7 +597,7 @@ export function CoachEntriesList({
                             <Button
                                 variant="outline"
                                 size="sm"
-                                className="w-full sm:w-auto h-11 px-4 gap-1.5 rounded-xl font-semibold border-[#0d9488]/40 dark:border-[#2dd4b4]/40 text-[#0d9488] dark:text-[#2dd4b4] hover:bg-[#0d9488]/5 bg-white dark:bg-[#111a2b] shadow-xs cursor-pointer"
+                                className="w-full sm:w-auto h-11 px-4 gap-1.5 rounded-xl font-semibold border-primary/40 text-primary hover:bg-primary/5 bg-card shadow-xs cursor-pointer"
                             >
                                 <Printer className="h-4 w-4" />
                                 <span>Print Team Cards ({approvedCount})</span>
@@ -609,7 +609,7 @@ export function CoachEntriesList({
                         <Button
                             onClick={onAddStudent}
                             size="sm"
-                            className="flex-1 sm:flex-initial h-11 px-4 gap-2 font-semibold shadow-xs rounded-xl bg-[#0d9488] hover:bg-[#0f766e] text-white dark:bg-[#2dd4b4] dark:hover:bg-[#25c4a5] dark:text-[#04231e] cursor-pointer"
+                            className="flex-1 sm:flex-initial h-11 px-4 gap-2 font-semibold shadow-xs rounded-xl bg-primary hover:bg-primary/90 text-white dark:bg-primary dark:hover:bg-primary/90 dark:text-primary-foreground cursor-pointer"
                         >
                             <AthleteIcon size={16} className="shrink-0" />
                             <span>Add Student</span>
@@ -621,21 +621,21 @@ export function CoachEntriesList({
             {/* ========================================================================= */}
             {/* 2. UNIFIED ATHLETE ENTRIES CARD (HEADER + ATHLETES TABLE JOINED)          */}
             {/* ========================================================================= */}
-            <div className="rounded-2xl border border-[#ded8cb] bg-white shadow-xs overflow-hidden dark:border-[#1f2b40] dark:bg-[#111a2b]">
+            <div className="rounded-2xl border border-border bg-white shadow-xs overflow-hidden dark:border-border dark:bg-card">
                 {/* Upper Section: Pending Approvals text & Segmented Slider with curvy top arc */}
-                <div className="p-4 sm:p-5 bg-white dark:bg-[#111a2b] border-b border-[#ded8cb] dark:border-[#1f2b40] flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+                <div className="p-4 sm:p-5 bg-card border-b border-border flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
                     <div>
                         <h3 className={`text-xl font-bold tracking-tight ${headingColor}`}>
                             {headingInfo.title}
                         </h3>
-                        <p className="text-xs text-[#78716c] dark:text-[#8a99ab] mt-0.5">
+                        <p className="text-xs text-muted-foreground mt-0.5">
                             {headingInfo.subtitle}
                         </p>
                     </div>
 
                     <div className="flex items-center gap-2.5 flex-wrap">
                         {/* Segmented Slider Switcher */}
-                        <div className="p-1 rounded-xl bg-[#ede8dc]/80 dark:bg-[#070e1b] border border-[#ded8cb] dark:border-[#1f2b40] inline-flex items-center gap-1 overflow-x-auto max-w-full">
+                        <div className="p-1 rounded-xl bg-muted/80 dark:bg-[#070e1b] border border-border inline-flex items-center gap-1 overflow-x-auto max-w-full">
                             {[
                                 { key: 'not_forwarded', label: 'Pending Approvals', count: tabCounts.not_forwarded, isPending: true },
                                 { key: 'all', label: 'All', count: tabCounts.all },
@@ -670,11 +670,11 @@ export function CoachEntriesList({
                                     }
                                 } else {
                                     buttonClasses = isActive
-                                        ? 'bg-white dark:bg-[#17243c] text-[#1c1917] dark:text-[#f8fafc] font-bold shadow-sm'
-                                        : 'text-[#57534e] dark:text-[#8a99ab] hover:text-[#1c1917] dark:hover:text-[#e8eef5] hover:bg-black/5 dark:hover:bg-white/5'
+                                        ? 'bg-white dark:bg-[#17243c] text-foreground font-bold shadow-sm'
+                                        : 'text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5'
                                     badgeClasses = isActive
-                                        ? 'bg-[#0d9488]/15 text-[#0d9488] dark:bg-[#2dd4b4]/20 dark:text-[#2dd4b4]'
-                                        : 'bg-black/5 dark:bg-white/10 text-[#57534e] dark:text-[#8a99ab]'
+                                        ? 'bg-primary/15 text-primary dark:bg-primary/20 dark:text-primary'
+                                        : 'bg-black/5 dark:bg-white/10 text-muted-foreground'
                                 }
 
                                 return (
@@ -709,39 +709,39 @@ export function CoachEntriesList({
                             alignItems: 'center',
                             height: '48px',
                         }}
-                        className="bg-[#f5f0e6] dark:bg-[#0f1828] border-b border-[#ded8cb] dark:border-[#1f2b40] text-[#78716c] dark:text-[#8a99ab] text-[11px] font-bold uppercase tracking-wider"
+                        className="bg-muted dark:bg-card border-b border-border text-muted-foreground text-[11px] font-bold uppercase tracking-wider"
                     >
                         {/* Select All Checkbox */}
-                        <div className="h-full flex items-center justify-center border-r border-dotted border-[#ded8cb] dark:border-[#223552] px-2">
+                        <div className="h-full flex items-center justify-center border-r border-dotted border-border px-2">
                             <span
                                 onClick={selectableEntries.length > 0 ? handleToggleSelectAll : undefined}
                                 title={selectableEntries.length === 0 ? 'No selectable entries' : isAllSelected ? 'Deselect all' : 'Select all'}
                                 className={`w-5 h-5 rounded-[6px] border-2 flex items-center justify-center transition ${
                                     selectableEntries.length === 0
-                                        ? 'opacity-30 cursor-not-allowed border-[#ded8cb] dark:border-[#34455f] bg-transparent'
+                                        ? 'opacity-30 cursor-not-allowed border-border bg-transparent'
                                         : isAllSelected
-                                        ? 'bg-[#0d9488] dark:bg-[#2dd4b4] border-[#0d9488] dark:border-[#2dd4b4] cursor-pointer'
-                                        : 'border-[#ded8cb] dark:border-[#34455f] bg-white dark:bg-transparent hover:border-[#0d9488]/60 cursor-pointer'
+                                        ? 'bg-primary border-primary cursor-pointer'
+                                        : 'border-border bg-white dark:bg-transparent hover:border-primary/60 cursor-pointer'
                                 }`}
                             >
                                 {isAllSelected && selectableEntries.length > 0 && <CheckmarkSvg />}
                             </span>
                         </div>
 
-                        <div className="h-full flex items-center px-2.5 border-r border-dotted border-[#ded8cb] dark:border-[#223552]">Chest</div>
-                        <div className="h-full flex items-center px-2.5 border-r border-dotted border-[#ded8cb] dark:border-[#223552]">Athlete</div>
-                        <div className="h-full flex items-center justify-center px-1 border-r border-dotted border-[#ded8cb] dark:border-[#223552]">Age</div>
-                        <div className="h-full flex items-center px-2.5 border-r border-dotted border-[#ded8cb] dark:border-[#223552]">Dojo</div>
-                        <div className="h-full flex items-center px-2.5 border-r border-dotted border-[#ded8cb] dark:border-[#223552]">Belt</div>
-                        <div className="h-full flex items-center px-2.5 border-r border-dotted border-[#ded8cb] dark:border-[#223552]">Weight</div>
-                        <div className="h-full flex items-center px-2 border-r border-dotted border-[#ded8cb] dark:border-[#223552]">Events applied</div>
+                        <div className="h-full flex items-center px-2.5 border-r border-dotted border-border">Chest</div>
+                        <div className="h-full flex items-center px-2.5 border-r border-dotted border-border">Athlete</div>
+                        <div className="h-full flex items-center justify-center px-1 border-r border-dotted border-border">Age</div>
+                        <div className="h-full flex items-center px-2.5 border-r border-dotted border-border">Dojo</div>
+                        <div className="h-full flex items-center px-2.5 border-r border-dotted border-border">Belt</div>
+                        <div className="h-full flex items-center px-2.5 border-r border-dotted border-border">Weight</div>
+                        <div className="h-full flex items-center px-2 border-r border-dotted border-border">Events applied</div>
 
                         {/* Payment Header with Mark all Pill */}
-                        <div className="h-full flex items-center justify-between px-3 border-r border-dotted border-[#ded8cb] dark:border-[#223552]">
+                        <div className="h-full flex items-center justify-between px-3 border-r border-dotted border-border">
                             <span>Payment</span>
                             <button
                                 onClick={handleMarkAllPaid}
-                                className="h-6 px-2.5 rounded-full border border-[#0d9488] dark:border-[#2dd4b4] text-[#0d9488] dark:text-[#2dd4b4] text-[10.5px] font-bold inline-flex items-center gap-1 hover:bg-[#0d9488]/10 dark:hover:bg-[#2dd4b4]/10 cursor-pointer transition whitespace-nowrap"
+                                className="h-6 px-2.5 rounded-full border border-primary text-primary text-[10.5px] font-bold inline-flex items-center gap-1 hover:bg-primary/10 cursor-pointer transition whitespace-nowrap"
                             >
                                 <PillCheckmarkSvg />
                                 Mark all
@@ -753,7 +753,7 @@ export function CoachEntriesList({
 
                     {/* Table Body Rows (82px spacious height, light dotted column dividers) */}
                     {filteredEntries.length === 0 ? (
-                        <div className="py-16 text-center text-[#78716c] dark:text-[#8a99ab] space-y-3">
+                        <div className="py-16 text-center text-muted-foreground space-y-3">
                             <p className="text-sm font-medium">
                                 {effectiveFilter === 'not_forwarded'
                                     ? 'No pending approvals! All entries have been processed.'
@@ -785,7 +785,7 @@ export function CoachEntriesList({
                                             setStatusFilter('all')
                                             if (onStatusChange) onStatusChange('all')
                                         }}
-                                        className="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-[#ede8dc] dark:bg-[#1f2b40] text-[#1c1917] dark:text-[#f8fafc] hover:bg-[#ded8cb] dark:hover:bg-[#2a3b57] cursor-pointer transition"
+                                        className="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-muted dark:bg-border text-foreground hover:bg-border cursor-pointer transition"
                                     >
                                         View All Entries ({tabCounts.all})
                                     </button>
@@ -812,26 +812,26 @@ export function CoachEntriesList({
                                         alignItems: 'center',
                                         height: '82px',
                                     }}
-                                    className={`border-b border-[#ded8cb] dark:border-[#1f2b40] transition-colors ${
+                                    className={`border-b border-border transition-colors ${
                                         isSelected
-                                            ? 'bg-[#0d9488]/10 dark:bg-[rgba(45,212,180,0.07)]'
-                                            : 'bg-white dark:bg-[#111a2b] hover:bg-[#faf8f3] dark:hover:bg-[#15233c]'
+                                            ? 'bg-primary/10 dark:bg-[rgba(45,212,180,0.07)]'
+                                            : 'bg-card hover:bg-background dark:hover:bg-muted'
                                     }`}
                                 >
                                     {/* Col 1: Checkbox (Disabled if approved) */}
-                                    <div className="h-full flex items-center justify-center border-r border-dotted border-[#ded8cb] dark:border-[#223552] px-2">
+                                    <div className="h-full flex items-center justify-center border-r border-dotted border-border px-2">
                                         {entry.status === 'approved' ? (
                                             <span
                                                 title="Approved athletes cannot be selected"
-                                                className="w-5 h-5 rounded-[6px] border border-[#ded8cb]/80 dark:border-[#2a3b57] bg-[#ede8dc]/40 dark:bg-white/5 opacity-30 cursor-not-allowed flex items-center justify-center select-none"
+                                                className="w-5 h-5 rounded-[6px] border border-border/80 dark:border-border bg-muted/40 dark:bg-white/5 opacity-30 cursor-not-allowed flex items-center justify-center select-none"
                                             />
                                         ) : (
                                             <span
                                                 onClick={() => handleToggleSelect(entry.id)}
                                                 className={`w-5 h-5 rounded-[6px] border-2 flex items-center justify-center cursor-pointer transition ${
                                                     isSelected
-                                                        ? 'bg-[#0d9488] dark:bg-[#2dd4b4] border-[#0d9488] dark:border-[#2dd4b4]'
-                                                        : 'border-[#ded8cb] dark:border-[#34455f] bg-white dark:bg-transparent hover:border-[#0d9488]/60'
+                                                        ? 'bg-primary border-primary'
+                                                        : 'border-border bg-white dark:bg-transparent hover:border-primary/60'
                                                 } ${isLocked ? 'opacity-35' : ''}`}
                                             >
                                                 {isSelected && <CheckmarkSvg />}
@@ -840,18 +840,18 @@ export function CoachEntriesList({
                                     </div>
 
                                     {/* Col 2: Chest Number */}
-                                    <div className="h-full flex items-center px-2.5 border-r border-dotted border-[#ded8cb] dark:border-[#223552]">
+                                    <div className="h-full flex items-center px-2.5 border-r border-dotted border-border">
                                         {entry.chest_no ? (
-                                            <span className="text-[16px] font-bold text-[#0d9488] dark:text-[#2dd4b4] tracking-tight">
+                                            <span className="text-[16px] font-bold text-primary tracking-tight">
                                                 #{String(entry.chest_no).padStart(3, '0')}
                                             </span>
                                         ) : (
-                                            <span className="text-[17px] text-[#a8a29e] dark:text-[#8a99ab]">—</span>
+                                            <span className="text-[17px] text-muted-foreground">—</span>
                                         )}
                                     </div>
 
                                     {/* Col 3: Athlete Info (46px avatar with verified badge) */}
-                                    <div className="h-full flex items-center gap-3 px-2.5 border-r border-dotted border-[#ded8cb] dark:border-[#223552] min-w-0">
+                                    <div className="h-full flex items-center gap-3 px-2.5 border-r border-dotted border-border min-w-0">
                                         <AthletePfp
                                             photoUrl={entry.students?.photo_url}
                                             name={entry.students?.name || 'Athlete'}
@@ -869,37 +869,37 @@ export function CoachEntriesList({
                                             }}
                                         />
                                         <div className="min-w-0 flex-1">
-                                            <div className="text-[15.5px] font-bold text-[#1c1917] dark:text-[#e8eef5] truncate">
+                                            <div className="text-[15.5px] font-bold text-foreground truncate">
                                                 {entry.students?.name || 'Athlete'}
                                             </div>
-                                            <div className="text-[12.5px] text-[#78716c] dark:text-[#8a99ab] truncate mt-0.5">
+                                            <div className="text-[12.5px] text-muted-foreground truncate mt-0.5">
                                                 {entry.parent_email || entry.students?.phone || 'athlete@email.com'}
                                             </div>
                                         </div>
                                     </div>
 
                                     {/* Col 4: Age (No yrs, shrunk) */}
-                                    <div className="h-full flex items-center justify-center px-1 border-r border-dotted border-[#ded8cb] dark:border-[#223552] text-[15px] font-bold text-[#1c1917] dark:text-[#e8eef5]">
+                                    <div className="h-full flex items-center justify-center px-1 border-r border-dotted border-border text-[15px] font-bold text-foreground">
                                         {age}
                                     </div>
 
                                     {/* Col 5: Dojo */}
-                                    <div className="h-full flex items-center px-2.5 border-r border-dotted border-[#ded8cb] dark:border-[#223552] text-[14.5px] text-[#1c1917] dark:text-[#e8eef5] truncate" title={dojo}>
+                                    <div className="h-full flex items-center px-2.5 border-r border-dotted border-border text-[14.5px] text-foreground truncate" title={dojo}>
                                         {dojo}
                                     </div>
 
                                     {/* Col 6: Belt */}
-                                    <div className="h-full flex items-center px-2.5 border-r border-dotted border-[#ded8cb] dark:border-[#223552] text-[14.5px] font-semibold text-[#1c1917] dark:text-[#e8eef5] truncate">
+                                    <div className="h-full flex items-center px-2.5 border-r border-dotted border-border text-[14.5px] font-semibold text-foreground truncate">
                                         {rank}
                                     </div>
 
                                     {/* Col 7: Weight */}
-                                    <div className="h-full flex items-center px-2.5 border-r border-dotted border-[#ded8cb] dark:border-[#223552] text-[14.5px] font-semibold text-[#1c1917] dark:text-[#e8eef5]">
+                                    <div className="h-full flex items-center px-2.5 border-r border-dotted border-border text-[14.5px] font-semibold text-foreground">
                                         {weight !== '—' ? `${weight} kg` : '—'}
                                     </div>
 
                                     {/* Col 8: Events Applied Tags (2 rows up and down) */}
-                                    <div className="h-full flex items-center px-2 border-r border-dotted border-[#ded8cb] dark:border-[#223552] overflow-hidden">
+                                    <div className="h-full flex items-center px-2 border-r border-dotted border-border overflow-hidden">
                                         <div className="grid grid-cols-2 gap-1 w-full max-w-[155px]">
                                             {tags.map((t, idx) => {
                                                 const isDay = t.toLowerCase().startsWith('day')
@@ -908,8 +908,8 @@ export function CoachEntriesList({
                                                         key={idx}
                                                         className={`text-[10px] sm:text-[10.5px] font-semibold rounded-md px-1 py-0.5 text-center truncate leading-tight whitespace-nowrap ${
                                                             isDay
-                                                                ? 'bg-[#0d9488]/12 text-[#0d9488] dark:bg-[#2dd4b4]/18 dark:text-[#2dd4b4] border border-[#0d9488]/30 dark:border-[#2dd4b4]/35 font-bold'
-                                                                : 'bg-[#f5f0e6] dark:bg-[#1a2a44] text-[#57534e] dark:text-[#c9d3df] border border-[#ded8cb] dark:border-transparent'
+                                                                ? 'bg-primary/12 text-primary dark:bg-primary/18 dark:text-primary border border-primary/30 dark:border-primary/35 font-bold'
+                                                                : 'bg-muted text-muted-foreground dark:text-foreground border border-border dark:border-transparent'
                                                         }`}
                                                         title={t}
                                                     >
@@ -921,20 +921,20 @@ export function CoachEntriesList({
                                     </div>
 
                                     {/* Col 9: Payment Toggle Box (CoachLaptop.dc.html height 40px) */}
-                                    <div className="h-full flex items-center px-3 border-r border-dotted border-[#ded8cb] dark:border-[#223552]">
+                                    <div className="h-full flex items-center px-3 border-r border-dotted border-border">
                                         <div
                                             onClick={() => handleTogglePaid(entry)}
                                             className={`h-10 px-3.5 rounded-[10px] text-[13.5px] font-semibold inline-flex items-center gap-2.5 transition select-none cursor-pointer w-full ${
                                                 isPaid
-                                                    ? 'bg-[#0d9488]/12 dark:bg-[rgba(45,212,180,0.14)] border-[1.5px] border-[#0d9488] dark:border-[#2dd4b4] text-[#0d9488] dark:text-[#2dd4b4] font-bold'
-                                                    : 'bg-white dark:bg-transparent border-[1.5px] border-[#ded8cb] dark:border-[#34455f] text-[#57534e] dark:text-[#c9d3df] hover:border-[#0d9488]/50'
+                                                    ? 'bg-primary/12 dark:bg-[rgba(45,212,180,0.14)] border-[1.5px] border-primary text-primary font-bold'
+                                                    : 'bg-white dark:bg-transparent border-[1.5px] border-border text-muted-foreground dark:text-foreground hover:border-primary/50'
                                             } ${isLocked ? 'opacity-55 cursor-default' : ''}`}
                                         >
                                             <span
                                                 className={`w-4 h-4 rounded-[5px] border-2 flex items-center justify-center transition shrink-0 ${
                                                     isPaid
-                                                        ? 'bg-[#0d9488] dark:bg-[#2dd4b4] border-[#0d9488] dark:border-[#2dd4b4]'
-                                                        : 'border-[#ded8cb] dark:border-[#34455f]'
+                                                        ? 'bg-primary border-primary'
+                                                        : 'border-border'
                                                 }`}
                                             >
                                                 {isPaid && <CheckmarkSvg />}
@@ -947,14 +947,14 @@ export function CoachEntriesList({
                                     <div className="h-full flex items-center justify-start gap-2.5 px-4">
                                         {/* Status Text with SVG */}
                                         {entry.status === 'approved' ? (
-                                            <span className="text-[13.5px] font-semibold text-[#0d9488] dark:text-[#2dd4b4] inline-flex items-center gap-1.5 whitespace-nowrap">
+                                            <span className="text-[13.5px] font-semibold text-primary inline-flex items-center gap-1.5 whitespace-nowrap">
                                                 <svg width="13" height="13" viewBox="0 0 14 14">
                                                     <path d="M2 7.5l3 3 7-7.5" fill="none" stroke="#2dd4b4" strokeWidth="2.2" strokeLinecap="round" />
                                                 </svg>
                                                 Approved
                                             </span>
                                         ) : entry.status === 'submitted' ? (
-                                            <span className="text-[13.5px] font-semibold text-[#78716c] dark:text-[#8a99ab] inline-flex items-center gap-1.5 whitespace-nowrap">
+                                            <span className="text-[13.5px] font-semibold text-muted-foreground inline-flex items-center gap-1.5 whitespace-nowrap">
                                                 <svg width="13" height="13" viewBox="0 0 14 14">
                                                     <path d="M2 7.5l3 3 7-7.5" fill="none" stroke="#6b7b8f" strokeWidth="2.2" strokeLinecap="round" />
                                                 </svg>
@@ -966,7 +966,7 @@ export function CoachEntriesList({
                                                 Rejected
                                             </span>
                                         ) : (
-                                            <span className="text-[13.5px] font-semibold text-[#78716c] dark:text-[#8a99ab] inline-flex items-center gap-1.5 whitespace-nowrap">
+                                            <span className="text-[13.5px] font-semibold text-muted-foreground inline-flex items-center gap-1.5 whitespace-nowrap">
                                                 <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="#8a99ab" strokeWidth="1.6">
                                                     <circle cx="7" cy="7" r="5" />
                                                 </svg>
@@ -974,11 +974,11 @@ export function CoachEntriesList({
                                             </span>
                                         )}
 
-                                        {/* Three-dot Button (CoachMenu.dc.html: 40x40 rounded-[10px] border border-[#2a3b57]) */}
+                                        {/* Three-dot Button (CoachMenu.dc.html: 40x40 rounded-[10px] border border-border) */}
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
                                                 <button
-                                                    className="w-10 h-10 rounded-[10px] border border-[#ded8cb] dark:border-[#2a3b57] text-[#78716c] dark:text-[#8a99ab] hover:text-[#1c1917] dark:hover:text-[#e8eef5] hover:border-[#0d9488] dark:hover:border-[#2dd4b4] inline-flex items-center justify-center text-lg font-bold tracking-widest transition cursor-pointer shrink-0"
+                                                    className="w-10 h-10 rounded-[10px] border border-border text-muted-foreground hover:text-foreground hover:border-primary inline-flex items-center justify-center text-lg font-bold tracking-widest transition cursor-pointer shrink-0"
                                                     aria-label="Row menu"
                                                 >
                                                     ···
@@ -987,7 +987,7 @@ export function CoachEntriesList({
 
                                             <DropdownMenuContent
                                                 align="end"
-                                                className="w-60 bg-white dark:bg-[#16233a] border border-[#ded8cb] dark:border-[#34455f] text-[#1c1917] dark:text-[#e8eef5] rounded-xl shadow-xl p-1.5 z-50"
+                                                className="w-60 bg-muted border border-border text-foreground rounded-xl shadow-xl p-1.5 z-50"
                                             >
                                                 {/* Download ID Card */}
                                                 {entry.status === 'approved' ? (
@@ -995,30 +995,30 @@ export function CoachEntriesList({
                                                         onClick={() =>
                                                             window.open(`/parent/entries/${entry.id}/id-card`, '_blank')
                                                         }
-                                                        className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-[#1c1917] dark:text-[#e8eef5] hover:bg-[#faf8f3] dark:hover:bg-[#1f2f4d] rounded-lg cursor-pointer transition"
+                                                        className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-foreground hover:bg-background dark:hover:bg-border rounded-lg cursor-pointer transition"
                                                     >
-                                                        <span className="text-[#0d9488] dark:text-[#2dd4b4] flex">
+                                                        <span className="text-primary flex">
                                                             <MenuDownloadSvg />
                                                         </span>
                                                         <div>
                                                             <div className="font-semibold text-xs">
                                                                 Download ID card
                                                             </div>
-                                                            <div className="text-[#78716c] dark:text-[#8a99ab] text-[10.5px]">
+                                                            <div className="text-muted-foreground text-[10.5px]">
                                                                 PDF · Chest #{entry.chest_no ? String(entry.chest_no).padStart(3, '0') : '001'}
                                                             </div>
                                                         </div>
                                                     </DropdownMenuItem>
                                                 ) : (
                                                     <div className="flex items-center gap-2.5 px-3 py-2 cursor-not-allowed select-none opacity-50">
-                                                        <span className="flex text-[#78716c] dark:text-[#8a99ab]">
+                                                        <span className="flex text-muted-foreground">
                                                             <MenuDownloadSvg />
                                                         </span>
                                                         <div>
-                                                            <div className="font-semibold text-xs text-[#78716c] dark:text-[#8a99ab]">
+                                                            <div className="font-semibold text-xs text-muted-foreground">
                                                                 Download ID card
                                                             </div>
-                                                            <div className="flex items-center gap-1 text-[10.5px] text-[#78716c] dark:text-[#8a99ab]">
+                                                            <div className="flex items-center gap-1 text-[10.5px] text-muted-foreground">
                                                                 <MenuLockSvg />
                                                                 Not generated yet
                                                             </div>
@@ -1026,7 +1026,7 @@ export function CoachEntriesList({
                                                     </div>
                                                 )}
 
-                                                <div className="h-[1px] bg-[#ded8cb] dark:bg-[#2a3b57] my-1" />
+                                                <div className="h-[1px] bg-border my-1" />
 
                                                 {/* Reject Entry */}
                                                 <DropdownMenuItem
@@ -1059,17 +1059,17 @@ export function CoachEntriesList({
                         onClick={selectableEntries.length > 0 ? handleToggleSelectAll : undefined}
                         className={`flex items-center gap-2 text-xs font-semibold ${
                             selectableEntries.length === 0
-                                ? 'opacity-40 cursor-not-allowed text-[#78716c] dark:text-[#8a99ab]'
-                                : 'text-[#78716c] dark:text-[#e8eef5] cursor-pointer'
+                                ? 'opacity-40 cursor-not-allowed text-muted-foreground'
+                                : 'text-muted-foreground dark:text-foreground cursor-pointer'
                         }`}
                     >
                         <span
                             className={`w-5 h-5 rounded-[6px] border-2 flex items-center justify-center transition ${
                                 selectableEntries.length === 0
-                                    ? 'opacity-30 cursor-not-allowed border-[#ded8cb] dark:border-[#34455f] bg-transparent'
+                                    ? 'opacity-30 cursor-not-allowed border-border bg-transparent'
                                     : isAllSelected
-                                    ? 'bg-[#0d9488] dark:bg-[#2dd4b4] border-[#0d9488] dark:border-[#2dd4b4]'
-                                    : 'border-[#ded8cb] dark:border-[#34455f] bg-white dark:bg-transparent'
+                                    ? 'bg-primary border-primary'
+                                    : 'border-border bg-white dark:bg-transparent'
                             }`}
                         >
                             {isAllSelected && selectableEntries.length > 0 && <CheckmarkSvg />}
@@ -1079,7 +1079,7 @@ export function CoachEntriesList({
 
                     <button
                         onClick={handleMarkAllPaid}
-                        className="h-8 px-3 border border-[#0d9488] dark:border-[#2dd4b4] text-[#0d9488] dark:text-[#2dd4b4] rounded-full text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer hover:bg-[#0d9488]/10 transition"
+                        className="h-8 px-3 border border-primary text-primary rounded-full text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer hover:bg-primary/10 transition"
                     >
                         <PillCheckmarkSvg />
                         Mark all paid &amp; verified
@@ -1089,7 +1089,7 @@ export function CoachEntriesList({
                 {/* Mobile Cards List */}
                 <div className="flex flex-col gap-3">
                     {filteredEntries.length === 0 ? (
-                        <div className="py-12 px-4 text-center text-[#78716c] dark:text-[#8a99ab] text-sm bg-white dark:bg-[#111a2b] rounded-2xl border border-[#ded8cb] dark:border-[#1f2b40] shadow-xs space-y-3">
+                        <div className="py-12 px-4 text-center text-muted-foreground text-sm bg-card rounded-2xl border border-border shadow-xs space-y-3">
                             <p className="font-medium">
                                 {effectiveFilter === 'not_forwarded'
                                     ? 'No pending approvals! All entries have been processed.'
@@ -1115,7 +1115,7 @@ export function CoachEntriesList({
                                             setStatusFilter('all')
                                             if (onStatusChange) onStatusChange('all')
                                         }}
-                                        className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#ede8dc] dark:bg-[#1f2b40] text-[#1c1917] dark:text-[#f8fafc] hover:bg-[#ded8cb] cursor-pointer transition"
+                                        className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-muted dark:bg-border text-foreground hover:bg-border cursor-pointer transition"
                                     >
                                         View All ({tabCounts.all})
                                     </button>
@@ -1138,8 +1138,8 @@ export function CoachEntriesList({
                                     key={entry.id}
                                     className={`rounded-2xl p-4 transition-all border ${
                                         isSelected
-                                            ? 'bg-[#0d9488]/5 dark:bg-[#15233c] border-[#0d9488]/60 dark:border-[#2dd4b4]/60 ring-1 ring-[#0d9488]/30 dark:ring-[#2dd4b4]/30'
-                                            : 'bg-white dark:bg-[#111a2b] border-[#ded8cb] dark:border-[#1f2b40] shadow-xs'
+                                            ? 'bg-primary/5 dark:bg-muted border-primary/60 ring-1 ring-primary/30'
+                                            : 'bg-card border-border shadow-xs'
                                     }`}
                                 >
                                     {/* Card Header: Checkbox + Avatar + Name/Email + Chest */}
@@ -1147,15 +1147,15 @@ export function CoachEntriesList({
                                         {entry.status === 'approved' ? (
                                             <span
                                                 title="Approved athletes cannot be selected"
-                                                className="w-5 h-5 rounded-[6px] border border-[#ded8cb]/80 dark:border-[#2a3b57] bg-[#ede8dc]/40 dark:bg-white/5 opacity-30 cursor-not-allowed flex items-center justify-center select-none shrink-0"
+                                                className="w-5 h-5 rounded-[6px] border border-border/80 dark:border-border bg-muted/40 dark:bg-white/5 opacity-30 cursor-not-allowed flex items-center justify-center select-none shrink-0"
                                             />
                                         ) : (
                                             <span
                                                 onClick={() => handleToggleSelect(entry.id)}
                                                 className={`w-5 h-5 rounded-[6px] border-2 flex items-center justify-center cursor-pointer transition shrink-0 ${
                                                     isSelected
-                                                        ? 'bg-[#0d9488] dark:bg-[#2dd4b4] border-[#0d9488] dark:border-[#2dd4b4]'
-                                                        : 'border-[#ded8cb] dark:border-[#34455f] bg-white dark:bg-transparent'
+                                                        ? 'bg-primary border-primary'
+                                                        : 'border-border bg-white dark:bg-transparent'
                                                 }`}
                                             >
                                                 {isSelected && <CheckmarkSvg />}
@@ -1180,21 +1180,21 @@ export function CoachEntriesList({
                                         />
 
                                         <div className="min-w-0 flex-1">
-                                            <div className="text-sm font-bold text-[#1c1917] dark:text-[#e8eef5] truncate">
+                                            <div className="text-sm font-bold text-foreground truncate">
                                                 {entry.students?.name || 'Athlete'}
                                             </div>
-                                            <div className="text-xs text-[#78716c] dark:text-[#8a99ab] mt-0.5 truncate">
+                                            <div className="text-xs text-muted-foreground mt-0.5 truncate">
                                                 {entry.parent_email || entry.students?.phone || 'athlete@email.com'}
                                             </div>
                                         </div>
 
                                         <div className="text-right shrink-0">
-                                            <div className="text-[10px] tracking-wider uppercase font-bold text-[#78716c] dark:text-[#6b7b8f]">
+                                            <div className="text-[10px] tracking-wider uppercase font-bold text-muted-foreground">
                                                 Chest
                                             </div>
                                             <div
                                                 className={`text-sm font-bold ${
-                                                    entry.chest_no ? 'text-[#0d9488] dark:text-[#2dd4b4]' : 'text-[#a8a29e] dark:text-[#6b7b8f]'
+                                                    entry.chest_no ? 'text-primary' : 'text-muted-foreground'
                                                 }`}
                                             >
                                                 {entry.chest_no ? `#${String(entry.chest_no).padStart(3, '0')}` : '—'}
@@ -1203,36 +1203,36 @@ export function CoachEntriesList({
                                     </div>
 
                                     {/* 4-Item Spec Grid (Age / Belt / Weight / Dojo) */}
-                                    <div className="grid grid-cols-4 gap-2 mt-3 py-2.5 border-t border-b border-[#ded8cb]/80 dark:border-[#1f2b40] text-xs">
+                                    <div className="grid grid-cols-4 gap-2 mt-3 py-2.5 border-t border-b border-border/80 dark:border-border text-xs">
                                         <div>
-                                            <div className="text-[10px] uppercase font-bold text-[#78716c] dark:text-[#6b7b8f]">
+                                            <div className="text-[10px] uppercase font-bold text-muted-foreground">
                                                 Age
                                             </div>
-                                            <div className="text-xs font-semibold text-[#1c1917] dark:text-[#e8eef5] mt-0.5 truncate">
+                                            <div className="text-xs font-semibold text-foreground mt-0.5 truncate">
                                                 {age}
                                             </div>
                                         </div>
                                         <div>
-                                            <div className="text-[10px] uppercase font-bold text-[#78716c] dark:text-[#6b7b8f]">
+                                            <div className="text-[10px] uppercase font-bold text-muted-foreground">
                                                 Belt
                                             </div>
-                                            <div className="text-xs font-semibold text-[#1c1917] dark:text-[#e8eef5] mt-0.5 truncate">
+                                            <div className="text-xs font-semibold text-foreground mt-0.5 truncate">
                                                 {rank}
                                             </div>
                                         </div>
                                         <div>
-                                            <div className="text-[10px] uppercase font-bold text-[#78716c] dark:text-[#6b7b8f]">
+                                            <div className="text-[10px] uppercase font-bold text-muted-foreground">
                                                 Weight
                                             </div>
-                                            <div className="text-xs font-semibold text-[#1c1917] dark:text-[#e8eef5] mt-0.5 truncate">
+                                            <div className="text-xs font-semibold text-foreground mt-0.5 truncate">
                                                 {weight !== '—' ? `${weight} kg` : '—'}
                                             </div>
                                         </div>
                                         <div>
-                                            <div className="text-[10px] uppercase font-bold text-[#78716c] dark:text-[#6b7b8f]">
+                                            <div className="text-[10px] uppercase font-bold text-muted-foreground">
                                                 Dojo
                                             </div>
-                                            <div className="text-xs font-semibold text-[#1c1917] dark:text-[#e8eef5] mt-0.5 truncate">
+                                            <div className="text-xs font-semibold text-foreground mt-0.5 truncate">
                                                 {dojo}
                                             </div>
                                         </div>
@@ -1247,8 +1247,8 @@ export function CoachEntriesList({
                                                     key={idx}
                                                     className={`text-[11px] font-semibold rounded-full px-2 py-0.5 whitespace-nowrap ${
                                                         isDay
-                                                            ? 'bg-[#0d9488]/12 text-[#0d9488] dark:bg-[#2dd4b4]/20 dark:text-[#2dd4b4] border border-[#0d9488]/30 dark:border-[#2dd4b4]/40 font-bold'
-                                                            : 'bg-[#f5f0e6] dark:bg-[#1a2a44] text-[#57534e] dark:text-[#c9d3df] border border-[#ded8cb] dark:border-[#2a3b57]'
+                                                            ? 'bg-primary/12 text-primary dark:bg-primary/20 dark:text-primary border border-primary/30 dark:border-primary/40 font-bold'
+                                                            : 'bg-muted text-muted-foreground dark:text-foreground border border-border'
                                                     }`}
                                                 >
                                                     {t}
@@ -1264,15 +1264,15 @@ export function CoachEntriesList({
                                             onClick={() => handleTogglePaid(entry)}
                                             className={`h-9 px-3 rounded-xl text-xs font-semibold inline-flex items-center gap-2 select-none cursor-pointer transition flex-1 ${
                                                 isPaid
-                                                    ? 'bg-[#0d9488]/10 dark:bg-[#2dd4b4]/15 border border-[#0d9488]/40 dark:border-[#2dd4b4] text-[#0d9488] dark:text-[#2dd4b4] font-bold'
-                                                    : 'bg-white dark:bg-transparent border border-[#ded8cb] dark:border-[#34455f] text-[#57534e] dark:text-[#c9d3df]'
+                                                    ? 'bg-primary/10 dark:bg-primary/15 border border-primary/40 dark:border-primary text-primary font-bold'
+                                                    : 'bg-white dark:bg-transparent border border-border text-muted-foreground dark:text-foreground'
                                             } ${isLocked ? 'opacity-55 cursor-default' : ''}`}
                                         >
                                             <span
                                                 className={`w-4 h-4 rounded-[4px] border flex items-center justify-center transition shrink-0 ${
                                                     isPaid
-                                                        ? 'bg-[#0d9488] dark:bg-[#2dd4b4] border-[#0d9488] dark:border-[#2dd4b4]'
-                                                        : 'border-[#ded8cb] dark:border-[#34455f]'
+                                                        ? 'bg-primary border-primary'
+                                                        : 'border-border'
                                                 }`}
                                             >
                                                 {isPaid && <CheckmarkSvg />}
@@ -1282,12 +1282,12 @@ export function CoachEntriesList({
 
                                         {/* Status */}
                                         {entry.status === 'approved' ? (
-                                            <span className="text-xs font-bold text-[#0d9488] dark:text-[#2dd4b4] inline-flex items-center gap-1 whitespace-nowrap">
+                                            <span className="text-xs font-bold text-primary inline-flex items-center gap-1 whitespace-nowrap">
                                                 <Check className="h-3 w-3" />
                                                 Approved
                                             </span>
                                         ) : entry.status === 'submitted' ? (
-                                            <span className="text-xs font-semibold text-[#78716c] dark:text-[#8a99ab] inline-flex items-center gap-1 whitespace-nowrap">
+                                            <span className="text-xs font-semibold text-muted-foreground inline-flex items-center gap-1 whitespace-nowrap">
                                                 <Check className="h-3 w-3" />
                                                 Forwarded
                                             </span>
@@ -1297,7 +1297,7 @@ export function CoachEntriesList({
                                                 Rejected
                                             </span>
                                         ) : (
-                                            <span className="text-xs font-medium text-[#a8a29e] dark:text-[#6b7b8f] inline-flex items-center gap-1 whitespace-nowrap">
+                                            <span className="text-xs font-medium text-muted-foreground inline-flex items-center gap-1 whitespace-nowrap">
                                                 <Circle className="h-2.5 w-2.5" />
                                                 Not forwarded
                                             </span>
@@ -1307,7 +1307,7 @@ export function CoachEntriesList({
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
                                                 <button
-                                                    className="w-9 h-9 rounded-xl border border-[#ded8cb] dark:border-[#2a3b57] text-[#78716c] dark:text-[#8a99ab] inline-flex items-center justify-center text-xs hover:text-[#1c1917] dark:hover:text-[#e8eef5] transition shrink-0"
+                                                    className="w-9 h-9 rounded-xl border border-border text-muted-foreground inline-flex items-center justify-center text-xs hover:text-foreground transition shrink-0"
                                                     aria-label="Row menu"
                                                 >
                                                     ···
@@ -1316,37 +1316,37 @@ export function CoachEntriesList({
 
                                             <DropdownMenuContent
                                                 align="end"
-                                                className="w-56 bg-white dark:bg-[#16233a] border border-[#ded8cb] dark:border-[#34455f] rounded-xl p-1.5 shadow-xl z-50 text-[#1c1917] dark:text-[#e8eef5]"
+                                                className="w-56 bg-muted border border-border rounded-xl p-1.5 shadow-xl z-50 text-foreground"
                                             >
                                                 {entry.status === 'approved' ? (
                                                     <DropdownMenuItem
                                                         onClick={() =>
                                                             window.open(`/parent/entries/${entry.id}/id-card`, '_blank')
                                                         }
-                                                        className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold hover:bg-[#faf8f3] dark:hover:bg-[#1f304d] rounded-lg cursor-pointer transition"
+                                                        className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold hover:bg-background dark:hover:bg-[#1f304d] rounded-lg cursor-pointer transition"
                                                     >
-                                                        <span className="text-[#0d9488] dark:text-[#2dd4b4] flex">
+                                                        <span className="text-primary flex">
                                                             <MenuDownloadSvg />
                                                         </span>
                                                         <div>
                                                             <div className="font-semibold text-xs">
                                                                 Download ID card
                                                             </div>
-                                                            <div className="text-[#78716c] dark:text-[#8a99ab] text-[10.5px]">
+                                                            <div className="text-muted-foreground text-[10.5px]">
                                                                 PDF · Chest #{entry.chest_no ? String(entry.chest_no).padStart(3, '0') : '001'}
                                                             </div>
                                                         </div>
                                                     </DropdownMenuItem>
                                                 ) : (
                                                     <div className="flex items-center gap-2.5 px-3 py-2 cursor-not-allowed select-none opacity-50">
-                                                        <span className="flex text-[#78716c] dark:text-[#8a99ab]">
+                                                        <span className="flex text-muted-foreground">
                                                             <MenuDownloadSvg />
                                                         </span>
                                                         <div>
-                                                            <div className="font-semibold text-xs text-[#78716c] dark:text-[#8a99ab]">
+                                                            <div className="font-semibold text-xs text-muted-foreground">
                                                                 Download ID card
                                                             </div>
-                                                            <div className="flex items-center gap-1 text-[10.5px] text-[#78716c] dark:text-[#8a99ab]">
+                                                            <div className="flex items-center gap-1 text-[10.5px] text-muted-foreground">
                                                                 <MenuLockSvg />
                                                                 Not generated yet
                                                             </div>
@@ -1354,7 +1354,7 @@ export function CoachEntriesList({
                                                     </div>
                                                 )}
 
-                                                <div className="h-[1px] bg-[#ded8cb] dark:bg-[#2a3b57] my-1" />
+                                                <div className="h-[1px] bg-border my-1" />
 
                                                 <DropdownMenuItem
                                                     onClick={() => {
@@ -1380,16 +1380,16 @@ export function CoachEntriesList({
             {/* ========================================================================= */}
             {/* FIXED FOOTER (Desktop & Mobile) — Fixed above mobile nav on mobile        */}
             {/* ========================================================================= */}
-            <div className="fixed bottom-16 md:bottom-0 left-0 right-0 z-40 bg-[#faf8f3]/95 dark:bg-[#0d1626]/95 backdrop-blur-md border-t border-[#ded8cb] dark:border-[#1f2b40] shadow-[0_-12px_28px_rgba(0,0,0,0.08)] dark:shadow-[0_-16px_30px_rgba(10,18,32,0.95)]">
+            <div className="fixed bottom-16 md:bottom-0 left-0 right-0 z-40 bg-background/95 dark:bg-card/95 backdrop-blur-md border-t border-border shadow-[0_-12px_28px_rgba(0,0,0,0.08)] dark:shadow-[0_-16px_30px_rgba(10,18,32,0.95)]">
                 {/* Desktop View */}
                 <div className="hidden lg:flex max-w-7xl mx-auto px-6 py-3.5 items-center justify-between">
                     {selectedCount > 0 ? (
                         <>
-                            <div className="text-[15px] text-[#1c1917] dark:text-[#e8eef5]">
+                            <div className="text-[15px] text-foreground">
                                 <b className="font-bold">{selectedCount} selected</b> &nbsp;·&nbsp;
                                 <button
                                     onClick={handleClearSelection}
-                                    className="text-[#0d9488] dark:text-[#2dd4b4] font-semibold cursor-pointer hover:underline ml-1"
+                                    className="text-primary font-semibold cursor-pointer hover:underline ml-1"
                                 >
                                     Clear
                                 </button>
@@ -1398,14 +1398,14 @@ export function CoachEntriesList({
                                 <button
                                     onClick={handleForwardAllPaid}
                                     disabled={isSubmitting || countPaid === 0}
-                                    className="h-[46px] px-5 rounded-xl font-bold text-[15px] border-[1.5px] border-[#0d9488] dark:border-[#2dd4b4] text-[#0d9488] dark:text-[#2dd4b4] hover:bg-[#0d9488]/10 dark:hover:bg-[#2dd4b4]/10 transition disabled:opacity-40 cursor-pointer"
+                                    className="h-[46px] px-5 rounded-xl font-bold text-[15px] border-[1.5px] border-primary text-primary hover:bg-primary/10 transition disabled:opacity-40 cursor-pointer"
                                 >
                                     Forward all paid &amp; verified ({countPaid})
                                 </button>
                                 <button
                                     onClick={handleForwardSelected}
                                     disabled={isSubmitting || selectedCount === 0}
-                                    className="h-[46px] px-5 rounded-xl font-bold text-[15px] bg-[#0d9488] hover:bg-[#0f766e] dark:bg-[#2dd4b4] dark:hover:bg-[#25c4a5] text-white dark:text-[#04231e] inline-flex items-center gap-2 transition disabled:opacity-40 cursor-pointer shadow-md"
+                                    className="h-[46px] px-5 rounded-xl font-bold text-[15px] bg-primary hover:bg-primary/90 dark:bg-primary dark:hover:bg-primary/90 text-white dark:text-primary-foreground inline-flex items-center gap-2 transition disabled:opacity-40 cursor-pointer shadow-md"
                                 >
                                     {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <ButtonCheckmarkSvg />}
                                     Forward selected ({selectedCount})
@@ -1414,13 +1414,13 @@ export function CoachEntriesList({
                         </>
                     ) : (
                         <>
-                            <div className="text-[14.5px] text-[#78716c] dark:text-[#8a99ab]">
-                                <b className="text-[#1c1917] dark:text-[#e8eef5] font-bold">{countPaid}</b> paid &amp; verified, ready to forward &nbsp;·&nbsp; {countNotPaid} not paid yet
+                            <div className="text-[14.5px] text-muted-foreground">
+                                <b className="text-foreground font-bold">{countPaid}</b> paid &amp; verified, ready to forward &nbsp;·&nbsp; {countNotPaid} not paid yet
                             </div>
                             <button
                                 onClick={handleForwardAllPaid}
                                 disabled={isSubmitting || countPaid === 0}
-                                className="h-[46px] px-5 rounded-xl font-bold text-[15px] bg-[#0d9488] hover:bg-[#0f766e] dark:bg-[#2dd4b4] dark:hover:bg-[#25c4a5] text-white dark:text-[#04231e] inline-flex items-center gap-2 transition disabled:opacity-40 cursor-pointer shadow-md"
+                                className="h-[46px] px-5 rounded-xl font-bold text-[15px] bg-primary hover:bg-primary/90 dark:bg-primary dark:hover:bg-primary/90 text-white dark:text-primary-foreground inline-flex items-center gap-2 transition disabled:opacity-40 cursor-pointer shadow-md"
                             >
                                 {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <ButtonCheckmarkSvg />}
                                 Forward all paid &amp; verified ({countPaid})
@@ -1433,11 +1433,11 @@ export function CoachEntriesList({
                 <div className="block lg:hidden px-4 py-3 space-y-2">
                     {selectedCount > 0 ? (
                         <>
-                            <div className="flex justify-between items-center text-[14px] text-[#1c1917] dark:text-[#e8eef5]">
+                            <div className="flex justify-between items-center text-[14px] text-foreground">
                                 <b className="font-bold">{selectedCount} selected</b>
                                 <button
                                     onClick={handleClearSelection}
-                                    className="text-[#0d9488] dark:text-[#2dd4b4] font-semibold cursor-pointer hover:underline"
+                                    className="text-primary font-semibold cursor-pointer hover:underline"
                                 >
                                     Clear
                                 </button>
@@ -1445,7 +1445,7 @@ export function CoachEntriesList({
                             <button
                                 onClick={handleForwardSelected}
                                 disabled={isSubmitting || selectedCount === 0}
-                                className="h-[48px] w-full text-[15px] font-bold bg-[#0d9488] hover:bg-[#0f766e] dark:bg-[#2dd4b4] dark:hover:bg-[#25c4a5] text-white dark:text-[#04231e] rounded-xl inline-flex items-center justify-center gap-2 transition disabled:opacity-40 cursor-pointer shadow-md"
+                                className="h-[48px] w-full text-[15px] font-bold bg-primary hover:bg-primary/90 dark:bg-primary dark:hover:bg-primary/90 text-white dark:text-primary-foreground rounded-xl inline-flex items-center justify-center gap-2 transition disabled:opacity-40 cursor-pointer shadow-md"
                             >
                                 {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <ButtonCheckmarkSvg />}
                                 Forward selected ({selectedCount})
@@ -1453,20 +1453,20 @@ export function CoachEntriesList({
                             <button
                                 onClick={handleForwardAllPaid}
                                 disabled={isSubmitting || countPaid === 0}
-                                className="h-[42px] w-full text-[14px] font-bold border-[1.5px] border-[#0d9488] dark:border-[#2dd4b4] text-[#0d9488] dark:text-[#2dd4b4] rounded-xl hover:bg-[#0d9488]/10 dark:hover:bg-[#2dd4b4]/10 transition disabled:opacity-40 cursor-pointer"
+                                className="h-[42px] w-full text-[14px] font-bold border-[1.5px] border-primary text-primary rounded-xl hover:bg-primary/10 transition disabled:opacity-40 cursor-pointer"
                             >
                                 Forward all paid &amp; verified ({countPaid})
                             </button>
                         </>
                     ) : (
                         <>
-                            <div className="text-[13.5px] text-[#78716c] dark:text-[#8a99ab]">
-                                <b className="text-[#1c1917] dark:text-[#e8eef5] font-bold">{countPaid}</b> paid &amp; verified · {countNotPaid} not paid yet
+                            <div className="text-[13.5px] text-muted-foreground">
+                                <b className="text-foreground font-bold">{countPaid}</b> paid &amp; verified · {countNotPaid} not paid yet
                             </div>
                             <button
                                 onClick={handleForwardAllPaid}
                                 disabled={isSubmitting || countPaid === 0}
-                                className="h-[48px] w-full text-[15.5px] font-bold bg-[#0d9488] hover:bg-[#0f766e] dark:bg-[#2dd4b4] dark:hover:bg-[#25c4a5] text-white dark:text-[#04231e] rounded-xl inline-flex items-center justify-center gap-2 transition disabled:opacity-40 cursor-pointer shadow-md"
+                                className="h-[48px] w-full text-[15.5px] font-bold bg-primary hover:bg-primary/90 dark:bg-primary dark:hover:bg-primary/90 text-white dark:text-primary-foreground rounded-xl inline-flex items-center justify-center gap-2 transition disabled:opacity-40 cursor-pointer shadow-md"
                             >
                                 {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <ButtonCheckmarkSvg />}
                                 Forward all paid &amp; verified ({countPaid})
@@ -1478,15 +1478,15 @@ export function CoachEntriesList({
 
             {/* Reject Entry Confirmation Modal */}
             <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
-                <DialogContent className="max-w-md bg-white dark:bg-[#111a2b] border border-[#ded8cb] dark:border-[#1f2b40] text-[#1c1917] dark:text-[#e8eef5] rounded-2xl p-6 shadow-2xl">
+                <DialogContent className="max-w-md bg-card border border-border text-foreground rounded-2xl p-6 shadow-2xl">
                     <DialogHeader>
                         <DialogTitle className="text-lg font-bold text-rose-600 dark:text-rose-400 flex items-center gap-2">
                             <MenuRejectSvg />
                             Reject Tournament Entry
                         </DialogTitle>
-                        <DialogDescription className="text-xs text-[#78716c] dark:text-[#8a99ab] mt-1.5 leading-relaxed">
+                        <DialogDescription className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
                             Are you sure you want to reject the entry for{' '}
-                            <strong className="text-[#1c1917] dark:text-[#e8eef5]">
+                            <strong className="text-foreground">
                                 {entryToReject?.students?.name || 'this athlete'}
                             </strong>
                             ? This athlete will be removed from your tournament entry list.
@@ -1500,7 +1500,7 @@ export function CoachEntriesList({
                                 setRejectDialogOpen(false)
                                 setEntryToReject(null)
                             }}
-                            className="h-9 px-4 rounded-xl border-[#ded8cb] dark:border-[#1f2b40] bg-[#faf8f3] dark:bg-[#16233a] text-[#78716c] dark:text-[#8a99ab] hover:text-[#1c1917] dark:hover:text-[#e8eef5] text-xs font-semibold"
+                            className="h-9 px-4 rounded-xl border-border bg-background dark:bg-muted text-muted-foreground hover:text-foreground text-xs font-semibold"
                         >
                             Cancel
                         </Button>

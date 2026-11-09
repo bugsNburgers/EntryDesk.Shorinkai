@@ -9,139 +9,123 @@ html {
 }
 
 :root {
-  /* EntryDesk Luxury Warm Cream & Emerald Design System - Light Mode */
+  /* EntryDesk design system v2 — "Washi & Ink"
+     Warm paper neutrals, deep jade primary, one accent. All components should use
+     these semantic tokens (bg-background, bg-card, text-foreground, text-muted-foreground,
+     border-border, bg-primary ...) — never hard-coded hex values. */
+  --background: #f5f2ea;
+  --foreground: #1a1814;
 
-  /* Background: Elegant warm cream / linen (#f7f4ec) */
-  --background: #f7f4ec;
+  --card: #fffdf8;
+  --card-foreground: #1a1814;
+  --popover: #fffdf8;
+  --popover-foreground: #1a1814;
 
-  /* Typography: Deep warm espresso/charcoal for soft, strain-free high contrast */
-  --foreground: #1c1917;
-
-  /* Elevated Surfaces & Cards: Crisp warm white (#ffffff) to create immediate depth above cream */
-  --card: #ffffff;
-  --card-foreground: #1c1917;
-
-  --popover: #ffffff;
-  --popover-foreground: #1c1917;
-
-  /* Primary Brand: Deep Forest Emerald */
-  --primary: oklch(0.46 0.135 158);
+  --primary: #0f6b55;
   --primary-foreground: #ffffff;
 
-  /* Secondary: Soft warm oat (#eee9df) */
-  --secondary: #eee9df;
-  --secondary-foreground: #1c1917;
+  --secondary: #ece7db;
+  --secondary-foreground: #1a1814;
 
-  /* Muted: Warm sand (#ece6db) */
-  --muted: #ece6db;
-  --muted-foreground: #57534e;
+  --muted: #ece7db;
+  --muted-foreground: #5f594e;
 
-  /* Accent: Warm cream tint */
-  --accent: #eae4d8;
-  --accent-foreground: #1c1917;
+  --accent: #e4ded0;
+  --accent-foreground: #1a1814;
 
-  --destructive: hsl(0, 75%, 52%);
+  --destructive: #c23a2b;
   --destructive-foreground: #ffffff;
 
-  /* Crisp, visible warm borders & inputs */
-  --border: #ded8cb;
-  --input: #ded8cb;
-  --ring: oklch(0.46 0.135 158);
+  --border: #ddd6c7;
+  --input: #ddd6c7;
+  --ring: #0f6b55;
 
-  --radius: 0.625rem;
+  --radius: 0.5rem;
 
-  /* Semantic Status Tokens (High-legibility warm pastels with rich text) */
   --status-pending: hsl(38, 92%, 46%);
   --status-pending-bg: hsl(42, 85%, 92%);
   --status-pending-fg: hsl(32, 95%, 26%);
-  --status-approved: hsl(158, 64%, 38%);
-  --status-approved-bg: hsl(152, 60%, 92%);
-  --status-approved-fg: hsl(158, 80%, 22%);
-  --status-rejected: hsl(0, 75%, 52%);
-  --status-rejected-bg: hsl(0, 75%, 93%);
-  --status-rejected-fg: hsl(0, 75%, 32%);
+  --status-approved: hsl(158, 64%, 32%);
+  --status-approved-bg: hsl(152, 50%, 91%);
+  --status-approved-fg: hsl(158, 80%, 20%);
+  --status-rejected: hsl(5, 65%, 48%);
+  --status-rejected-bg: hsl(5, 70%, 93%);
+  --status-rejected-fg: hsl(5, 70%, 30%);
   --status-draft: hsl(35, 14%, 48%);
   --status-draft-bg: hsl(38, 20%, 90%);
   --status-draft-fg: hsl(35, 14%, 30%);
 
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
+  --chart-1: #0f6b55;
+  --chart-2: #c8832a;
+  --chart-3: #3b5b7a;
+  --chart-4: #b4472f;
+  --chart-5: #7a6a45;
 
-  /* Sidebar: Grounded parchment cream (#f2eee5) */
-  --sidebar: #f2eee5;
-  --sidebar-foreground: #1c1917;
-  --sidebar-primary: oklch(0.46 0.135 158);
+  --sidebar: #efeadf;
+  --sidebar-foreground: #1a1814;
+  --sidebar-primary: #0f6b55;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #eae4d8;
-  --sidebar-accent-foreground: #1c1917;
-  --sidebar-border: #ded7cb;
-  --sidebar-ring: oklch(0.46 0.135 158);
+  --sidebar-accent: #e4ded0;
+  --sidebar-accent-foreground: #1a1814;
+  --sidebar-border: #ddd6c7;
+  --sidebar-ring: #0f6b55;
 }
 
 .dark {
-  /* Dark Mode Background */
-  --background: #071222;
+  --background: #0f0e0c;
+  --foreground: #f2eee6;
 
-  --foreground: oklch(0.985 0 0);
+  --card: #181613;
+  --card-foreground: #f2eee6;
+  --popover: #181613;
+  --popover-foreground: #f2eee6;
 
-  --card: oklch(0.13 0.028 261.692);
-  --card-foreground: oklch(0.985 0 0);
+  --primary: #3ecf9f;
+  --primary-foreground: #04150f;
 
-  --popover: oklch(0.13 0.028 261.692);
-  --popover-foreground: oklch(0.985 0 0);
+  --secondary: #221f1b;
+  --secondary-foreground: #f2eee6;
 
-  /* Emerald Primary */
-  --primary: oklch(0.696 0.17 162.48);
-  --primary-foreground: oklch(0 0 0);
+  --muted: #221f1b;
+  --muted-foreground: #a69e8f;
 
-  --secondary: hsl(217.2, 32.6%, 17.5%);
-  --secondary-foreground: hsl(210, 40%, 98%);
+  --accent: #2a2621;
+  --accent-foreground: #f2eee6;
 
-  --muted: hsl(217.2, 32.6%, 17.5%);
-  /* Improved dark mode contrast */
-  --muted-foreground: hsl(215, 20.2%, 72%);
+  --destructive: #e5604f;
+  --destructive-foreground: #1a0a07;
 
-  --accent: hsl(217.2, 32.6%, 17.5%);
-  --accent-foreground: hsl(210, 40%, 98%);
+  --border: #2e2a24;
+  --input: #2e2a24;
+  --ring: #3ecf9f;
 
-  --destructive: hsl(0, 62.8%, 30.6%);
-  --destructive-foreground: hsl(210, 40%, 98%);
-
-  --border: hsl(217.2, 32.6%, 17.5%);
-  --input: hsl(217.2, 32.6%, 17.5%);
-  --ring: hsl(212.7, 26.8%, 83.9%);
-
-  /* Dark mode status tokens */
   --status-pending: hsl(38, 92%, 60%);
-  --status-pending-bg: hsl(32, 60%, 18%);
+  --status-pending-bg: hsl(32, 50%, 16%);
   --status-pending-fg: hsl(38, 92%, 70%);
   --status-approved: hsl(158, 64%, 52%);
-  --status-approved-bg: hsl(152, 40%, 14%);
+  --status-approved-bg: hsl(152, 35%, 13%);
   --status-approved-fg: hsl(152, 68%, 68%);
-  --status-rejected: hsl(0, 84%, 65%);
-  --status-rejected-bg: hsl(0, 40%, 18%);
-  --status-rejected-fg: hsl(0, 84%, 75%);
-  --status-draft: hsl(215, 20%, 60%);
-  --status-draft-bg: hsl(217, 32%, 20%);
-  --status-draft-fg: hsl(215, 20%, 75%);
+  --status-rejected: hsl(5, 80%, 65%);
+  --status-rejected-bg: hsl(5, 40%, 16%);
+  --status-rejected-fg: hsl(5, 80%, 76%);
+  --status-draft: hsl(35, 10%, 60%);
+  --status-draft-bg: hsl(35, 8%, 18%);
+  --status-draft-fg: hsl(35, 10%, 74%);
 
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
+  --chart-1: #3ecf9f;
+  --chart-2: #e0a24a;
+  --chart-3: #6f9bc4;
+  --chart-4: #e5604f;
+  --chart-5: #b9a574;
 
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --sidebar: #141210;
+  --sidebar-foreground: #f2eee6;
+  --sidebar-primary: #3ecf9f;
+  --sidebar-primary-foreground: #04150f;
+  --sidebar-accent: #221f1b;
+  --sidebar-accent-foreground: #f2eee6;
+  --sidebar-border: #2e2a24;
+  --sidebar-ring: #3ecf9f;
 }
 
 /* Glassmorphism Utilities */
@@ -170,13 +154,18 @@ html {
     text-rendering: optimizeLegibility;
   }
 
-  /* Hardware acceleration for smooth transitions */
+  h1, h2 {
+    font-family: var(--font-display), var(--font-geist-sans), serif;
+    letter-spacing: -0.01em;
+  }
+
+  /* Colour-only transitions: transition-all on every element was janky and costly */
   button,
   a,
   input,
   select,
   textarea {
-    @apply transition-all duration-200 ease-in-out;
+    @apply transition-colors duration-150 ease-out;
   }
 
   /* Enforce smooth rounded-rectangle styling for all entry fields, dropdowns, and textareas */
@@ -316,10 +305,9 @@ body {
   }
 
   .dark .dashboard-shell .dashboard-surface {
-    border-color: rgb(255 255 255 / 0.05);
-    background: rgb(255 255 255 / 0.03);
-    box-shadow: 0 14px 32px -24px rgb(0 0 0 / 0.55);
-    backdrop-filter: blur(8px);
+    border-color: var(--border);
+    background: var(--card);
+    box-shadow: none;
   }
 
   .shimmer {

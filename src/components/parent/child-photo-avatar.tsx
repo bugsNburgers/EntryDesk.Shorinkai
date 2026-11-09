@@ -31,7 +31,7 @@ export function ChildPhotoAvatar({
                 <button
                     type="button"
                     onClick={() => setDialogOpen(true)}
-                    className="relative w-[84px] h-[84px] rounded-full overflow-hidden bg-[#eee9df] border-2 border-emerald-600 dark:bg-[#16233a] dark:border-[#2dd4b4] flex items-center justify-center transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-[#f7f4ec] dark:focus:ring-[#2dd4b4] dark:focus:ring-offset-[#0a1220]"
+                    className="relative w-[84px] h-[84px] rounded-full overflow-hidden bg-muted border-2 border-emerald-600 dark:bg-muted dark:border-primary flex items-center justify-center transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-[#f7f4ec] dark:focus:ring-primary dark:focus:ring-offset-[#0a1220]"
                     title="Click to view or change photo"
                 >
                     {photoUrl ? (
@@ -48,7 +48,7 @@ export function ChildPhotoAvatar({
                             height="40"
                             viewBox="0 0 46 46"
                             fill="none"
-                            className="stroke-[#57534e] dark:stroke-[#8a99ab]"
+                            className="stroke-muted-foreground"
                             strokeWidth="1.6"
                         >
                             <circle cx="23" cy="16" r="8" />
@@ -66,7 +66,7 @@ export function ChildPhotoAvatar({
                 <button
                     type="button"
                     onClick={() => setDialogOpen(true)}
-                    className="absolute -right-[2px] -bottom-[2px] w-[28px] h-[28px] rounded-full bg-emerald-600 border-[3px] border-white text-white dark:bg-[#2dd4b4] dark:border-[#0a1220] dark:text-[#04231e] flex items-center justify-center shadow-md hover:bg-emerald-700 dark:hover:bg-[#25c4a5] transition-transform active:scale-95 z-10"
+                    className="absolute -right-[2px] -bottom-[2px] w-[28px] h-[28px] rounded-full bg-emerald-600 border-[3px] border-white text-white dark:bg-primary dark:border-background dark:text-primary-foreground flex items-center justify-center shadow-md hover:bg-emerald-700 dark:hover:bg-primary/90 transition-transform active:scale-95 z-10"
                     title="Upload or change photo"
                 >
                     <svg

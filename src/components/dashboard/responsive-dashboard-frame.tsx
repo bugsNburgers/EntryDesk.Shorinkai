@@ -80,19 +80,19 @@ function MobileFooterNavItem({ item, isActive }: { item: NavItemConfig; isActive
             className={cn(
                 'relative flex-1 flex flex-col items-center justify-center py-1.5 transition-all duration-150 select-none group',
                 isActive
-                    ? 'text-[#0d9488] dark:text-[#2dd4b4]'
-                    : 'text-[#57534e] hover:text-[#1c1917] dark:text-[#8a99ab] dark:hover:text-[#e8eef5]'
+                    ? 'text-primary'
+                    : 'text-muted-foreground hover:text-foreground dark:text-muted-foreground dark:hover:text-foreground'
             )}
         >
             {/* Top subtle active indicator pill */}
             {isActive && (
-                <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-1 rounded-b-full bg-[#0d9488] dark:bg-[#2dd4b4]" />
+                <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-1 rounded-b-full bg-primary" />
             )}
 
             <div
                 className={cn(
                     'p-1 rounded-xl transition-all',
-                    isActive ? 'bg-[#0d9488]/10 dark:bg-[#2dd4b4]/15' : 'group-hover:bg-accent/40'
+                    isActive ? 'bg-primary/10 dark:bg-primary/15' : 'group-hover:bg-accent/40'
                 )}
             >
                 <Icon className={cn('h-5 w-5 transition-transform group-active:scale-90', isActive && 'stroke-[2.25]')} />
@@ -152,16 +152,16 @@ export function ResponsiveDashboardFrame({
 
     return (
         <NavProvider>
-            <div className="dashboard-shell min-h-screen w-full relative bg-[#f7f4ec] text-[#1c1917] dark:bg-[#071222] dark:text-[#e8eef5] transition-colors">
+            <div className="dashboard-shell min-h-screen w-full relative bg-background text-foreground dark:bg-[#071222] dark:text-foreground transition-colors">
                 {/* Subtle Background Pattern */}
                 <div className="fixed inset-0 -z-10 h-full w-full bg-[linear-gradient(to_right,#00000008_1px,transparent_1px),linear-gradient(to_bottom,#00000008_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]">
-                    <div className="absolute left-1/4 top-0 -z-10 h-[400px] w-[500px] rounded-full bg-[#0d9488]/5 dark:bg-[#2dd4b4]/5 blur-[120px]" />
+                    <div className="absolute left-1/4 top-0 -z-10 h-[400px] w-[500px] rounded-full bg-primary/5 blur-[120px]" />
                 </div>
 
                 {/* ========================================================================= */}
                 {/* 1. TOP NAVIGATION BAR (Desktop & Laptop - md:flex)                        */}
                 {/* ========================================================================= */}
-                <header className="sticky top-0 z-50 hidden md:block border-b border-[#ded8cb] bg-white/95 backdrop-blur-xl dark:border-[#1f2b40] dark:bg-[#0a1220]/95 shadow-2xs">
+                <header className="sticky top-0 z-50 hidden md:block border-b border-border bg-white/95 backdrop-blur-xl dark:border-border dark:bg-background/95 shadow-2xs">
                     <div className="mx-auto flex h-16 w-full max-w-[1720px] items-center justify-between px-4 sm:px-6 lg:px-8">
                         {/* Left: Branding & Role Badge */}
                         <div className="flex items-center gap-3">
@@ -169,7 +169,7 @@ export function ResponsiveDashboardFrame({
                                 href="/dashboard"
                                 className="flex items-center gap-2.5 rounded-xl p-1 transition-opacity hover:opacity-90"
                             >
-                                <div className="relative h-9 w-9 overflow-hidden rounded-xl border border-[#ded8cb] bg-white dark:border-[#1f2b40] dark:bg-[#111a2b] shrink-0 shadow-2xs p-1">
+                                <div className="relative h-9 w-9 overflow-hidden rounded-xl border border-border bg-white dark:border-border dark:bg-card shrink-0 shadow-2xs p-1">
                                     <Image
                                         src="/icons/add-athlete-32.svg?v=2"
                                         alt="EntryDesk logo"
@@ -180,7 +180,7 @@ export function ResponsiveDashboardFrame({
                                     />
                                 </div>
                                 <div className="leading-tight">
-                                    <span className="text-base font-bold tracking-tight text-[#1c1917] dark:text-[#e8eef5]">
+                                    <span className="text-base font-bold tracking-tight text-foreground">
                                         EntryDesk
                                     </span>
                                 </div>
@@ -199,7 +199,7 @@ export function ResponsiveDashboardFrame({
                         </div>
 
                         {/* Center: Desktop Navigation Links */}
-                        <nav className="flex items-center gap-1 bg-[#f7f4ec]/80 dark:bg-[#111a2b]/80 border border-[#ded8cb] dark:border-[#1f2b40] p-1 rounded-2xl shadow-2xs">
+                        <nav className="flex items-center gap-1 bg-background/80 dark:bg-card/80 border border-border p-1 rounded-2xl shadow-2xs">
                             {navItems.map((item) => {
                                 const Icon = item.icon
                                 return (
@@ -222,7 +222,7 @@ export function ResponsiveDashboardFrame({
                             {/* User Profile Dropdown Menu */}
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <button className="flex items-center gap-2 rounded-xl border border-[#ded8cb] bg-[#faf8f3] dark:border-[#1f2b40] dark:bg-[#111a2b] pl-1.5 pr-2.5 py-1 hover:border-[#0d9488]/40 dark:hover:border-[#2dd4b4]/40 transition-all cursor-pointer shadow-2xs">
+                                    <button className="flex items-center gap-2 rounded-xl border border-border bg-background dark:border-border dark:bg-card pl-1.5 pr-2.5 py-1 hover:border-primary/40 transition-all cursor-pointer shadow-2xs">
                                         <div
                                             className={cn(
                                                 'flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br text-[11px] font-bold text-white shadow-xs',
@@ -231,23 +231,23 @@ export function ResponsiveDashboardFrame({
                                         >
                                             {initials}
                                         </div>
-                                        <span className="text-xs font-semibold text-[#1c1917] dark:text-[#e8eef5] max-w-[110px] truncate">
+                                        <span className="text-xs font-semibold text-foreground max-w-[110px] truncate">
                                             {profileFullName || displayName}
                                         </span>
-                                        <ChevronDown className="h-3.5 w-3.5 text-[#57534e] dark:text-[#8a99ab]" />
+                                        <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
                                     </button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent
                                     align="end"
-                                    className="w-56 bg-white dark:bg-[#111a2b] border-[#ded8cb] dark:border-[#1f2b40] text-[#1c1917] dark:text-[#e8eef5] rounded-2xl p-1.5 shadow-xl"
+                                    className="w-56 bg-card border-border text-foreground rounded-2xl p-1.5 shadow-xl"
                                 >
                                     <div className="px-2.5 py-2">
                                         <p className="text-xs font-bold truncate">{profileFullName || 'User'}</p>
-                                        <p className="text-[11px] text-[#57534e] dark:text-[#8a99ab] truncate mt-0.5">
+                                        <p className="text-[11px] text-muted-foreground truncate mt-0.5">
                                             {userEmail}
                                         </p>
                                     </div>
-                                    <DropdownMenuSeparator className="bg-[#ded8cb] dark:bg-[#1f2b40] my-1" />
+                                    <DropdownMenuSeparator className="bg-border my-1" />
                                     <div className="p-1">
                                         <SignOutForm />
                                     </div>
@@ -260,14 +260,14 @@ export function ResponsiveDashboardFrame({
                 {/* ========================================================================= */}
                 {/* 2. MOBILE TOP HEADER (Compact Header on small screens - md:hidden)        */}
                 {/* ========================================================================= */}
-                <header className="sticky top-0 z-40 md:hidden border-b border-[#ded8cb] bg-white/95 backdrop-blur-xl dark:border-[#1f2b40] dark:bg-[#0a1220]/95">
+                <header className="sticky top-0 z-40 md:hidden border-b border-border bg-white/95 backdrop-blur-xl dark:border-border dark:bg-background/95">
                     <div className="flex h-14 items-center justify-between px-4">
                         <div className="flex items-center gap-2">
                             <Link href="/dashboard" className="flex items-center gap-2">
-                                <div className="relative h-7 w-7 overflow-hidden rounded-lg border border-[#ded8cb] bg-white dark:border-[#1f2b40] dark:bg-[#111a2b] shadow-2xs p-0.5">
+                                <div className="relative h-7 w-7 overflow-hidden rounded-lg border border-border bg-white dark:border-border dark:bg-card shadow-2xs p-0.5">
                                     <Image src="/icons/add-athlete-32.svg?v=2" alt="EntryDesk" fill className="object-contain" sizes="28px" priority />
                                 </div>
-                                <span className="text-sm font-bold tracking-tight text-[#1c1917] dark:text-[#e8eef5]">
+                                <span className="text-sm font-bold tracking-tight text-foreground">
                                     EntryDesk
                                 </span>
                             </Link>
@@ -296,15 +296,15 @@ export function ResponsiveDashboardFrame({
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent
                                     align="end"
-                                    className="w-52 bg-white dark:bg-[#111a2b] border-[#ded8cb] dark:border-[#1f2b40] text-[#1c1917] dark:text-[#e8eef5] rounded-2xl p-1.5 shadow-xl"
+                                    className="w-52 bg-card border-border text-foreground rounded-2xl p-1.5 shadow-xl"
                                 >
                                     <div className="px-2.5 py-2">
                                         <p className="text-xs font-bold truncate">{profileFullName || 'User'}</p>
-                                        <p className="text-[11px] text-[#57534e] dark:text-[#8a99ab] truncate mt-0.5">
+                                        <p className="text-[11px] text-muted-foreground truncate mt-0.5">
                                             {userEmail}
                                         </p>
                                     </div>
-                                    <DropdownMenuSeparator className="bg-[#ded8cb] dark:bg-[#1f2b40] my-1" />
+                                    <DropdownMenuSeparator className="bg-border my-1" />
                                     <div className="p-1">
                                         <SignOutForm />
                                     </div>
@@ -328,7 +328,7 @@ export function ResponsiveDashboardFrame({
                 {/* ========================================================================= */}
                 <nav
                     aria-label="Mobile Navigation"
-                    className="fixed bottom-0 left-0 right-0 z-50 h-16 md:hidden border-t border-[#ded8cb] bg-white/95 backdrop-blur-xl dark:border-[#1f2b40] dark:bg-[#0a1220]/95 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] dark:shadow-[0_-4px_20px_rgba(0,0,0,0.4)]"
+                    className="fixed bottom-0 left-0 right-0 z-50 h-16 md:hidden border-t border-border bg-white/95 backdrop-blur-xl dark:border-border dark:bg-background/95 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] dark:shadow-[0_-4px_20px_rgba(0,0,0,0.4)]"
                 >
                     <div className="flex h-full items-stretch justify-around px-2 max-w-md mx-auto">
                         {navItems.map((item) => (
