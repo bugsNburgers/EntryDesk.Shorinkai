@@ -1,204 +1,52 @@
-# DB Schema Reference
+# DB schema (verified against live Neon + schema.sql + migrations 001–002)
 
-> Fast lookup for column names, types, constraints. Read this instead of schema.sql.
+Apply order on a fresh DB: `schema.sql` → `migrations/001_parent_portal.sql` → `migrations/002_fix_registration_no_overflow.sql`.
+IDs are UUID (`gen_random_uuid()`). Neon runs Postgres 18; local Docker uses 16 (same behaviour).
 
----
-
-## users
-```
-id              UUID PK
-email           TEXT UNIQUE (lowercase)
-password_hash   TEXT NULL (null if Google-only)
-full_name       TEXT NULL
-role            TEXT CHECK('coach','organizer','admin') DEFAULT 'coach'
-avatar_url      TEXT NULL
-google_id       TEXT UNIQUE NULL
-is_active       BOOLEAN DEFAULT true
-created_at      TIMESTAMPTZ
-updated_at      TIMESTAMPTZ
-```
-View alias: `profiles` (id, email, role, full_name, avatar_url, created_at)
-
----
+## users  (ALL roles incl. parents)
+id, email (unique, lowercase), password_hash NULL, full_name, role CHECK(coach|organizer|admin|parent) default coach,
+avatar_url, google_id UNIQUE, is_active (false = pending approval), created_at, updated_at.  View `profiles`.
+Coach/organiser must have `avatar_url` set or the dashboard shows a mandatory photo-upload gate.
 
 ## sessions
-```
-id              UUID PK
-user_id         UUID FK → users.id CASCADE
-session_token   TEXT UNIQUE
-expires_at      TIMESTAMPTZ
-user_agent      TEXT NULL
-ip_address      TEXT NULL
-created_at      TIMESTAMPTZ
-```
-
----
+user_id → users, session_token = **SHA-256 of the cookie value** (cookie `entrydesk_session` holds the raw token),
+expires_at (parent 90d, others 7d), user_agent, ip_address.
 
 ## dojos
-```
-id              UUID PK
-coach_id        UUID FK → users.id CASCADE
-name            TEXT
-slug            TEXT UNIQUE (immutable once created)
-join_code       TEXT UNIQUE (short, used in URL)
-join_link_enabled BOOLEAN DEFAULT true
-welcome_note    TEXT NULL
-created_at      TIMESTAMPTZ
-```
+coach_id → users, name, city, slug UNIQUE (join URL `/join/<slug>`), join_code UNIQUE (6 hex), join_link_enabled, welcome_note.
 
----
-
-## students
-```
-id                  UUID PK
-dojo_id             UUID FK → dojos.id CASCADE
-guardian_account_id UUID NULL FK → guardian_accounts.id
-name                TEXT
-gender              TEXT ('male','female')
-date_of_birth       DATE NULL
-weight              NUMERIC NULL (kg)
-rank                TEXT NULL ('white','yellow','brown_3', etc.)
-registration_no     TEXT UNIQUE (auto: 'SK26-0001' via trigger)
-photo_url           TEXT NULL
-is_active           BOOLEAN DEFAULT true
-dob_locked          BOOLEAN DEFAULT false
-created_at          TIMESTAMPTZ
-```
-
----
-
-## guardian_accounts
-```
-id                  UUID PK
-email               TEXT UNIQUE (lowercase)
-full_name           TEXT NULL
-phone               TEXT NULL
-email_verified_at   TIMESTAMPTZ NULL
-last_login_at       TIMESTAMPTZ NULL
-status              TEXT CHECK('active','blocked') DEFAULT 'active'
-created_at          TIMESTAMPTZ
-updated_at          TIMESTAMPTZ
-```
-
----
+## students  (athletes)
+dojo_id, **parent_id → users** (the registering parent; NULL for coach-created), name, gender, date_of_birth, weight, rank,
+registration_no UNIQUE (trigger, `SK26-0001`; migration 002 fixes overflow past 9,999), photo_url, phone, school_or_city,
+dob_locked, consent_given_at/version/by, membership_status (`active|removed`), removed_at/by/reason, is_active
+(trigger-managed), generic_checked.
 
 ## events
-```
-id                              UUID PK
-organizer_id                    UUID FK → users.id CASCADE
-title                           TEXT
-description                     TEXT NULL
-event_type                      TEXT CHECK('tournament','seminar','test')
-level                           TEXT CHECK('club','district','state','national','international') DEFAULT 'district'
-start_date                      DATE
-end_date                        DATE
-location                        TEXT NULL
-is_public                       BOOLEAN DEFAULT false
-is_registration_open            BOOLEAN DEFAULT true
-registration_close_date         DATE NULL
-temporary_registration_closes_at TIMESTAMPTZ NULL
-created_at                      TIMESTAMPTZ
-```
-Unique index on: (organizer_id, lower(title), event_type, start_date, end_date, lower(location))
-
----
-
-## event_days
-```
-id          UUID PK
-event_id    UUID FK → events.id CASCADE
-date        DATE
-name        TEXT NULL
-```
-
----
-
-## categories
-```
-id          UUID PK
-event_id    UUID FK → events.id CASCADE
-name        TEXT
-gender      TEXT NULL ('male','female','mixed')
-min_age     INT NULL
-max_age     INT NULL
-min_weight  NUMERIC NULL
-max_weight  NUMERIC NULL
-min_rank    TEXT NULL
-max_rank    TEXT NULL
-```
-
----
+organizer_id, title, description, event_type (tournament|seminar|test), level, start_date, end_date, location, is_public,
+is_registration_open, registration_close_date, temporary_registration_closes_at, coach_checks_each_entry (default true),
+age_cutoff_rule (`tournament_day|jan_1`), photo_required, max_events_per_athlete.
+UNIQUE(organizer_id, lower(title), event_type, start_date, end_date, lower(location)).
+Child tables: event_days(event_id,date,name), categories(event_id,name,gender,min/max age/weight/rank).
 
 ## event_applications
-```
-id          UUID PK
-event_id    UUID FK → events.id CASCADE
-coach_id    UUID FK → users.id CASCADE
-status      TEXT CHECK('pending','approved','rejected') DEFAULT 'pending'
-created_at  TIMESTAMPTZ
-UNIQUE(event_id, coach_id)
-```
-
----
+event_id, coach_id, status (pending|approved|rejected). UNIQUE(event_id, coach_id). A parent can only register for events
+whose application for their dojo's coach is `approved` (or the coach is the organiser).
 
 ## entries
-```
-id                  UUID PK
-event_id            UUID FK → events.id CASCADE
-coach_id            UUID FK → users.id CASCADE
-student_id          UUID FK → students.id CASCADE
-category_id         UUID NULL FK → categories.id SET NULL
-event_day_id        UUID NULL FK → event_days.id SET NULL
-participation_type  TEXT NULL ('kata','kumite','both')
-status              TEXT CHECK('draft','submitted','approved','rejected') DEFAULT 'draft'
-chest_no            INTEGER NULL (auto-assigned on approval via trigger)
-generic_checked     BOOLEAN DEFAULT false
-created_at          TIMESTAMPTZ
-updated_at          TIMESTAMPTZ
-```
+event_id, coach_id, student_id, category_id NULL, event_day_id NULL, participation_type (`both|kata|kumite|…,team_kata,team_kumite`),
+**status** CHECK: `draft | pending_coach | submitted | approved | rejected | correction_needed | coach_declined | withdrawn`,
+chest_no (trigger on approval), generic_checked, submitted_by, coach_reviewed_by/at, coach_notes, org_reviewed_by/at,
+rejection_reason, qr_token (unique partial), checked_in_at/by, declared_weight_kg, category_snapshot JSONB.
+UNIQUE(student_id, event_id).
 
----
+## Others
+event_collaborators / dojo_collaborators (user_id, permission read|write), contacts (public form),
+otp_codes (email, bcrypt code_hash, expires_at, attempts, used, ip_address), auth_rate_limits (key, count, reset_at),
+audit_log (actor_type, actor_id, action, entity_type, entity_id, details JSONB, ip_address).
 
-## event_collaborators
-```
-id          UUID PK
-event_id    UUID FK → events.id CASCADE
-user_id     UUID FK → users.id CASCADE
-permission  TEXT CHECK('read','write') DEFAULT 'read'
-created_at  TIMESTAMPTZ
-UNIQUE(event_id, user_id)
-```
-
----
-
-## dojo_collaborators
-```
-id          UUID PK
-dojo_id     UUID FK → dojos.id CASCADE
-user_id     UUID FK → users.id CASCADE
-permission  TEXT CHECK('read','write') DEFAULT 'read'
-created_at  TIMESTAMPTZ
-UNIQUE(dojo_id, user_id)
-```
-
----
-
-## contacts
-```
-id          UUID PK
-name        TEXT
-email       TEXT
-message     TEXT
-status      TEXT CHECK('unread','read','archived') DEFAULT 'unread'
-created_at  TIMESTAMPTZ
-```
-
----
-
-## DB Triggers
-
-| Trigger | Table | Effect |
-|---|---|---|
-| `tr_generate_student_registration_no` | `students` BEFORE INSERT | Auto-sets `registration_no` = 'SK26-NNNN' |
-| `tr_assign_chest_no_on_approval` | `entries` BEFORE UPDATE | Auto-sets `chest_no` when status → 'approved' |
-| `evaluate_activity_on_entry` | `entries` AFTER INSERT/UPDATE/DELETE | Recalculates `students.is_active` per dojo |
+## Triggers / functions
+| Name | On | Effect | Caveat |
+|---|---|---|---|
+| tr_generate_student_registration_no | students BEFORE INSERT | `SK<yy>-<seq>` | pad only <10000 (mig. 002) |
+| tr_assign_chest_no_on_approval | entries BEFORE UPDATE | chest_no = MAX+1 per event on →approved | no lock/unique index: concurrent approvals can duplicate |
+| evaluate_activity_on_entry | entries AFTER INS/UPD/DEL (per row) | recompute students.is_active for the dojo | per-row; ~1 ms/row at 3k entries, grows with dojo size |

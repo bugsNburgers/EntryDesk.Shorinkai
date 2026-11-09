@@ -1,141 +1,32 @@
-# Auth System
+# Auth (verified 2026-11-09)
 
-> Deep-dive for authentication flows. Read AGENTS.md first.
+Files: `src/lib/auth/{session,google,otp,rate-limit-db,password,profile,add-user}.ts`, `require-role.ts` (barrel → session.ts),
+`src/app/api/auth/*`, `src/app/login/*`, `src/components/auth/*`, `src/proxy.ts`.
 
----
+## One user table, one cookie
+Everyone (parent, coach, organizer, admin) is a row in `users`. Session = HttpOnly cookie `entrydesk_session` (random 32-byte
+hex); DB `sessions.session_token` stores its SHA-256. Lifetime: parent 90 d, others 7 d. `getCurrentSession()` is
+`cache()`d per request and requires `users.is_active = true`. `requireRole(role|roles, {redirectTo?})` throws "Unauthorized" or redirects.
+`proxy.ts` only checks that the cookie *exists* for `/dashboard`, `/parent`, `/athlete`; real validation happens in the page/action.
 
-## Files
-
-```
-src/lib/auth/
-├── session.ts          ← Session management (7.3KB) — core session functions
-├── otp.ts              ← OTP generation + verification (9.2KB)
-├── google.ts           ← Google OAuth (5.9KB)
-├── require-role.ts     ← Role gate helper (627B)
-├── rate-limit.ts       ← In-memory rate limiter (767B)
-├── rate-limit-db.ts    ← DB-backed rate limiter for OTP (3.5KB)
-├── password.ts         ← bcrypt helpers (685B)
-├── profile.ts          ← User profile fetch (1.3KB)
-└── add-user.ts         ← Create user in system (1.2KB)
-
-src/app/api/auth/
-├── otp/route.ts        ← POST: send OTP / verify OTP
-├── google-join/route.ts← POST: Google OAuth callback
-├── logout/route.ts     ← POST: destroy session
-└── session/route.ts    ← GET: current session info
-```
-
----
-
-## Two Separate Auth Systems
-
-| | Coach/Organiser | Parent |
+## Sign-in paths
+| Who | Path | Behaviour |
 |---|---|---|
-| Table | `users` | `guardian_accounts` |
-| Methods | Email OTP + Google OAuth | Email OTP only |
-| Role field | `users.role` ('coach','organizer','admin') | N/A |
-| Session function | `requireRole(['coach'])` | `requireParentSession()` |
-| Cookie | `session_token` | `parent_session_token` (different name) |
-| Redirect on fail | `/login` | `/join/[slug]` or `/login` |
+| Coach / organiser / admin | `/login` password (`login()`), or Google (`verifyGoogleLogin`) | **Whitelist**: unknown Google email → inserted as inactive `coach` + "awaiting approval"; admin flips `is_active`. |
+| Parent | `/join/<slug>` Google → `POST /api/auth/google-join` | auto-creates `parent` (active). Existing active coach signing in here just gets their own session. |
+| Parent | `/join/<slug>` email code → `/api/auth/otp` → `/api/auth/otp/verify` | auto-creates `parent`. **Rejects any existing non-parent or inactive email (403).** |
+Redirect target: `/athlete` (+ `?joinedDojo=<slug>`), cookie `parent_dojo_slug` (30 d) remembers the dojo.
 
----
+## Email OTP details
+6 digits, bcrypt-hashed in `otp_codes`, 10 min expiry, max attempts then burn, 30 s resend cooldown, rate limits 5/email +
+10/IP per 15 min (send) and 20/IP per 15 min (verify), Turnstile required for the first send when `TURNSTILE_SECRET_KEY` is set.
+Production **needs `RESEND_API_KEY`** — without it `sendOtpEmail` fails (500) and OTP login does not work.
+In dev without a key the code is printed to the server log and returned as `devCode`.
 
-## OTP Flow
+## Don'ts
+- Don't let any code path call `createSession` for a user that wasn't explicitly authenticated as *that* user.
+- Don't `UPDATE users SET is_active = TRUE` from a public endpoint (that is the admin approval switch).
+- Don't copy the Google profile photo into `avatar_url` (deliberate: ID-card photos must be real headshots).
 
-```
-1. POST /api/auth/otp { email, action: 'send' }
-   → rate-limit-db check
-   → generate 6-digit code
-   → store hash in DB (or Redis equivalent)
-   → send via Resend email
-   → return { sent: true }
-
-2. POST /api/auth/otp { email, otp, action: 'verify' }
-   → verify hash
-   → find or create user / guardian_account
-   → createSession() → store in sessions table
-   → set HttpOnly cookie
-   → return { success: true, role }
-```
-
----
-
-## Google OAuth Flow
-
-```
-1. User clicks Google button → redirected to Google
-2. Google → POST /api/auth/google-join { credential }
-3. verifyGoogleToken(credential) → gets email, name, google_id
-4. findOrCreateGoogleUser() → upsert in users table
-5. createSession() → HttpOnly cookie
-6. Redirect to /dashboard
-```
-
----
-
-## Session Structure
-
-```ts
-// Stored in sessions table, referenced via HttpOnly cookie
-interface Session {
-  userId: string;      // users.id
-  email: string;
-  role: 'coach' | 'organizer' | 'admin';
-  sessionToken: string;
-  expiresAt: Date;
-}
-
-// For parent sessions
-interface ParentSession {
-  guardianAccountId: string;   // guardian_accounts.id
-  email: string;
-  sessionToken: string;
-  expiresAt: Date;
-}
-```
-
----
-
-## Usage in Server Actions / Route Handlers
-
-```ts
-// For coach/organiser pages
-import { requireRole } from '@/lib/auth/require-role';
-const session = await requireRole(['coach', 'organizer']);
-// Redirects to /login if not authenticated or wrong role
-
-// For parent pages
-import { requireParentSession } from '@/lib/auth/session';
-const session = await requireParentSession();
-// Redirects to /login if not authenticated
-
-// For any authenticated user (any role)
-import { requireRole } from '@/lib/auth/require-role';
-const session = await requireRole(['coach', 'organizer', 'admin']);
-```
-
----
-
-## Rate Limiting
-
-- **In-memory** (`rate-limit.ts`): for general API routes, resets on server restart
-- **DB-backed** (`rate-limit-db.ts`): for OTP sends specifically, persists across restarts
-- OTP limit: max 3 sends per email per 15 minutes
-
----
-
-## Turnstile (Bot Protection)
-
-- Used on login + join forms
-- Client: `@marsidev/react-turnstile`
-- Server: verify token via Cloudflare API in route handler
-- Env var: `TURNSTILE_SECRET_KEY`
-
----
-
-## Profile Photo (Required)
-
-- After first login, `compulsory-profile-photo-upload.tsx` blocks dashboard until photo uploaded
-- Check: `users.avatar_url IS NULL` → show upload gate
-- Upload goes to Vercel Blob via `/api/upload`
-- Applies to coach/organiser. Parent uses `guardian_accounts` avatar separately.
+## Mandatory profile photo
+Coach/organiser with `avatar_url IS NULL` are blocked by `compulsory-profile-photo-upload.tsx` until they upload (`/api/upload/profile-photo`).

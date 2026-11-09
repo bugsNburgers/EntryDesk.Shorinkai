@@ -1,163 +1,51 @@
-# Coding Conventions & Patterns
+# Coding conventions
 
-> Load this when you need to write or modify code. Contains the non-obvious rules.
-
----
-
-## Database Access
-
+## Database
 ```ts
-// ✅ CORRECT — always use tagged template
-import sql from '@/lib/db';
-const rows = await sql`SELECT * FROM students WHERE dojo_id = ${dojoId}`;
-
-// ❌ WRONG — never raw strings, never string concatenation
-const rows = await sql(`SELECT * FROM students WHERE dojo_id = '${dojoId}'`);
+import sql from '@/lib/db'
+const rows = await sql<Student[]>`SELECT * FROM students WHERE dojo_id = ${dojoId}`   // tagged template only
+await sql.begin(async (tx) => { /* transaction */ })
 ```
+- **Never put `${}` inside a quoted SQL literal.** `INTERVAL '${n} seconds'` makes Postgres fail with "could not determine data
+  type of parameter". Use `(${n}::int * INTERVAL '1 second')`. (This silently broke email-OTP for months.)
+- Pool is `max: 1` per serverless instance → use Neon's **pooled** URL (`-pooler` host). Don't hold connections open.
+- Prefer one set-based UPDATE over per-row loops (see `coachBulkForwardEntries`).
 
-- Connection: `src/lib/db/index.ts` exports default `sql` (postgres npm package)
-- All queries return typed arrays. Use `database.ts` types.
-- Transactions: `` sql.begin(async sql => { ... }) ``
-
----
-
-## Authentication & Session
-
+## Auth in actions / pages
 ```ts
-// In server actions / route handlers — ALWAYS at the top
-import { requireRole } from '@/lib/auth/require-role';
-const session = await requireRole(['coach']); // throws redirect if not authed
-// session.userId, session.role, session.email available
-
-// For parent portal
-import { requireParentSession } from '@/lib/auth/session';
-const parentSession = await requireParentSession(); // throws redirect
+const { user } = await requireRole(['coach', 'organizer'])        // throws if role not allowed
+const { user } = await requireRole('parent', { redirectTo: '/login' })
 ```
+Always scope queries to the caller (`parent_id = ${user.id}` / `dojos.coach_id = ${user.id}`); never trust ids from the client.
 
-- Sessions are stored in `sessions` table + HttpOnly cookie
-- Parent sessions are SEPARATE — `guardian_accounts` table, separate cookie
-- OTP auth: `src/lib/auth/otp.ts` — sends 6-digit code via Resend
-- Google OAuth: `src/lib/auth/google.ts`
-- Rate limiting: `src/lib/auth/rate-limit.ts` (in-memory) + `src/lib/auth/rate-limit-db.ts` (DB-backed)
-
----
-
-## Server Actions
-
-```ts
-// Pattern: co-locate actions.ts next to the page that uses them
-// src/app/dashboard/students/actions/index.ts
-'use server';
-import { requireRole } from '@/lib/auth/require-role';
-import sql from '@/lib/db';
-import { revalidatePath } from 'next/cache';
-
-export async function createStudent(formData: FormData) {
-  const session = await requireRole(['coach']);
-  // ... validate with zod from @/lib/validation
-  // ... insert with sql``
-  revalidatePath('/dashboard/students');
-}
-```
-
----
-
-## TypeScript Types
-
-```ts
-// ✅ Import from central types file — NEVER redefine
-import type { Student, Entry, Event, User } from '@/types/database';
-
-// types/database.ts has:
-// Student, Dojo, Event, Entry, Category, EventDay
-// EventApplication, GuardianAccount, DojoCoCo, EventCollaborator
-```
-
----
+## Server actions
+Co-locate `actions.ts` next to the page, `'use server'` on top, validate with zod (`lib/validation.ts`), `audit()` for
+consent/status changes (fire-and-forget `.catch(console.error)` except consent), then `revalidatePath` for **both**
+`/athlete…` and `/parent…` variants (the app serves one via rewrite; keep both fresh) and the dashboard pages.
 
 ## Forms
+react-hook-form + zod v4. **zod v4 `.uuid()` is strict (RFC variant bits)** — hand-typed fake UUIDs like
+`aaaaaaaa-0000-…` are rejected; use real `gen_random_uuid()` ids in tests/seeds.
+Show errors next to the submit button or scroll the banner into view (see `registration-form.tsx`).
 
-```ts
-// Always: react-hook-form + zod v4
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+## Dates & hydration
+`new Date(x).toLocaleDateString()` with no locale renders differently on server (en-US) and browser (en-IN) → React
+hydration mismatch → the form can fall back to a native submit. Always: `toLocaleDateString('en-IN', { timeZone: 'UTC', … })`
+for DB `DATE` values (they parse as UTC midnight).
 
-// Shared zod schemas live in src/lib/validation.ts — check there first
-import { studentSchema } from '@/lib/validation';
-```
+## Images
+`next/image` throws (whole page crashes) for hosts not in `next.config.ts → images.remotePatterns`. Allowed:
+`*.googleusercontent.com`, `*.public.blob.vercel-storage.com`, `avatars.githubusercontent.com`, and local `/…` paths.
 
----
-
-## Status Values
-
-```ts
-// ✅ Use status helpers — never show raw DB values in UI
-import { getEntryStatusLabel, getEntryStatusColor } from '@/lib/status';
-// DB values: 'draft' | 'submitted' | 'approved' | 'rejected'
-// UI labels: 'Pending Review' | 'Submitted' | 'Approved' | 'Rejected'
-```
-
----
-
-## Environment Variables
-
-```
-DATABASE_URL           Neon Postgres connection string
-APP_BASE_URL           Base URL for links/QR codes (no trailing slash)
-RESEND_API_KEY         Email sending
-VERCEL_BLOB_TOKEN      Photo/file storage
-GOOGLE_CLIENT_ID       OAuth
-GOOGLE_CLIENT_SECRET   OAuth
-JWT_SECRET             Session signing
-TURNSTILE_SECRET_KEY   Bot protection
-```
-
-Never hardcode domain. Always `process.env.APP_BASE_URL`.
-
----
-
-## File Upload / Photos
-
-- Use `@/lib/image-compression` before upload
-- Upload via `src/app/api/upload/` route → Vercel Blob
-- Photo URL stored in `students.photo_url` or `guardian_accounts.avatar_url`
-
----
-
-## Email
-
-```ts
-// Always use pre-built notification functions
-import { sendEntryApprovedEmail } from '@/lib/email/notifications';
-// Never call Resend directly from page/action code
-// Templates live in src/lib/email/templates/
-```
-
----
+## Components
+Server Components by default; `'use client'` only for hooks/events. Primitives in `components/ui`. Colours only via tokens
+(`design-system.md`). Status badges via `lib/status.ts`.
 
 ## Migrations
+`src/lib/db/migrations/NNN_name.sql`: additive + idempotent (`IF NOT EXISTS`, `CREATE OR REPLACE`). Mirror in `schema.sql`
+and `types/database.ts`. Run by hand on Neon (SQL editor) — and on the local test DB first.
 
-1. Create `src/lib/db/migrations/NNN_description.sql`
-2. Run it manually on Neon or via `scripts/` helper
-3. Update `src/types/database.ts` to match new columns
-4. NEVER edit `src/lib/db/schema.sql` for incremental changes
-
----
-
-## Component Conventions
-
-- Server Components by default (no `'use client'` unless needed)
-- `'use client'` only for: event handlers, hooks, browser APIs
-- Large client components in `src/components/<module>/` folder
-- UI primitives from `src/components/ui/` (shadcn-based)
-- Loading states: use `loading.tsx` co-located with pages
-- Error boundaries: use `error.tsx` co-located with pages
-
----
-
-## Tailwind v4 Notes
-
-- Config is in `postcss.config.mjs` — no `tailwind.config.js`
-- Custom tokens defined in `src/app/globals.css` via CSS variables
-- Use `cn()` from `@/lib/utils` for conditional classes (clsx + tailwind-merge)
+## Env vars
+`DATABASE_URL` (Neon pooled) · `NEXT_PUBLIC_BASE_URL` · `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET`/`NEXT_PUBLIC_GOOGLE_CLIENT_ID` ·
+`BLOB_READ_WRITE_TOKEN` · `RESEND_API_KEY` + `EMAIL_FROM` (needed for OTP in production) ·
+`NEXT_PUBLIC_TURNSTILE_SITE_KEY` + `TURNSTILE_SECRET_KEY`. (`APP_BASE_URL` in old docs does not exist — it is `NEXT_PUBLIC_BASE_URL`.)

@@ -1,83 +1,38 @@
-# API Routes & Server Actions Map
+# API routes & server actions (generated from code, 2026-11-09)
 
-> Complete map of every API endpoint and server action. Use this to avoid creating duplicates.
+All server actions start with `requireRole(...)` from `@/lib/auth/require-role` (re-export of `lib/auth/session.ts`).
 
----
+## Route handlers (`src/app/api`, `src/app/auth`)
+| Method | Path | Purpose |
+|---|---|---|
+| POST | /api/auth/otp | send email code (Turnstile if `TURNSTILE_SECRET_KEY`; 5/email + 10/IP per 15 min; 30 s cooldown). Returns `devCode` only when email is unconfigured AND not production |
+| POST | /api/auth/otp/verify | verify code → parent session. **Parents only**; 403 for coach/organiser/admin/inactive emails |
+| POST | /api/auth/google-join | Google ID token → auto-creates parent, sets `parent_dojo_slug` cookie |
+| POST | /api/auth/logout · GET /api/auth/session | logout · current session |
+| GET | /auth/callback · POST/GET /auth/signout | OAuth callback · sign out |
+| POST/DELETE | /api/upload/photo | athlete photo (≤200 KB jpg/png/webp) → Vercel Blob (base64 data-URI fallback if no token) |
+| POST | /api/upload/profile-photo | coach/organiser profile photo |
+| GET | /api/id-card/[entryId] | ID card PDF |
+| GET | /api/public-events | public event list (landing page) |
+| GET | /api/email/preview | email template preview (dev) |
+| GET | /v/[token] (page) | QR check-in verification, public |
 
-## Next.js API Routes (`src/app/api/`)
+## Server actions by file
+- `login/actions.ts`: login (password), verifyGoogleLogin (whitelist only), logout
+- `parent/actions.ts`: createChildAsParent, updateChildAsParent
+- `parent/entry-actions.ts`: submitParentEntry, withdrawParentEntry, updateParentEntryDay
+- `dashboard/parent-entries/actions.ts` (coach review): coachForwardEntry, coachBulkForwardEntries, coachRequestCorrection, coachDeclineEntry, coachWithdrawEntry
+- `dashboard/events/[id]/entries/actions.ts` (organiser): updateEntryStatus, bulkUpdateEntryStatus, updateEntryChestNo, exportEventEntries
+- `dashboard/events/actions/index.ts`: createEvent · `events/[id]/actions.ts`: deleteEvent, updateEventSettings
+- `dashboard/events/[id]/categories/actions/index.ts`: createCategory, updateCategory, deleteCategory
+- `dashboard/events/[id]/settings/collaborators.ts`: add/remove/updateEventCollaborator
+- `dashboard/events-browser/actions/index.ts`: applyToEvent · `dashboard/approvals/actions/index.ts`: updateApplicationStatus
+- `dashboard/dojos/actions.ts`: createDojo, updateDojo, toggleDojoJoinLink, regenerateDojoJoinCode, deleteDojo · `collaborators.ts`: add/remove/updateDojoCollaborator
+- `dashboard/students/actions/index.ts`: createStudent, updateStudent, deleteStudent, updateStudentGenericChecked
+- `dashboard/entries/actions/index.ts` (coach-managed entries): upsertEntry, submitEntries, bulkCreateEntries, bulkSubmitEntries, deleteEntry, bulkDeleteEntries, updateEntryGenericChecked, bulkUpdateEntryGenericChecked, coachAddManualStudentAndEntry
+- `contact/actions.ts`: submitContactForm, getContactSubmissions
 
-| Method | Route | File | Purpose |
-|---|---|---|---|
-| POST | `/api/auth/otp` | `src/app/api/auth/otp/route.ts` | Send/verify OTP |
-| POST | `/api/auth/google-join` | `src/app/api/auth/google-join/route.ts` | Google OAuth join flow |
-| POST | `/api/auth/logout` | `src/app/api/auth/logout/route.ts` | Destroy session cookie |
-| GET  | `/api/auth/session` | `src/app/api/auth/session/route.ts` | Get current session |
-| POST | `/api/email` | `src/app/api/email/route.ts` | Internal email trigger |
-| GET  | `/api/id-card/[...params]` | `src/app/api/id-card/route.ts` | Generate ID card PDF |
-| GET  | `/api/public-events` | `src/app/api/public-events/route.ts` | Public events listing |
-| POST | `/api/upload` | `src/app/api/upload/route.ts` | Photo upload → Vercel Blob |
-
----
-
-## Dashboard Server Actions
-
-### Students (`src/app/dashboard/students/actions/index.ts`)
-- `getStudents(dojoId)` — fetch all students for a dojo
-- `createStudent(formData)` — add new student
-- `updateStudent(studentId, formData)` — edit student
-- `deleteStudent(studentId)` — soft delete (sets is_active = false)
-- `bulkUploadStudents(data[])` — CSV/Excel bulk import
-
-### Events (`src/app/dashboard/events/actions/`)
-- `createEvent(formData)` — create new event
-- `updateEvent(eventId, formData)` — edit event
-- `deleteEvent(eventId)` — delete event
-- `toggleRegistration(eventId)` — open/close registration
-- `getEventWithDetails(eventId)` — full event + categories + days
-
-### Entries (`src/app/dashboard/entries/actions/`)
-- `getEntriesForEvent(eventId)` — all entries for an event
-- `approveEntry(entryId)` — approve → triggers chest_no assignment
-- `rejectEntry(entryId)` — reject entry
-- `bulkApprove(entryIds[])` — bulk approve
-- `exportEntries(eventId, format)` — xlsx/pdf export
-
-### Approvals (`src/app/dashboard/approvals/actions/`)
-- `getPendingApplications()` — event_applications pending
-- `approveApplication(applicationId)` — approve coach for event
-- `rejectApplication(applicationId)` — reject coach
-
----
-
-## Parent Portal Server Actions
-
-### `src/app/parent/actions.ts`
-- `getParentProfile()` — guardian_account for current session
-- `updateParentProfile(formData)` — update name/phone
-- `getMyChildren()` — students linked to guardian_account_id
-- `addChild(formData)` — register new student via parent
-- `updateChild(studentId, formData)` — edit child details
-- `getDojoInfo(slug)` — public dojo info for join page
-
-### `src/app/parent/entry-actions.ts` (14KB)
-- `getAvailableEvents(dojoId)` — events open for this dojo
-- `registerChildForEvent(studentId, eventId, formData)` — create entry
-- `withdrawEntry(entryId)` — withdraw/cancel entry
-- `getChildEntries(studentId)` — all entries for a child
-- `selectEventDay(entryId, dayId)` — pick event day
-
----
-
-## Auth Lib Functions (`src/lib/auth/`)
-
-| File | Key Exports |
-|---|---|
-| `session.ts` | `getSession()`, `requireSession()`, `requireParentSession()`, `createSession()`, `destroySession()` |
-| `otp.ts` | `generateOTP()`, `sendOTPEmail()`, `verifyOTP()`, `createOTPSession()` |
-| `google.ts` | `verifyGoogleToken()`, `findOrCreateGoogleUser()` |
-| `require-role.ts` | `requireRole(roles[])` → returns session or redirects |
-| `rate-limit.ts` | `checkRateLimit(key, max, windowMs)` |
-| `rate-limit-db.ts` | DB-backed rate limit for OTP |
-| `add-user.ts` | `addUserToSystem(email, role)` |
-| `profile.ts` | `getUserProfile(userId)` |
-| `password.ts` | `hashPassword()`, `comparePassword()` |
+## Lib helpers worth reusing
+`lib/status.ts` (labels/colours), `lib/validation.ts` (zod), `lib/events/registration.ts` (isRegistrationClosed, toIsoDate),
+`lib/category.ts` (calculateCategory by age/weight/rank), `lib/audit.ts` (audit log; `AUDIT_ACTIONS`),
+`lib/auth/rate-limit.ts` (DB-backed), `lib/email/notifications.ts`, `lib/qr.ts`, `lib/image-compression.ts`.
