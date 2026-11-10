@@ -14,25 +14,13 @@ import { IdCardPhonePass, type IdCardData } from '@/components/id-card/id-card-p
 import { IdCardDownload } from '@/components/id-card/id-card-download'
 import { generateQrToken, qrToDataUrl } from '@/lib/qr'
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://entrydesk.in'
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://entrydesk.in'
 
 interface PageProps {
     params: Promise<{ id: string }>
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-    const { id } = await params
-    const rows = await sql<{ student_name: string; event_title: string }[]>`
-        SELECT COALESCE(e.snap_name, s.name) AS student_name, ev.title AS event_title
-        FROM entries e
-        JOIN students s ON e.student_id = s.id
-        JOIN events ev ON e.event_id = ev.id
-        WHERE e.id = ${id}
-        LIMIT 1
-    `
-    if (!rows.length) return { title: 'Athlete ID Card — EntryDesk' }
-    return { title: `Athlete ID: ${rows[0].student_name} (${rows[0].event_title})` }
-}
+export const metadata: Metadata = { title: 'Athlete ID Card' }
 
 export default async function AthleteIdCardFullPage({ params }: PageProps) {
     const { id } = await params

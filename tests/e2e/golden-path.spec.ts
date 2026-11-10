@@ -20,14 +20,13 @@ test("parent registers an athlete for the event", async ({ page, context, baseUR
   const watch = watchErrors(page);
   await page.goto(`/athlete/${S().athleteId}/register?event=${S().eventId}`);
   await expect(page.getByText("E2E Open 2027").first()).toBeVisible();
-  await expect(page.getByText(/category is worked out from age, belt and weight/i)).toBeVisible();
-
-  // pick the tournament if it is not preselected, then confirm weight
-  const submit = page.getByRole("button", { name: /Submit Registration/i });
-  if (await submit.isDisabled()) await page.getByText("E2E Open 2027").first().click();
-  const weight = page.locator("#weight");
-  if (await weight.count()) await weight.fill("32");
-  await submit.click();
+  // pick the tournament if it is not preselected, then give the weight
+  const tournament = page.getByRole("radio", { name: /E2E Open 2027/ });
+  if (!(await tournament.isChecked())) await tournament.check();
+  const changeWeight = page.getByRole("radio", { name: /No, change/ });
+  if (await changeWeight.count()) await changeWeight.check();
+  await page.locator("#weight").fill("32");
+  await page.getByRole("button", { name: /Send to coach|Send entry/ }).click();
   await page.waitForURL(/\/athlete\/entries\//);
   entryId = page.url().split("/athlete/entries/")[1].split(/[?#/]/)[0];
   expect(watch.hydration()).toEqual([]);
@@ -50,10 +49,15 @@ test("profile edit after submitting does not change the entry", async () => {
 
 test("coach sends the entry to the organiser", async ({ page, context, baseURL }) => {
   await signInAs(context, baseURL!, "coach-tok");
+  // The old queue URL now redirects to the event's entries page, filtered to "With coach".
   await page.goto("/dashboard/parent-entries");
-  await expect(page.getByText("Asha Rao").first()).toBeVisible();
+  await page.waitForURL(new RegExp(`/dashboard/events/${S().eventId}/entries`));
+  const row = page.locator("tr", { hasText: "Asha Rao" });
+  await expect(row).toBeVisible();
   await expect(page.getByText("Asha Renamed")).toHaveCount(0);
-  await page.getByRole("button", { name: /^Send$/ }).first().click();
+  // Fees must be ticked "Paid" before the entry can be sent (desktop project = table row)
+  await row.getByRole("checkbox", { name: "Paid" }).check();
+  await row.getByRole("button", { name: "Send to organiser" }).click();
   const sql = db();
   await expect.poll(async () => (await sql`SELECT status FROM entries WHERE id = ${entryId}`)[0].status).toBe("submitted");
   await sql.end();
@@ -61,13 +65,16 @@ test("coach sends the entry to the organiser", async ({ page, context, baseURL }
 
 test("organiser approves; chest number and QR are issued; the list shows the snapshot", async ({ page, context, baseURL }) => {
   await signInAs(context, baseURL!, "org-tok");
-  await page.goto(`/dashboard/events/${S().eventId}/entries`);
+  // /entries redirects to the event page, which is now the organiser's one place for entries
+  await page.goto(`/dashboard/events/${S().eventId}/entries?status=submitted`);
   const row = page.locator("tr", { hasText: "Asha Rao" });
   await expect(row).toBeVisible();
   await expect(row).toContainText("Under 12 · Girls · -35 kg");
   // the organiser sees the coach's photo next to the coach name
   await expect(row.locator('img[alt="Sensei Kenji"]')).toBeVisible();
-  await row.getByTitle("Approve").click();
+  // organiser can correct the submitted details (entries.snap_*) from the row
+  await expect(row.getByRole("button", { name: "Fix details" })).toBeVisible();
+  await row.getByRole("button", { name: "Accept", exact: true }).click();
 
   const sql = db();
   await expect
@@ -78,12 +85,18 @@ test("organiser approves; chest number and QR are issued; the list shows the sna
   expect(e.qr_token).toBeTruthy();
 });
 
-test("organiser exports the event for RingFlow", async ({ page, context, baseURL }) => {
+test("admin previews and exports the event for RingFlow", async ({ page, context, baseURL }) => {
   await signInAs(context, baseURL!, "org-tok");
-  await page.goto(`/dashboard/events/${S().eventId}/entries`);
+  await page.goto("/admin", { waitUntil: "commit" });
+  await expect(page).toHaveURL(/\/dashboard(?:[/?#]|$)/);
+  await signInAs(context, baseURL!, "admin-tok");
+  await page.goto("/admin");
+  await expect(page.getByRole("heading", { name: "EntryDesk admin" })).toBeVisible();
+  await page.getByRole("button", { name: "Preview RingFlow roster" }).click();
+  await expect(page.getByText(/1 accepted entries/)).toBeVisible();
   const [download] = await Promise.all([
     page.waitForEvent("download"),
-    page.getByRole("button", { name: /Export for RingFlow/i }).click(),
+    page.getByRole("button", { name: "Download workbook" }).click(),
   ]);
   const file = await download.path();
   const wb = XLSX.read(fs.readFileSync(file));

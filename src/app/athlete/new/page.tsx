@@ -89,7 +89,7 @@ export default async function AddChildPage({ searchParams }: AddChildPageProps) 
                 className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground dark:text-muted-foreground dark:hover:text-foreground transition-colors group"
             >
                 <ArrowLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
-                Back to my profile(s)
+                Back to my children
             </Link>
 
             <div className="flex items-center gap-3.5">
@@ -97,9 +97,9 @@ export default async function AddChildPage({ searchParams }: AddChildPageProps) 
                     <AthleteIcon size={40} />
                 </div>
                 <div className="space-y-1">
-                    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Add a profile</h1>
+                    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Add a child</h1>
                     <p className="text-sm text-muted-foreground">
-                        Your coach will see these details in their roster and approve tournament entries.
+                        Your coach will see these details.
                     </p>
                 </div>
             </div>

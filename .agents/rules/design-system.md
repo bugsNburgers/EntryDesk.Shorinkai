@@ -26,3 +26,21 @@ Source of truth: `:root` / `.dark` in `src/app/globals.css`. Fonts wired in `src
 4. Transitions are colour-only (`transition-colors`); don't add `transition-all` or `backdrop-blur` glass.
 5. Radius: `--radius` 0.5 rem base; cards `rounded-xl`, inputs `rounded-md`.
 6. Mobile first: parents use phones. Test at 375 px.
+
+## UX rules (owner decisions, 09/11/2026 — users are often not used to apps)
+Design reference: Claude Design canvas "EntryDesk UX Fixes".
+1. **One word per entry stage, same for every role**: With coach · With organiser · Accepted · Needs a fix · Not accepted
+   (· Withdrawn / Not sent). Show it with `<StatusBadge status=…>` (`components/ui/status-badge.tsx`): colour **and** icon.
+   Tokens: `--status-pending-*` (with coach), `--status-org-*` (with organiser), `--status-approved-*`, `--status-rejected-*`
+   (needs a fix), `--status-closed-*` (not accepted).
+2. **Count boxes are the filter**: `<StageFilterTiles>` (`components/ui/stage-filter-tiles.tsx`) — 2 columns on a phone, one
+   row on a laptop, the selected box is dark. No big stat cards with pastel icon chips.
+3. **What to do now comes first** on home pages (amber "waiting for you" card with one dark button).
+4. **Labelled buttons only** for actions (Accept / Don't accept / Send to organiser / Send back / ID card / Fix details).
+   Icon-only buttons are allowed only for "More" (`…`) and must have `aria-label`. Touch targets ≥ 44 px; main phone buttons 52 px.
+5. **Phones get cards, not tables** (coach and organiser entry lists switch at `lg`).
+6. **Dates DD/MM/YYYY**; deadlines also say "N days left".
+7. **Text**: body 16 px, nothing under 13 px, no all-caps micro labels, plain words (no "accreditation", "registration flow", "pending approvals").
+8. Light/dark is one 44 px button (moon in light mode, sun in dark) — `components/app/theme-toggle.tsx`.
+9. Belt is picked from colours (`components/ui/belt-picker.tsx`, stores e.g. `Yellow`); date of birth is Day/Month/Year dropdowns
+   (`components/ui/dob-selects.tsx`). Belt swatch hexes are physical belt colours, an allowed exception to rule 1 above.

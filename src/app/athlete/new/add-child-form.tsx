@@ -18,7 +18,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { AlertCircle, Loader2, ShieldCheck, Building2, Camera, Upload, CheckCircle2 } from 'lucide-react'
 import { compressAthletePhoto, type CompressionResult } from '@/lib/image-compression'
 import { PhotoGuidelinesVisual } from '@/components/ui/photo-guidelines'
-import { DobPicker } from '@/components/ui/dob-picker'
+import { DobSelects } from '@/components/ui/dob-selects'
+import { BeltPicker } from '@/components/ui/belt-picker'
 
 interface Dojo {
     id: string
@@ -42,10 +43,10 @@ function SubmitButton() {
             {pending ? (
                 <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Adding profile…
+                    Saving…
                 </>
             ) : (
-                'Add profile'
+                'Save child'
             )}
         </Button>
     )
@@ -135,7 +136,7 @@ export function AddChildForm({ dojos }: AddChildFormProps) {
                 <div>
                     <Link href="/athlete">
                         <Button variant="outline" size="sm">
-                            Back to My Profile(s)
+                            Back to My children
                         </Button>
                     </Link>
                 </div>
@@ -146,8 +147,8 @@ export function AddChildForm({ dojos }: AddChildFormProps) {
     return (
         <form ref={formRef} action={handleAction} className="space-y-5">
             {error && (
-                <div className="flex items-start gap-2.5 rounded-xl bg-destructive/10 border border-destructive/20 px-4 py-3 text-sm text-destructive">
-                    <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                <div className="flex items-start gap-2.5 rounded-xl bg-destructive/10 border border-destructive/20 px-4 py-3 text-base font-semibold text-destructive" role="alert">
+                    <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" aria-hidden="true" />
                     <span>{error}</span>
                 </div>
             )}
@@ -155,9 +156,7 @@ export function AddChildForm({ dojos }: AddChildFormProps) {
             {/* Dojo info: Auto-locked if single curated dojo, otherwise choice between parent's joined dojos */}
             {dojos.length === 1 ? (
                 <div className="space-y-1.5">
-                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                        Dojo / Training Club
-                    </Label>
+                    <span className="block text-base font-bold">Dojo</span>
                     <div className="rounded-xl border border-border/50 bg-muted/40 p-4 dark:bg-white/[0.03]">
                         <div className="flex items-center justify-between gap-3">
                             <div className="space-y-0.5">
@@ -207,9 +206,7 @@ export function AddChildForm({ dojos }: AddChildFormProps) {
 
             {/* Athlete Photo (Compulsory for official tournament ID card) */}
             <div className="space-y-2">
-                <Label className="text-sm font-medium">
-                    Athlete photo <span className="text-destructive">*</span>
-                </Label>
+                <span className="block text-base font-bold">Photo for the ID card</span>
                 <div className="flex items-center gap-4 rounded-xl border border-border/50 bg-muted/20 p-4 dark:bg-white/[0.02]">
                     <div className="relative group shrink-0">
                         <div className="h-20 w-20 rounded-full border-2 border-dashed border-border flex items-center justify-center overflow-hidden bg-muted/40 relative shadow-sm">
@@ -241,7 +238,7 @@ export function AddChildForm({ dojos }: AddChildFormProps) {
                         )}
                     </div>
 
-                    <div className="space-y-1.5 flex-1">
+                    <div className="min-w-0 flex-1 space-y-1.5">
                         <input
                             ref={photoInputRef}
                             type="file"
@@ -256,10 +253,10 @@ export function AddChildForm({ dojos }: AddChildFormProps) {
                                 size="sm"
                                 disabled={isCompressing}
                                 onClick={() => photoInputRef.current?.click()}
-                                className="h-9 gap-1.5 text-xs cursor-pointer font-medium"
+                                className="min-h-12 w-full whitespace-normal gap-2 text-base cursor-pointer font-semibold"
                             >
-                                <Upload className="h-3.5 w-3.5" />
-                                {photoUrl ? 'Change photo' : 'Upload face photo'}
+                                <Upload className="h-5 w-5" aria-hidden="true" />
+                                {photoUrl ? 'Change photo' : 'Take or choose a photo'}
                             </Button>
                             {photoUrl && (
                                 <span className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
@@ -268,11 +265,7 @@ export function AddChildForm({ dojos }: AddChildFormProps) {
                             )}
                         </div>
                         <div className="space-y-0.5 pt-0.5">
-                            <p className="text-[11px] text-muted-foreground leading-snug">
-                                <span className="font-medium text-foreground">Formats:</span> JPG, PNG, WebP, HEIC
-                            </p>
-                            <p className="text-[10.5px] text-muted-foreground/80 leading-snug">
-                            </p>
+
                         </div>
                     </div>
                 </div>
@@ -287,8 +280,8 @@ export function AddChildForm({ dojos }: AddChildFormProps) {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                 {/* Athlete name */}
                 <div className="space-y-2">
-                    <Label htmlFor="name">
-                        Athlete&apos;s full name <span className="text-destructive">*</span>
+                    <Label htmlFor="name" className="text-base font-bold">
+                        Child&apos;s full name
                     </Label>
                     <Input
                         id="name"
@@ -297,140 +290,124 @@ export function AddChildForm({ dojos }: AddChildFormProps) {
                         placeholder="e.g. Aarav Sharma"
                         required
                         maxLength={100}
-                        className="h-11"
+                        className="h-12 text-base"
                         autoComplete="off"
                     />
                 </div>
 
                 {/* Gender */}
                 <div className="space-y-2">
-                    <Label htmlFor="gender">
-                        Gender <span className="text-destructive">*</span>
-                    </Label>
-                    <Select name="gender" required>
-                        <SelectTrigger id="gender" className="h-11">
-                            <SelectValue placeholder="Select gender" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="male">Male</SelectItem>
-                            <SelectItem value="female">Female</SelectItem>
-                        </SelectContent>
-                    </Select>
+                    <span className="block text-base font-bold" id="gender-label">Boy or girl</span>
+                    <div role="radiogroup" aria-labelledby="gender-label" className="grid grid-cols-2 gap-2">
+                        {[
+                            { v: 'male', l: 'Boy / Male' },
+                            { v: 'female', l: 'Girl / Female' },
+                        ].map((g, i) => (
+                            <label
+                                key={g.v}
+                                className="flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-border bg-card px-3 text-base font-semibold has-[:checked]:border-primary has-[:checked]:bg-primary/5"
+                            >
+                                <input type="radio" name="gender" value={g.v} required={i === 0} className="h-5 w-5 accent-[var(--primary)]" />
+                                {g.l}
+                            </label>
+                        ))}
+                    </div>
                 </div>
 
                 {/* Date of birth */}
                 <div className="space-y-2">
-                    <Label htmlFor="date_of_birth">
-                        Date of birth <span className="text-destructive">*</span>
+                    <Label htmlFor="date_of_birth" className="text-base font-bold">
+                        Date of birth
                     </Label>
-                    <DobPicker
-                        id="date_of_birth"
-                        name="date_of_birth"
-                        required
-                    />
-                    <p className="text-xs text-muted-foreground">
-                        Used to automatically assign the right tournament age category.
-                    </p>
+                    <DobSelects id="date_of_birth" name="date_of_birth" required />
                 </div>
 
                 {/* Belt rank */}
                 <div className="space-y-2">
-                    <Label htmlFor="rank">
-                        Belt rank <span className="text-destructive">*</span>
-                    </Label>
-                    <Input
-                        id="rank"
-                        name="rank"
-                        type="text"
-                        placeholder="e.g. Yellow Belt, 5th Kyu"
-                        maxLength={50}
-                        className="h-11"
-                        required
-                    />
+                    <span className="block text-base font-bold">Belt colour</span>
+                    <BeltPicker name="rank" required />
+                    <p className="text-[15px] text-muted-foreground">Not sure? Ask your coach. They can change it later.</p>
                 </div>
 
                 {/* Weight */}
                 <div className="space-y-2">
-                    <Label htmlFor="weight">
-                        Weight (kg) <span className="text-destructive">*</span>
+                    <Label htmlFor="weight" className="text-base font-bold">
+                        Weight
                     </Label>
-                    <Input
-                        id="weight"
-                        name="weight"
-                        type="number"
-                        min="5"
-                        max="200"
-                        step="0.1"
-                        placeholder="e.g. 35"
-                        className="h-11"
-                        required
-                    />
-                    <p className="text-xs text-muted-foreground">
-                        Used for weight category matching.
-                    </p>
+                    <div className="flex">
+                        <Input
+                            id="weight"
+                            name="weight"
+                            type="number"
+                            inputMode="decimal"
+                            min="5"
+                            max="200"
+                            step="0.1"
+                            placeholder="e.g. 35"
+                            className="h-12 rounded-r-none text-base"
+                            required
+                        />
+                        <span className="flex h-12 items-center rounded-r-md border border-l-0 border-input bg-muted px-4 font-semibold">kg</span>
+                    </div>
                 </div>
 
                 {/* School / city */}
                 <div className="space-y-2">
-                    <Label htmlFor="school_or_city">
-                        School or city <span className="text-destructive">*</span>
+                    <Label htmlFor="school_or_city" className="text-base font-bold">
+                        School or city
                     </Label>
                     <Input
                         id="school_or_city"
                         name="school_or_city"
                         type="text"
-                        placeholder="e.g. Crux Public School, Bangalore"
+                        placeholder="e.g. Crux Public School, Pune"
                         maxLength={100}
-                        className="h-11"
+                        className="h-12 text-base"
                         required
                     />
                 </div>
 
                 {/* Phone */}
                 <div className="space-y-2 sm:col-span-2">
-                    <Label htmlFor="phone">Mobile number (optional)</Label>
+                    <Label htmlFor="phone" className="text-base font-bold">
+                        Your mobile number <span className="font-normal text-muted-foreground">(optional)</span>
+                    </Label>
                     <Input
                         id="phone"
                         name="phone"
                         type="tel"
-                        placeholder="+91 98765 43210"
+                        inputMode="tel"
+                        placeholder="98765 43210"
                         maxLength={20}
-                        className="h-11"
+                        className="h-12 text-base"
                         autoComplete="tel"
                     />
-                    <p className="text-xs text-muted-foreground">
-                        Shared with your coach for quick tournament communication.
-                    </p>
+                    <p className="text-[15px] text-muted-foreground">Only your coach sees it.</p>
                 </div>
             </div>
 
-            {/* DPDP Consent */}
-            <div className="space-y-2">
-                <Label htmlFor="consent">
-                    Consent &amp; Declaration <span className="text-destructive">*</span>
-                </Label>
-                <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 dark:border-primary/10 dark:bg-primary/5">
-                    <div className="flex items-start gap-3">
-                        <input
-                            type="checkbox"
-                            id="consent"
-                            name="consent"
-                            checked={consentChecked}
-                            onChange={(e) => setConsentChecked(e.target.checked)}
-                            className="mt-1 h-4 w-4 shrink-0 rounded border-border text-primary focus:ring-primary cursor-pointer accent-primary"
-                            required
-                        />
-                        <label htmlFor="consent" className="text-sm leading-relaxed cursor-pointer select-none">
-                            <span className="font-medium text-foreground">I confirm I am either this athlete (18+) or the parent / lawful guardian</span> of this
-                            athlete and I consent to processing personal data (name, date of birth, gender,
-                            belt rank, weight, photo, school/city) for karate tournament registration on EntryDesk.{' '}
-                            <a href="/privacy" className="text-primary underline underline-offset-2" target="_blank" rel="noopener noreferrer">
-                                Privacy Policy
-                            </a>
-                        </label>
-                    </div>
-                </div>
-            </div>
+            {/* DPDP consent (plain words; same checkbox name and requirement) */}
+            <label
+                htmlFor="consent"
+                className="flex cursor-pointer items-start gap-3 rounded-2xl border-[1.5px] border-border bg-card p-4"
+            >
+                <input
+                    type="checkbox"
+                    id="consent"
+                    name="consent"
+                    checked={consentChecked}
+                    onChange={(e) => setConsentChecked(e.target.checked)}
+                    className="mt-0.5 h-6 w-6 shrink-0 cursor-pointer accent-[var(--primary)]"
+                    required
+                />
+                <span className="text-base leading-relaxed">
+                    I am this child&apos;s parent or guardian (or I am the athlete and 18 or older), and EntryDesk can use these
+                    details for tournament entry.{' '}
+                    <a href="/privacy" className="text-primary underline underline-offset-2" target="_blank" rel="noopener noreferrer">
+                        Privacy policy
+                    </a>
+                </span>
+            </label>
 
             <SubmitButton />
         </form>

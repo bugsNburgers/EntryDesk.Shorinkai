@@ -99,7 +99,7 @@ function MobileFooterNavItem({ item, isActive }: { item: NavItemConfig; isActive
             </div>
             <span
                 className={cn(
-                    'text-[10px] tracking-tight mt-0.5 truncate max-w-[68px]',
+                    'text-[13px] tracking-tight mt-0.5 truncate max-w-[84px]',
                     isActive ? 'font-bold' : 'font-medium'
                 )}
             >
@@ -206,10 +206,10 @@ export function ResponsiveDashboardFrame({
                                     <DashboardNavLink
                                         key={item.href}
                                         href={item.href}
-                                        className="h-9 px-3.5 rounded-xl text-xs font-semibold gap-2 transition-all"
+                                        className="h-10 px-2.5 lg:px-3.5 rounded-xl text-sm font-semibold gap-2 transition-all"
                                     >
                                         <Icon className="h-4 w-4" />
-                                        <span>{item.label}</span>
+                                        <span className="whitespace-nowrap">{item.label}</span>
                                     </DashboardNavLink>
                                 )
                             })}
@@ -222,7 +222,7 @@ export function ResponsiveDashboardFrame({
                             {/* User Profile Dropdown Menu */}
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <button className="flex items-center gap-2 rounded-xl border border-border bg-background dark:border-border dark:bg-card pl-1.5 pr-2.5 py-1 hover:border-primary/40 transition-all cursor-pointer shadow-2xs">
+                                    <button aria-label="Your account" className="flex min-h-11 items-center gap-2 rounded-xl border border-border bg-background dark:border-border dark:bg-card pl-1.5 pr-2.5 py-1 hover:border-primary/40 transition-all cursor-pointer shadow-2xs">
                                         <div
                                             className={cn(
                                                 'flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br text-[11px] font-bold text-white shadow-xs',
@@ -231,7 +231,7 @@ export function ResponsiveDashboardFrame({
                                         >
                                             {initials}
                                         </div>
-                                        <span className="text-xs font-semibold text-foreground max-w-[110px] truncate">
+                                        <span className="hidden lg:inline text-sm font-semibold text-foreground max-w-[110px] truncate">
                                             {profileFullName || displayName}
                                         </span>
                                         <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
@@ -285,7 +285,7 @@ export function ResponsiveDashboardFrame({
                         </div>
 
                         <div className="flex items-center gap-2">
-                            <ThemeSwitch className="scale-[0.85]" />
+                            <ThemeSwitch />
 
                             {/* Mobile User Profile Dropdown */}
                             <DropdownMenu>

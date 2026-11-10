@@ -72,15 +72,15 @@ export function ParentPortalNav({ userEmail, userName, userAvatar }: ParentPorta
                     <Link
                         href="/athlete"
                         onClick={() => setOpen(false)}
-                        className="flex items-center gap-2.5 px-3 py-2 text-sm text-foreground hover:bg-background dark:text-foreground dark:hover:bg-muted transition-colors"
+                        className="flex min-h-11 items-center gap-2.5 px-3 py-2 text-base text-foreground hover:bg-background dark:text-foreground dark:hover:bg-muted transition-colors"
                     >
                         <User className="h-4 w-4 text-muted-foreground" />
-                        My Profile(s)
+                        My children
                     </Link>
 
                     <button
                         onClick={handleLogout}
-                        className="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                        className="flex min-h-11 w-full items-center gap-2.5 px-3 py-2 text-base text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 transition-colors"
                     >
                         <LogOut className="h-4 w-4" />
                         Sign out

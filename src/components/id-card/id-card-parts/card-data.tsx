@@ -1,3 +1,4 @@
+import { formatDateRangeStable, formatSubmittedTimestamp } from '@/lib/date'
 import React from 'react'
 
 // Moved verbatim from id-card-preview.tsx (printed output must stay pixel-identical:
@@ -53,26 +54,9 @@ export interface IdCardData {
 // ─── Formatters & Helpers ────────────────────────────────────────────────────
 
 export function formatEventDates(startDate?: string | null, endDate?: string | null): string {
-    if (!startDate) return '[DD] – [DD] [Month] 2026'
-    try {
-        const s = new Date(startDate)
-        const e = endDate ? new Date(endDate) : s
-        const sDay = s.getDate()
-        const eDay = e.getDate()
-        const sMonth = s.toLocaleDateString('en-IN', { month: 'short' })
-        const eMonth = e.toLocaleDateString('en-IN', { month: 'short' })
-        const year = s.getFullYear()
-
-        if (s.toDateString() === e.toDateString()) {
-            return `${sDay} ${sMonth} ${year}`
-        }
-        if (sMonth === eMonth && s.getFullYear() === e.getFullYear()) {
-            return `${sDay} – ${eDay} ${sMonth} ${year}`
-        }
-        return `${sDay} ${sMonth} – ${eDay} ${eMonth} ${year}`
-    } catch {
-        return '[DD] – [DD] [Month] 2026'
-    }
+    if (!startDate) return '[DD/MM/YYYY]'
+    const out = formatDateRangeStable(startDate, endDate || startDate)
+    return out || '[DD/MM/YYYY]'
 }
 
 export function formatDob(dob?: string | null): string {
@@ -91,16 +75,15 @@ export function formatDob(dob?: string | null): string {
 
 export function formatRegistrationDateTime(dateStr?: string | null): { date: string; time: string } {
     if (!dateStr) {
-        return { date: '[DD Mon YYYY]', time: '[HH:MM]' }
+        return { date: '[DD/MM/YYYY]', time: '[HH:MM]' }
     }
     try {
         const d = new Date(dateStr)
-        if (isNaN(d.getTime())) return { date: '[DD Mon YYYY]', time: '[HH:MM]' }
-        const date = d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
-        const time = d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false })
+        if (isNaN(d.getTime())) return { date: '[DD/MM/YYYY]', time: '[HH:MM]' }
+        const [date, time] = formatSubmittedTimestamp(d).split(', ')
         return { date, time }
     } catch {
-        return { date: '[DD Mon YYYY]', time: '[HH:MM]' }
+        return { date: '[DD/MM/YYYY]', time: '[HH:MM]' }
     }
 }
 

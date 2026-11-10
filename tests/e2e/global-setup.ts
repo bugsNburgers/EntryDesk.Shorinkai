@@ -1,4 +1,4 @@
-// Recreates the e2e database on the LOCAL Docker Postgres and seeds users + sessions.
+// Creates and retains a fresh e2e database on the LOCAL Docker Postgres and seeds users + sessions.
 // The dev server (playwright.config.ts webServer) connects lazily, so recreating the DB here
 // before the first request is safe.
 import crypto from "node:crypto";
@@ -17,11 +17,16 @@ export default async function globalSetup() {
   if (!["127.0.0.1", "localhost", "::1"].includes(host)) throw new Error(`Refusing non-local DB host ${host}`);
 
   const admin = postgres(ADMIN_URL, { max: 1, onnotice: () => {} });
-  await admin.unsafe("DROP DATABASE IF EXISTS entrydesk_e2e WITH (FORCE)");
-  await admin.unsafe("CREATE DATABASE entrydesk_e2e");
-  await admin.end();
+  const dbName = process.env.ENTRYDESK_E2E_DATABASE;
+  if (!dbName || !/^entrydesk_e2e_[a-z0-9_]+$/.test(dbName) || dbName.length > 63) throw new Error("Invalid E2E database name");
+  console.log(`Retaining rehearsal database: ${dbName}`);
+  try {
+    await admin`CREATE DATABASE ${admin(dbName)}`;
+  } finally {
+    await admin.end();
+  }
 
-  const sql = postgres(ADMIN_URL.replace(/\/[^/]*$/, "/entrydesk_e2e"), { max: 1, onnotice: () => {} });
+  const sql = postgres(ADMIN_URL.replace(/\/[^/]*$/, `/${dbName}`), { max: 1, onnotice: () => {} });
   try {
     await applyAll(sql);
 
@@ -41,6 +46,8 @@ export default async function globalSetup() {
     const badCoach = await user("badavatar@e2e.local", "Coach Badhost", "coach", "https://unlisted-host.example.com/me.jpg");
     const noPhotoCoach = await user("nophoto@e2e.local", "Coach Nophoto", "coach", null);
     const parent = await user("parent@e2e.local", "Priya Parent", "parent", null);
+    const platformAdmin = await user("admin@e2e.local", "Platform Admin", "admin", null);
+    await session(platformAdmin, "admin-tok");
     await session(organizer, "org-tok");
     await session(coach, "coach-tok");
     await session(noPhotoCoach, "nophoto-tok");

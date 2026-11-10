@@ -2,7 +2,7 @@
 // EntryDesk — ID Card data API
 // GET /api/id-card/[entryId]
 // Returns JSON used by the client-side ID card renderer and download trigger.
-// Authentication: session cookie (parent sees own child's entries; coach/organiser/admin see all).
+// Authentication: session cookie (parents, coaches and organisers are scoped to their records).
 // ============================================================================
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -11,7 +11,7 @@ import sql from '@/lib/db'
 import { generateQrToken, qrToDataUrl } from '@/lib/qr'
 import { audit, AUDIT_ACTIONS } from '@/lib/audit'
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://entrydesk.in'
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://entrydesk.in'
 
 export async function GET(
     req: NextRequest,
@@ -122,6 +122,16 @@ export async function GET(
         if (!check.length) {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
         }
+    }
+
+    if (role === 'organizer') {
+        const [allowed] = await sql`
+            SELECT 1 FROM events ev WHERE ev.id = ${entry.event_id}
+              AND (ev.organizer_id = ${user.id} OR EXISTS (
+                  SELECT 1 FROM event_collaborators ec WHERE ec.event_id = ev.id AND ec.user_id = ${user.id}
+              ))
+        `
+        if (!allowed) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     // Only approved entries get an ID card

@@ -10,12 +10,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { requireRole } from '@/lib/auth/require-role'
 import sql from '@/lib/db'
-import {
-    calculateAge,
-    formatDobLong,
-    formatTournamentDateRangeLong,
-    formatCloseDateBadge,
-} from '@/lib/date'
+import { calculateAge, formatDobLong, formatTournamentDateRangeLong, formatCloseDateBadge, formatDateStable, daysLeftText } from '@/lib/date'
 import { isRegistrationClosed, toIsoDate } from '@/lib/events/registration'
 import { AthleteIdActions } from '@/components/id-card/athlete-id-actions'
 import { ChildPhotoAvatar } from '@/components/parent/child-photo-avatar'
@@ -37,62 +32,62 @@ export async function generateMetadata({ params }: ChildPageProps): Promise<Meta
 function getEntryCardState(status: string) {
     if (status === 'approved') {
         return {
-            statusText: 'Pass ready · Confirmed',
+            statusText: 'Accepted · ID card ready',
             dotClass: 'bg-emerald-600 dark:bg-primary',
             textClass: 'text-emerald-700 dark:text-primary',
-            stepLabel: 'Step 3 of 3',
+            stepLabel: 'Done',
             step1: 'bg-emerald-600 dark:bg-primary',
             step2: 'bg-emerald-600 dark:bg-primary',
             step3: 'bg-emerald-600 dark:bg-primary',
-            actionInfo: 'View pass',
+            actionInfo: 'ID card',
         }
     }
     if (status === 'submitted') {
         return {
-            statusText: 'Under organiser review',
+            statusText: 'With organiser',
             dotClass: 'bg-sky-500 dark:bg-[#38bdf8]',
             textClass: 'text-sky-700 dark:text-[#38bdf8]',
             stepLabel: 'Step 2 of 3',
             step1: 'bg-emerald-600 dark:bg-primary',
             step2: 'bg-emerald-600 dark:bg-primary',
             step3: 'bg-sky-500 dark:bg-[#38bdf8]',
-            actionInfo: 'View status',
+            actionInfo: 'See entry',
         }
     }
     if (status === 'correction_needed') {
         return {
-            statusText: 'Action required · Update entry',
+            statusText: 'Needs a fix',
             dotClass: 'bg-orange-500',
             textClass: 'text-orange-700 dark:text-orange-400',
-            stepLabel: 'Action required',
+            stepLabel: 'Fix it',
             step1: 'bg-emerald-600 dark:bg-primary',
             step2: 'bg-orange-500',
             step3: 'bg-border',
-            actionInfo: 'Update entry',
+            actionInfo: 'Fix it',
         }
     }
     if (status === 'coach_declined' || status === 'rejected') {
         return {
-            statusText: 'Entry declined',
+            statusText: 'Not accepted',
             dotClass: 'bg-rose-500',
             textClass: 'text-rose-700 dark:text-rose-400',
-            stepLabel: 'Declined',
+            stepLabel: 'Not accepted',
             step1: 'bg-border',
             step2: 'bg-rose-500',
             step3: 'bg-border',
-            actionInfo: 'View details',
+            actionInfo: 'See why',
         }
     }
     // Default: 'pending_coach' (Waiting for coach) — Matches reference design Step 2 of 3
     return {
-        statusText: 'Waiting for coach',
+        statusText: 'With coach',
         dotClass: 'bg-amber-500 dark:bg-[#f5c542]',
         textClass: 'text-amber-700 dark:text-[#f5c542]',
         stepLabel: 'Step 2 of 3',
         step1: 'bg-emerald-600 dark:bg-primary',
         step2: 'bg-amber-400 dark:bg-[#f5c542]',
         step3: 'bg-border',
-        actionInfo: 'View timeline',
+        actionInfo: 'See entry',
     }
 }
 
@@ -266,14 +261,11 @@ export default async function ChildDetailPage({ params }: ChildPageProps) {
             <div className="flex items-center justify-between py-1 px-1">
                 <Link
                     href="/athlete"
-                    className="inline-flex items-center gap-1.5 text-[14.5px] font-medium text-muted-foreground hover:text-foreground dark:text-muted-foreground dark:hover:text-foreground transition-colors group"
+                    className="inline-flex min-h-11 items-center gap-1.5 text-base font-semibold text-foreground hover:text-primary transition-colors group"
                 >
-                    <span className="text-xl leading-none font-light group-hover:-translate-x-0.5 transition-transform">‹</span>
-                    <span>All profiles</span>
+                    <span className="text-2xl leading-none font-light group-hover:-translate-x-0.5 transition-transform" aria-hidden="true">‹</span>
+                    <span>My children</span>
                 </Link>
-                <span className="text-[12px] font-mono tracking-tight text-muted-foreground border border-border rounded-md px-2.5 py-0.5 tabular-nums bg-white shadow-2xs dark:text-muted-foreground dark:border-border dark:bg-card/80">
-                    ID {child.id.slice(0, 8)}
-                </span>
             </div>
 
             {/* Responsive Main Layout: 2 Columns on desktop (lg+), 1 Column stacked on mobile */}
@@ -331,8 +323,8 @@ export default async function ChildDetailPage({ params }: ChildPageProps) {
                     {/* Personal Details Card */}
                     <div className="bg-white border border-border dark:bg-card dark:border-border rounded-[18px] p-[16px_20px] shadow-xs">
                         <div className="flex items-center justify-between mb-1">
-                            <div className="text-[11.5px] font-bold tracking-[0.14em] uppercase text-primary">
-                                Personal details
+                            <div className="text-base font-bold text-foreground">
+                                Details
                             </div>
                             <EditAthleteTrigger
                                 student={child}
@@ -344,7 +336,7 @@ export default async function ChildDetailPage({ params }: ChildPageProps) {
                             <div className="flex items-baseline justify-between gap-3.5 py-3">
                                 <span className="text-[14px] text-muted-foreground shrink-0">Belt</span>
                                 <b className="text-[15.5px] font-semibold text-right text-foreground break-words">
-                                    {child.rank || '—'}
+                                    {child.rank ? `${child.rank.charAt(0).toUpperCase()}${child.rank.slice(1)}` : '—'}
                                 </b>
                             </div>
                             <div className="flex items-baseline justify-between gap-3.5 py-3">
@@ -371,7 +363,7 @@ export default async function ChildDetailPage({ params }: ChildPageProps) {
                     {/* Contact Card */}
                     <div className="bg-white border border-border dark:bg-card dark:border-border rounded-[18px] p-[16px_20px] shadow-xs">
                         <div className="flex items-center justify-between mb-1">
-                            <div className="text-[11.5px] font-bold tracking-[0.14em] uppercase text-primary">
+                            <div className="text-base font-bold text-foreground">
                                 Contact
                             </div>
                             <EditAthleteTrigger
@@ -401,10 +393,7 @@ export default async function ChildDetailPage({ params }: ChildPageProps) {
                 <div className="lg:col-span-7 xl:col-span-8 2xl:col-span-9 space-y-6">
                     {/* Active Tournaments Section (Open & Registered) */}
                     <div>
-                        <div className="text-[22px] font-bold text-foreground">Tournaments</div>
-                        <div className="text-[14.5px] text-muted-foreground mt-1 mb-3.5">
-                            Your active registrations &amp; upcoming tournaments.
-                        </div>
+                        <h2 className="text-[22px] font-bold text-foreground mb-3">Tournaments</h2>
 
                         <div className="grid grid-cols-1 2xl:grid-cols-2 gap-4">
                             {/* 1. Active Registered Entries */}
@@ -419,14 +408,14 @@ export default async function ChildDetailPage({ params }: ChildPageProps) {
                                     >
                                         <div className="flex-1 min-w-0">
                                             {/* Status line with dot */}
-                                            <div className={`flex items-center gap-2 text-[13px] font-semibold ${cardState.textClass}`}>
+                                            <div className={`flex items-center gap-2 text-[15px] font-semibold ${cardState.textClass}`}>
                                                 <span className={`w-2 h-2 rounded-full ${cardState.dotClass} shrink-0`} />
                                                 <span className="truncate">{cardState.statusText}</span>
                                             </div>
 
                                             {/* Tournament Name strictly on 1 line with ellipsis */}
                                             <div
-                                                className="text-[19px] font-bold text-foreground mt-2 leading-[1.2] truncate"
+                                                className="text-[19px] font-bold text-foreground mt-2 leading-[1.25]"
                                                 title={entry.event_title}
                                             >
                                                 {entry.event_title}
@@ -461,7 +450,7 @@ export default async function ChildDetailPage({ params }: ChildPageProps) {
                                                         <span>{entry.event_day_name}</span>
                                                         {entry.event_day_date && (
                                                             <span className="opacity-80">
-                                                                ({new Date(entry.event_day_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })})
+                                                                ({formatDateStable(entry.event_day_date)})
                                                             </span>
                                                         )}
                                                     </span>
@@ -470,14 +459,14 @@ export default async function ChildDetailPage({ params }: ChildPageProps) {
 
                                             {/* Coach note callout if present */}
                                             {(entry.coach_notes || entry.rejection_reason) && (
-                                                <div className="rounded-xl bg-[#fff8ea] border border-amber-200 dark:bg-card dark:border-border p-2.5 text-xs mt-2.5">
+                                                <div className="rounded-xl bg-[var(--status-pending-bg)] border border-[var(--status-pending)]/30 p-2.5 text-[15px] mt-2.5">
                                                     {entry.coach_notes && (
-                                                        <p className="text-amber-800 dark:text-amber-400 truncate">
-                                                            <span className="font-semibold">Coach note: </span>{entry.coach_notes}
+                                                        <p className="text-[var(--status-pending-fg)]">
+                                                            <span className="font-semibold">Coach says: </span>{entry.coach_notes}
                                                         </p>
                                                     )}
                                                     {entry.rejection_reason && (
-                                                        <p className="text-rose-800 dark:text-rose-400 truncate mt-0.5">
+                                                        <p className="text-[var(--status-rejected-fg)] mt-0.5">
                                                             <span className="font-semibold">Reason: </span>{entry.rejection_reason}
                                                         </p>
                                                     )}
@@ -491,14 +480,14 @@ export default async function ChildDetailPage({ params }: ChildPageProps) {
                                                     <i className={`flex-1 h-1 rounded-[2px] ${cardState.step2}`} />
                                                     <i className={`flex-1 h-1 rounded-[2px] ${cardState.step3}`} />
                                                 </div>
-                                                <span className="text-[12.5px] text-muted-foreground whitespace-nowrap font-medium">
+                                                <span className="text-[14px] text-muted-foreground whitespace-nowrap font-medium">
                                                     {cardState.stepLabel}
                                                 </span>
                                             </div>
                                         </div>
 
                                         {/* Right: info text before arrow + side arrow > */}
-                                        <div className="flex items-center gap-1.5 shrink-0 text-[12.5px] sm:text-[13px] font-semibold text-muted-foreground group-hover:text-emerald-700 dark:group-hover:text-primary transition-colors">
+                                        <div className="flex items-center gap-1.5 shrink-0 text-[15px] font-semibold text-muted-foreground group-hover:text-emerald-700 dark:group-hover:text-primary transition-colors">
                                             <span className="whitespace-nowrap">{cardState.actionInfo}</span>
                                             <svg
                                                 width="18"
@@ -521,6 +510,8 @@ export default async function ChildDetailPage({ params }: ChildPageProps) {
                             {/* 2. Open Tournaments (Ready to Register) */}
                             {openTournaments.map((t) => {
                                 const closeDateBadge = formatCloseDateBadge(t.registration_close_date)
+                                    ? `${formatCloseDateBadge(t.registration_close_date)} · ${daysLeftText(t.registration_close_date)}`
+                                    : null
 
                                 return (
                                     <div
@@ -532,18 +523,18 @@ export default async function ChildDetailPage({ params }: ChildPageProps) {
                                             <div className="flex items-center justify-between gap-2">
                                                 <div className="flex items-center gap-2 text-[13px] font-semibold text-emerald-800 dark:text-primary">
                                                     <span className="w-2 h-2 rounded-full bg-emerald-600 dark:bg-primary shrink-0" />
-                                                    <span>Registration open</span>
+                                                    <span>Open for entries</span>
                                                 </div>
                                                 {closeDateBadge && (
-                                                    <span className="text-[12.5px] text-muted-foreground shrink-0">
-                                                        Closes {closeDateBadge}
+                                                    <span className="text-[14px] font-semibold text-[var(--status-pending-fg)] shrink-0">
+                                                        Last day {closeDateBadge}
                                                     </span>
                                                 )}
                                             </div>
 
                                             {/* Tournament Name strictly on 1 line with ellipsis */}
                                             <div
-                                                className="text-[19px] font-bold text-foreground mt-2 leading-[1.2] truncate"
+                                                className="text-[19px] font-bold text-foreground mt-2 leading-[1.25]"
                                                 title={t.title}
                                             >
                                                 {t.title}
@@ -576,7 +567,7 @@ export default async function ChildDetailPage({ params }: ChildPageProps) {
                                                 href={`/athlete/${child.id}/register?event=${t.id}`}
                                                 className="w-full sm:w-auto sm:min-w-[180px] h-[46px] px-6 rounded-md bg-primary hover:bg-primary/90 text-white dark:bg-primary dark:hover:bg-primary/90 dark:text-primary-foreground text-[15px] font-bold flex items-center justify-center transition-all duration-150 active:scale-[0.99] shadow-sm"
                                             >
-                                                Register for Tournament
+                                                Enter this tournament
                                             </Link>
                                         </div>
                                     </div>

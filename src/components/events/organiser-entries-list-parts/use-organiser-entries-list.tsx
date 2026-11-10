@@ -7,15 +7,21 @@ import { updateEntryStatus, bulkUpdateEntryStatus, updateEntryChestNo } from '@/
 import { Dialog } from '@/components/ui/dialog'
 import { Search } from 'lucide-react'
 import { toast } from 'sonner'
-import { OrganiserEntryItem, OrganiserEntriesListProps } from './shared'
+import { OrganiserEntryItem, OrganiserEntriesListProps, type OrganiserTab } from './shared'
 
 export function useOrganiserEntriesList({
     entries,
     eventId,
     eventTitle,
+    initialTab,
 }: OrganiserEntriesListProps) {
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
-    const [searchQuery, setSearchQuery] = useState('')
+    const [searchQuery, setSearch] = useState('')
+    const [requestedPage, setPage] = useState(1)
+    const setSearchQuery = (value: string) => {
+        setSearch(value)
+        setPage(1)
+    }
     const [isActionPending, startTransition] = useTransition()
 
     // Counts for tabs
@@ -24,55 +30,36 @@ export function useOrganiserEntriesList({
             all: entries.length,
             pending: entries.filter((e) => e.status === 'submitted').length,
             approved: entries.filter((e) => e.status === 'approved').length,
-            rejected: entries.filter((e) => e.status === 'rejected').length,
+            rejected: entries.filter((e) => e.status === 'rejected' || e.status === 'coach_declined').length,
+            fix: entries.filter((e) => e.status === 'correction_needed').length,
         }
     }, [entries])
 
     // Initial status preset: If there are pending approvals, default to pending, else all
-    const [activeTab, setActiveTab] = useState<'pending' | 'all' | 'approved' | 'rejected'>(
-        counts.pending > 0 ? 'pending' : 'all'
+    const [activeTab, setTab] = useState<OrganiserTab>(
+        initialTab ?? (counts.pending > 0 ? 'pending' : 'all')
     )
 
-    // Dynamic Heading & Subtitle that updates as slider switches
+    const setActiveTab = (tab: OrganiserTab) => {
+        setTab(tab)
+        setPage(1)
+    }
+
     const headingInfo = useMemo(() => {
         switch (activeTab) {
-            case 'pending':
-                return {
-                    title: `Pending Approvals (${counts.pending})`,
-                    subtitle: 'Review and verify athlete entries submitted by coaches awaiting acceptance.',
-                }
             case 'all':
-                return {
-                    title: `All Entries (${counts.all})`,
-                    subtitle: 'All tournament entries across coaches and dojos.',
-                }
+                return { title: `All entries (${counts.all})`, subtitle: 'Every entry coaches have sent for this event.' }
             case 'approved':
-                return {
-                    title: `Accepted Entries (${counts.approved})`,
-                    subtitle: 'Athletes approved, verified, and cleared for tournament participation.',
-                }
+                return { title: `Accepted (${counts.approved})`, subtitle: 'These athletes can compete. Chest numbers and ID cards are ready.' }
             case 'rejected':
-                return {
-                    title: `Rejected Entries (${counts.rejected})`,
-                    subtitle: 'Athletes whose entries were declined or rejected.',
-                }
+                return { title: `Not accepted (${counts.rejected})`, subtitle: 'Entries that were not accepted. The reason is shown on each one.' }
+            case 'fix':
+                return { title: `Needs a fix (${counts.fix})`, subtitle: 'Sent back. The coach or parent will fix it and send it again.' }
             default:
-                return {
-                    title: `Pending Approvals (${counts.pending})`,
-                    subtitle: 'Review and verify athlete entries submitted by coaches awaiting acceptance.',
-                }
+                return { title: `With organiser (${counts.pending})`, subtitle: 'Coaches sent these. Check each one and accept it.' }
         }
     }, [activeTab, counts])
-
-    // Dynamic Heading Color: Pending Approvals is RED if > 0, GREEN if 0
-    const headingColor = useMemo(() => {
-        if (activeTab === 'pending') {
-            return counts.pending > 0
-                ? 'text-rose-600 dark:text-rose-400'
-                : 'text-emerald-600 dark:text-emerald-400'
-        }
-        return 'text-foreground'
-    }, [activeTab, counts.pending])
+    const headingColor = 'text-foreground'
 
     // Dialog states
     const [rejectDialogOpen, setRejectDialogOpen] = useState(false)
@@ -95,7 +82,8 @@ export function useOrganiserEntriesList({
             // Tab filter
             if (activeTab === 'pending' && entry.status !== 'submitted') return false
             if (activeTab === 'approved' && entry.status !== 'approved') return false
-            if (activeTab === 'rejected' && entry.status !== 'rejected') return false
+            if (activeTab === 'rejected' && entry.status !== 'rejected' && entry.status !== 'coach_declined') return false
+            if (activeTab === 'fix' && entry.status !== 'correction_needed') return false
 
             // Search query filter
             if (searchQuery.trim()) {
@@ -123,6 +111,11 @@ export function useOrganiserEntriesList({
             return true
         })
     }, [entries, activeTab, searchQuery])
+
+    const pageSize = 50
+    const pageCount = Math.max(1, Math.ceil(filteredEntries.length / pageSize))
+    const page = Math.min(requestedPage, pageCount)
+    const visibleEntries = filteredEntries.slice((page - 1) * pageSize, page * pageSize)
 
     // Multi-select handlers
     const isAllSelected =
@@ -154,9 +147,9 @@ export function useOrganiserEntriesList({
         startTransition(async () => {
             try {
                 await updateEntryStatus(entry.id, 'approved')
-                toast.success(`Entry for ${entry.student_name} accepted!`)
+                toast.success(`${entry.student_name} accepted`)
             } catch (err: any) {
-                toast.error(err.message || 'Failed to approve entry')
+                toast.error(err.message || 'Could not accept this entry')
             }
         })
     }
@@ -186,18 +179,18 @@ export function useOrganiserEntriesList({
                     const ids = Array.from(selectedIds)
                     await bulkUpdateEntryStatus(ids, 'rejected')
                     setSelectedIds(new Set())
-                    toast.success(`${ids.length} entries marked as rejected.`)
+                    toast.success(`${ids.length} not accepted`)
                 } else if (targetEntryForReject) {
                     await updateEntryStatus(
                         targetEntryForReject.id,
                         'rejected',
                         rejectReason.trim() || undefined
                     )
-                    toast.success(`Entry for ${targetEntryForReject.student_name} rejected.`)
+                    toast.success(`${targetEntryForReject.student_name} not accepted`)
                 }
                 setRejectDialogOpen(false)
             } catch (err: any) {
-                toast.error(err.message || 'Failed to reject entry')
+                toast.error(err.message || 'Could not save')
             }
         })
     }
@@ -210,9 +203,9 @@ export function useOrganiserEntriesList({
                 const ids = Array.from(selectedIds)
                 await bulkUpdateEntryStatus(ids, 'approved')
                 setSelectedIds(new Set())
-                toast.success(`${ids.length} entries accepted!`)
+                toast.success(`${ids.length} accepted`)
             } catch (err: any) {
-                toast.error(err.message || 'Failed to approve entries')
+                toast.error(err.message || 'Could not accept the entries')
             }
         })
     }
@@ -225,9 +218,9 @@ export function useOrganiserEntriesList({
             try {
                 await bulkUpdateEntryStatus(pendingIds, 'approved')
                 setSelectedIds(new Set())
-                toast.success(`${pendingIds.length} pending entries accepted!`)
+                toast.success(`${pendingIds.length} accepted`)
             } catch (err: any) {
-                toast.error(err.message || 'Failed to approve entries')
+                toast.error(err.message || 'Could not accept the entries')
             }
         })
     }
@@ -244,7 +237,7 @@ export function useOrganiserEntriesList({
         if (!targetEntryForChest) return
         const parsed = chestInputValue.trim() ? parseInt(chestInputValue.trim(), 10) : null
         if (chestInputValue.trim() && (isNaN(parsed!) || parsed! <= 0)) {
-            toast.error('Please enter a valid positive chest number')
+            toast.error('Type a number above 0')
             return
         }
 
@@ -255,10 +248,10 @@ export function useOrganiserEntriesList({
                     toast.error(res.error)
                     return
                 }
-                toast.success(`Chest number updated for ${targetEntryForChest.student_name}`)
+                toast.success(`Chest number saved for ${targetEntryForChest.student_name}`)
                 setChestDialogOpen(false)
             } catch (err: any) {
-                toast.error(err.message || 'Failed to update chest number')
+                toast.error(err.message || 'Could not save the chest number')
             }
         })
     }
@@ -270,7 +263,10 @@ export function useOrganiserEntriesList({
         counts,
         headingInfo,
         headingColor,
-        filteredEntries,
+        visibleEntries,
+        page,
+        pageCount,
+        setPage,
         isAllSelected,
         handleToggleSelectAll,
         handleToggleSelectOne,

@@ -1,5 +1,6 @@
 'use server'
 
+import { formatStepDate } from '@/lib/date'
 import { revalidatePath } from 'next/cache'
 import { requireRole } from '@/lib/auth/require-role'
 import sql from '@/lib/db'
@@ -13,6 +14,8 @@ export async function updateEntryStatus(
     reason?: string
 ) {
     const { user, role } = await requireRole(['organizer', 'admin'])
+
+    if (status !== 'approved' && status !== 'rejected') throw new Error('Invalid decision')
 
     // Strictly enforce that entry's event is managed by this organizer or write collaborator
     const updated = await sql<{ event_id: string; student_id: string }[]>`
@@ -32,6 +35,9 @@ export async function updateEntryStatus(
         FROM events ev
         WHERE e.id = ${entryId}
           AND e.event_id = ev.id
+          AND (e.status = 'submitted'
+               OR (${status} = 'approved' AND e.status = 'rejected' AND e.generic_checked)
+               OR (${status} = 'rejected' AND e.status = 'approved'))
           ${role !== 'admin' ? sql`AND (ev.organizer_id = ${user.id} OR EXISTS (SELECT 1 FROM event_collaborators ec WHERE ec.event_id = ev.id AND ec.user_id = ${user.id} AND ec.permission = 'write'))` : sql``}
         RETURNING e.event_id, e.student_id
     `
@@ -67,45 +73,42 @@ export async function updateEntryStatus(
 
 export async function bulkUpdateEntryStatus(entryIds: string[], status: 'approved' | 'rejected') {
     const { user, role } = await requireRole(['organizer', 'admin'])
+    if (status !== 'approved' && status !== 'rejected') throw new Error('Invalid decision')
     if (!entryIds || entryIds.length === 0) return { success: true }
 
-    // Atomic bulk update strictly scoped to events managed by this organizer or write collaborator
     const updated = await sql<{ event_id: string }[]>`
-        UPDATE entries e
-        SET status = ${status},
-            updated_at = NOW(),
-            rejection_reason = CASE
-                WHEN ${status} = 'approved' THEN NULL
-                ELSE e.rejection_reason
-            END,
-            qr_token = CASE
-                WHEN ${status} = 'approved' THEN COALESCE(e.qr_token, replace(gen_random_uuid()::text, '-', ''))
-                WHEN ${status} = 'rejected' THEN NULL
-                ELSE e.qr_token
-            END
-        FROM events ev
-        WHERE e.id = ANY(${entryIds}::uuid[])
-          AND e.event_id = ev.id
-          AND e.status != 'draft'
-          ${role !== 'admin' ? sql`AND (ev.organizer_id = ${user.id} OR EXISTS (SELECT 1 FROM event_collaborators ec WHERE ec.event_id = ev.id AND ec.user_id = ${user.id} AND ec.permission = 'write'))` : sql``}
-        RETURNING DISTINCT e.event_id
+        WITH changed AS (
+            UPDATE entries e
+            SET status = ${status},
+                updated_at = NOW(),
+                rejection_reason = CASE
+                    WHEN ${status} = 'approved' THEN NULL
+                    ELSE e.rejection_reason
+                END,
+                qr_token = CASE
+                    WHEN ${status} = 'approved' THEN COALESCE(e.qr_token, replace(gen_random_uuid()::text, '-', ''))
+                    WHEN ${status} = 'rejected' THEN NULL
+                    ELSE e.qr_token
+                END
+            FROM events ev
+            WHERE e.id = ANY(${entryIds}::uuid[])
+              AND e.event_id = ev.id
+              AND (e.status = 'submitted'
+                   OR (${status} = 'approved' AND e.status = 'rejected' AND e.generic_checked)
+                   OR (${status} = 'rejected' AND e.status = 'approved'))
+              ${role !== 'admin' ? sql`AND (ev.organizer_id = ${user.id} OR EXISTS (SELECT 1 FROM event_collaborators ec WHERE ec.event_id = ev.id AND ec.user_id = ${user.id} AND ec.permission = 'write'))` : sql``}
+            RETURNING e.id, e.event_id
+        ), logged AS (
+            INSERT INTO audit_log (actor_type, actor_id, action, entity_type, entity_id, details)
+            SELECT ${role}, ${user.id},
+                ${status === 'approved' ? AUDIT_ACTIONS.ENTRY_APPROVED : AUDIT_ACTIONS.ENTRY_REJECTED},
+                'entry', id, jsonb_build_object('bulk', true, 'event_id', event_id)
+            FROM changed
+        )
+        SELECT DISTINCT event_id FROM changed
     `
 
-    if (updated.length === 0) {
-        throw new Error('Unauthorized or no eligible entries to update')
-    }
-
-    // Audit each entry in bulk update
-    for (const id of entryIds) {
-        audit({
-            actorType: role === 'admin' ? 'admin' : 'organizer',
-            actorId: user.id,
-            action: status === 'approved' ? AUDIT_ACTIONS.ENTRY_APPROVED : AUDIT_ACTIONS.ENTRY_REJECTED,
-            entityType: 'entry',
-            entityId: id,
-            details: { bulk: true },
-        }).catch(console.error)
-    }
+    if (!updated.length) throw new Error('Unauthorized or no eligible entries to update')
 
     updated.forEach((r) => {
         revalidatePath(`/dashboard/events/${r.event_id}/entries`)
@@ -209,7 +212,7 @@ export async function exportEventEntries(
         LEFT JOIN event_days ed ON e.event_day_id = ed.id
         JOIN users p ON e.coach_id = p.id
         WHERE e.event_id = ${eventId}
-          AND e.status != 'draft'
+          AND e.status IN ('submitted', 'approved', 'rejected')
           ${role !== 'admin' ? sql`AND (ev.organizer_id = ${user.id} OR EXISTS (SELECT 1 FROM event_collaborators ec WHERE ec.event_id = ev.id AND ec.user_id = ${user.id}))` : sql``}
           ${q ? sql`AND COALESCE(e.snap_name, s.name) ILIKE ${'%' + q + '%'}` : sql``}
           ${status && status !== 'all' ? sql`AND e.status = ${status}` : sql``}
@@ -229,23 +232,17 @@ export async function exportEventEntries(
         'Status': e.status,
         'Coach Name': e.coach_name || '-',
         'Coach Email': e.coach_email,
-        'Date Applied': new Date(e.created_at).toLocaleDateString('en-IN', { timeZone: 'UTC' }),
+        'Date Applied': formatStepDate(e.created_at),
     }))
 }
 
-/**
- * Rows for RingFlow's official-roster import (first sheet, exact headers in
- * lib/export/ringflow.ts). Approved entries only, ordered by chest number, using the
- * per-event snapshot (what the athlete was entered with).
- */
-export async function exportEventForRingFlow(eventId: string): Promise<{ rows?: RingFlowRow[]; title?: string; error?: string }> {
-    const { user, role } = await requireRole(['organizer', 'admin'])
+export async function exportEventForRingFlow(eventId: string, dayId?: string): Promise<{ rows?: RingFlowRow[]; title?: string; error?: string }> {
+    const { user } = await requireRole('admin')
 
     const events = await sql<{ id: string; title: string; start_date: string | Date; age_cutoff_rule: string | null }[]>`
         SELECT ev.id, ev.title, ev.start_date, ev.age_cutoff_rule
         FROM events ev
         WHERE ev.id = ${eventId}
-          ${role !== 'admin' ? sql`AND (ev.organizer_id = ${user.id} OR EXISTS (SELECT 1 FROM event_collaborators ec WHERE ec.event_id = ev.id AND ec.user_id = ${user.id}))` : sql``}
         LIMIT 1
     `
     if (!events.length) return { error: 'Event not found or unauthorized' }
@@ -272,8 +269,11 @@ export async function exportEventForRingFlow(eventId: string): Promise<{ rows?: 
         LEFT JOIN categories c ON c.id = e.category_id
         WHERE e.event_id = ${eventId}
           AND e.status = 'approved'
+          AND (${dayId ?? null}::uuid IS NULL OR e.event_day_id = ${dayId ?? null}::uuid)
           AND e.chest_no IS NOT NULL
         ORDER BY e.chest_no ASC
     `
+    await audit({ actorType: 'admin', actorId: user.id, action: 'event.ringflow_roster_accessed',
+        entityType: 'event', entityId: eventId, details: { count: entries.length, dayId } })
     return { rows: toRingFlowRows(entries, event), title: event.title }
 }

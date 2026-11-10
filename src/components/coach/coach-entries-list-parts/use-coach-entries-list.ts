@@ -4,7 +4,7 @@
 
 import { useEffect, useMemo, useState, useTransition } from 'react'
 import { bulkUpdateEntryGenericChecked, updateEntryGenericChecked, deleteEntry } from '@/app/dashboard/entries/actions'
-import { coachBulkForwardEntries } from '@/app/dashboard/parent-entries/actions'
+import { coachBulkForwardEntries, coachForwardEntry, coachRequestCorrection } from '@/app/dashboard/parent-entries/actions'
 import { Search } from 'lucide-react'
 import { toast } from 'sonner'
 import { normalizeCoachStatus, CoachEntriesListProps } from './shared'
@@ -73,7 +73,9 @@ export function useCoachEntriesList({
         return entries.filter((e) => {
             // Status filter
             if (effectiveFilter === 'not_forwarded') {
-                if (e.status !== 'draft' && e.status !== 'pending_coach' && e.status !== 'correction_needed') return false
+                if (e.status !== 'draft' && e.status !== 'pending_coach') return false
+            } else if (effectiveFilter === 'correction') {
+                if (e.status !== 'correction_needed') return false
             } else if (effectiveFilter === 'forwarded') {
                 if (e.status !== 'submitted') return false
             } else if (effectiveFilter === 'approved') {
@@ -100,20 +102,21 @@ export function useCoachEntriesList({
     // Counts for bottom floating bar
     const countPaid = useMemo(() => {
         return entries.filter(
-            (e) => genericCheckedMap[e.id] && (e.status === 'draft' || e.status === 'pending_coach' || e.status === 'correction_needed')
+            (e) => genericCheckedMap[e.id] && (e.status === 'draft' || e.status === 'pending_coach')
         ).length
     }, [entries, genericCheckedMap])
 
     const countNotPaid = useMemo(() => {
         return entries.filter(
-            (e) => !genericCheckedMap[e.id] && (e.status === 'draft' || e.status === 'pending_coach' || e.status === 'correction_needed')
+            (e) => !genericCheckedMap[e.id] && (e.status === 'draft' || e.status === 'pending_coach')
         ).length
     }, [entries, genericCheckedMap])
 
     // Dynamic Tab Counts (Pending Approvals 1st)
     const tabCounts = useMemo(() => {
         return {
-            not_forwarded: entries.filter((e) => e.status === 'draft' || e.status === 'pending_coach' || e.status === 'correction_needed').length,
+            not_forwarded: entries.filter((e) => e.status === 'draft' || e.status === 'pending_coach').length,
+            correction: entries.filter((e) => e.status === 'correction_needed').length,
             all: entries.length,
             forwarded: entries.filter((e) => e.status === 'submitted').length,
             approved: entries.filter((e) => e.status === 'approved').length,
@@ -126,33 +129,38 @@ export function useCoachEntriesList({
         switch (effectiveFilter) {
             case 'not_forwarded':
                 return {
-                    title: `Pending Approvals (${tabCounts.not_forwarded})`,
-                    subtitle: 'Mark each student as paid & verified, then forward them to the organiser.',
+                    title: `With coach (${tabCounts.not_forwarded})`,
+                    subtitle: 'Tick “Paid” when fees are collected, then send each entry to the organiser.',
+                }
+            case 'correction':
+                return {
+                    title: `Needs a fix (${tabCounts.correction})`,
+                    subtitle: 'Sent back to the parent. They will fix it and send it again.',
                 }
             case 'all':
                 return {
-                    title: `All Entries (${tabCounts.all})`,
-                    subtitle: 'Filter, review, and manage your team athletes.',
+                    title: `All entries (${tabCounts.all})`,
+                    subtitle: 'Every athlete you entered for this event.',
                 }
             case 'forwarded':
                 return {
-                    title: `Submitted Entries (${tabCounts.forwarded})`,
-                    subtitle: 'Entries forwarded to the organiser awaiting verification.',
+                    title: `With organiser (${tabCounts.forwarded})`,
+                    subtitle: 'You sent these. The organiser will accept them.',
                 }
             case 'approved':
                 return {
-                    title: `Approved Entries (${tabCounts.approved})`,
-                    subtitle: 'Athletes approved and cleared for the tournament.',
+                    title: `Accepted (${tabCounts.approved})`,
+                    subtitle: 'These athletes can compete. ID cards are ready.',
                 }
             case 'rejected':
                 return {
-                    title: `Rejected Entries (${tabCounts.rejected})`,
-                    subtitle: 'Athletes whose entries were declined or rejected.',
+                    title: `Not accepted (${tabCounts.rejected})`,
+                    subtitle: 'These entries were not accepted. The reason is shown on each one.',
                 }
             default:
                 return {
-                    title: `Pending Approvals (${tabCounts.not_forwarded})`,
-                    subtitle: 'Mark each student as paid & verified, then forward them to the organiser.',
+                    title: `With coach (${tabCounts.not_forwarded})`,
+                    subtitle: 'Tick “Paid” when fees are collected, then send each entry to the organiser.',
                 }
         }
     }, [effectiveFilter, tabCounts])
@@ -160,9 +168,7 @@ export function useCoachEntriesList({
     // Dynamic Heading Color: Pending Approvals is RED if > 0, GREEN if 0
     const headingColor = useMemo(() => {
         if (effectiveFilter === 'not_forwarded') {
-            return tabCounts.not_forwarded > 0
-                ? 'text-rose-600 dark:text-rose-400'
-                : 'text-emerald-600 dark:text-emerald-400'
+            return 'text-foreground'
         }
         return 'text-foreground'
     }, [effectiveFilter, tabCounts.not_forwarded])
@@ -228,7 +234,7 @@ export function useCoachEntriesList({
             await updateEntryGenericChecked(entry.id, next, eventId)
         } catch {
             setGenericCheckedMap((prev) => ({ ...prev, [entry.id]: current }))
-            toast.error('Failed to update payment status')
+            toast.error('Could not save “Paid”')
         }
     }
 
@@ -248,9 +254,9 @@ export function useCoachEntriesList({
 
         try {
             await bulkUpdateEntryGenericChecked(ids, next, eventId)
-            toast.success(next ? 'Marked all entries as paid & verified.' : 'Unmarked entries.')
+            toast.success(next ? 'All marked as paid.' : 'Unmarked entries.')
         } catch {
-            toast.error('Failed to update payment status')
+            toast.error('Could not save “Paid”')
         }
     }
 
@@ -262,7 +268,7 @@ export function useCoachEntriesList({
         )
         const ids = unforwardedPaidEntries.map((e) => e.id)
         if (!ids.length) {
-            toast.info('No unforwarded paid entries found.')
+            toast.info('No paid entries are waiting to be sent.')
             return
         }
 
@@ -272,14 +278,14 @@ export function useCoachEntriesList({
             if (res.error) {
                 toast.error(res.error)
             } else {
-                toast.success(`Successfully forwarded ${ids.length} entries to organiser!`)
+                toast.success(`${res.count} sent to the organiser`)
                 setEntries((prev) =>
-                    prev.map((e) => (ids.includes(e.id) ? { ...e, status: 'submitted' } : e))
+                    prev.map((e) => (res.forwardedIds?.includes(e.id) ? { ...e, status: 'submitted' } : e))
                 )
                 setSelectedIds(new Set())
             }
         } catch (err: any) {
-            toast.error(err.message || 'Failed to forward entries')
+            toast.error(err.message || 'Could not send the entries')
         } finally {
             setIsSubmitting(false)
         }
@@ -293,7 +299,7 @@ export function useCoachEntriesList({
         )
         const ids = selectedToForward.map((e) => e.id)
         if (!ids.length) {
-            toast.info('None of the selected entries are eligible for forwarding.')
+            toast.info('None of the ticked entries can be sent.')
             return
         }
 
@@ -303,27 +309,83 @@ export function useCoachEntriesList({
             if (res.error) {
                 toast.error(res.error)
             } else {
-                toast.success(`Successfully forwarded ${ids.length} entries to organiser!`)
+                toast.success(`${res.count} sent to the organiser`)
                 setEntries((prev) =>
-                    prev.map((e) => (ids.includes(e.id) ? { ...e, status: 'submitted' } : e))
+                    prev.map((e) => (res.forwardedIds?.includes(e.id) ? { ...e, status: 'submitted' } : e))
                 )
                 setSelectedIds(new Set())
             }
         } catch (err: any) {
-            toast.error(err.message || 'Failed to forward selected entries')
+            toast.error(err.message || 'Could not send the ticked entries')
         } finally {
             setIsSubmitting(false)
         }
     }
 
     // Confirm & Execute Reject Entry
+    // One entry → organiser (the big green button on each card / row).
+    const [busyEntryId, setBusyEntryId] = useState<string | null>(null)
+    const handleForwardOne = async (entry: any) => {
+        if (isReadOnly || !(entry.status === 'draft' || entry.status === 'pending_coach')) return
+        try {
+            setBusyEntryId(entry.id)
+            const res = await coachForwardEntry(entry.id)
+            if (res.error) {
+                toast.error(res.error)
+                return
+            }
+            toast.success(`${entry.students?.name || 'Entry'} sent to the organiser`)
+            setEntries((prev) => prev.map((e) => (e.id === entry.id ? { ...e, status: 'submitted' } : e)))
+            setSelectedIds((prev) => {
+                const next = new Set(prev)
+                next.delete(entry.id)
+                return next
+            })
+        } catch (err: any) {
+            toast.error(err.message || 'Could not send this entry')
+        } finally {
+            setBusyEntryId(null)
+        }
+    }
+
+    // Send back to the parent with a note (status → correction_needed).
+    const [sendBackEntry, setSendBackEntry] = useState<any | null>(null)
+    const [sendBackNote, setSendBackNote] = useState('')
+    const [isSendingBack, setIsSendingBack] = useState(false)
+    const handleConfirmSendBack = async () => {
+        if (!sendBackEntry) return
+        const note = sendBackNote.trim()
+        if (note.length < 3) {
+            toast.error('Write what the parent should fix.')
+            return
+        }
+        try {
+            setIsSendingBack(true)
+            const res = await coachRequestCorrection(sendBackEntry.id, note)
+            if (res.error) {
+                toast.error(res.error)
+                return
+            }
+            toast.success('Sent back to the parent')
+            setEntries((prev) =>
+                prev.map((e) => (e.id === sendBackEntry.id ? { ...e, status: 'correction_needed', coach_notes: note } : e))
+            )
+            setSendBackEntry(null)
+            setSendBackNote('')
+        } catch (err: any) {
+            toast.error(err.message || 'Could not send it back')
+        } finally {
+            setIsSendingBack(false)
+        }
+    }
+
     const handleConfirmReject = () => {
         if (!entryToReject) return
 
         startRejectTransition(async () => {
             try {
                 await deleteEntry(entryToReject.id)
-                toast.success(`Entry for ${entryToReject.students?.name || 'student'} has been rejected.`)
+                toast.success(`${entryToReject.students?.name || 'Athlete'} removed from this event`)
                 setEntries((prev) => prev.filter((e) => e.id !== entryToReject.id))
                 setSelectedIds((prev) => {
                     const next = new Set(prev)
@@ -333,7 +395,7 @@ export function useCoachEntriesList({
                 setRejectDialogOpen(false)
                 setEntryToReject(null)
             } catch (err: any) {
-                toast.error(err.message || 'Failed to reject entry')
+                toast.error(err.message || 'Could not remove this entry')
             }
         })
     }
@@ -371,6 +433,14 @@ export function useCoachEntriesList({
         handleForwardAllPaid,
         handleForwardSelected,
         handleConfirmReject,
+        handleForwardOne,
+        busyEntryId,
+        sendBackEntry,
+        setSendBackEntry,
+        sendBackNote,
+        setSendBackNote,
+        isSendingBack,
+        handleConfirmSendBack,
         entries,
         setEntries,
         selectedIds,

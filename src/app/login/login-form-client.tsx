@@ -1,14 +1,17 @@
-// EntryDesk — Client-side Login Form Component
+// EntryDesk — Sign in for everyone (09/11/2026 redesign).
+// Google first (works for every role), then email code (parents/athletes), and the coach/organiser
+// password form tucked into a "Coach or organiser with a password?" section.
 'use client'
 
 import { useState } from 'react'
 import { GoogleSignInButton } from '@/components/auth/google-sign-in-button'
+import { EmailCodeSignIn } from '@/components/auth/email-code-sign-in'
 import { login } from './actions'
 import { PendingButton } from '@/components/ui/pending-button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { NavigationOnPending } from '@/components/app/navigation-on-pending'
-import { ArrowRight, AlertCircle } from 'lucide-react'
+import { AlertCircle } from 'lucide-react'
 
 interface LoginFormClientProps {
     initialError?: string | null
@@ -23,73 +26,45 @@ export function LoginFormClient({ initialError, googleClientId, callbackUrl }: L
     return (
         <div>
             {activeError && (
-                <div className="mb-5 flex items-start gap-3 rounded-xl border border-red-500/25 bg-red-500/10 p-4 text-sm text-red-400 dark:text-red-300">
-                    <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
+                <div role="alert" className="mb-5 flex items-start gap-3 rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-base text-destructive">
+                    <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
                     <div>{activeError}</div>
                 </div>
             )}
 
             <div className="mb-6">
-                <h2 className="text-2xl font-semibold tracking-tight">Authorized Sign In</h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                    Access is restricted to authorized coaches and event organizers.
+                <h1 className="text-3xl font-bold tracking-tight">Sign in</h1>
+                <p className="mt-1 text-base text-muted-foreground">For parents, athletes, coaches and organisers.</p>
+            </div>
+
+            <div className="space-y-3">
+                <GoogleSignInButton clientId={googleClientId} onError={(err) => setCustomError(err)} />
+                <EmailCodeSignIn callbackUrl={callbackUrl} />
+                <p className="text-[15px] text-muted-foreground">
+                    Parents: the first time, use the link your coach sent you. After that, sign in here.
                 </p>
             </div>
 
-            <form action={login} className="grid gap-4">
-                <NavigationOnPending title="Authenticating session" />
-                {/* Pass callbackUrl through the form so the action can redirect back */}
-                {callbackUrl && callbackUrl.startsWith('/') && (
-                    <input type="hidden" name="callbackUrl" value={callbackUrl} />
-                )}
-                <div className="space-y-2">
-                    <Label htmlFor="login-email">Email</Label>
-                    <Input
-                        id="login-email"
-                        name="email"
-                        type="email"
-                        placeholder="name@example.com"
-                        className="h-11 border-border/50 bg-background/70 text-sm dark:border-white/[0.10]"
-                        autoComplete="email"
-                        required
-                    />
-                </div>
-
-                <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                        <Label htmlFor="login-password">Password</Label>
+            <details className="mt-6 border-t border-border pt-3" open={Boolean(initialError)}>
+                <summary className="flex min-h-11 cursor-pointer items-center text-base font-semibold">
+                    Coach or organiser with a password?
+                </summary>
+                <form action={login} className="mt-3 grid gap-4">
+                    <NavigationOnPending title="Signing in" />
+                    {callbackUrl && callbackUrl.startsWith('/') && <input type="hidden" name="callbackUrl" value={callbackUrl} />}
+                    <div className="space-y-2">
+                        <Label htmlFor="login-email" className="text-base font-semibold">Email</Label>
+                        <Input id="login-email" name="email" type="email" autoComplete="email" required className="h-12 text-base" />
                     </div>
-                    <Input
-                        id="login-password"
-                        name="password"
-                        type="password"
-                        className="h-11 border-border/50 bg-background/70 text-sm dark:border-white/[0.10]"
-                        autoComplete="current-password"
-                        required
-                    />
-                </div>
-
-                <PendingButton type="submit" className="mt-2 h-11 w-full gap-2 text-sm" pendingText="Verifying credentials...">
-                    Sign In
-                    <ArrowRight className="h-4 w-4" />
-                </PendingButton>
-            </form>
-
-            <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t border-border/50 dark:border-white/[0.10]" />
-                </div>
-                <div className="relative z-10 flex justify-center">
-                    <span className="bg-card px-3 py-1 text-xs uppercase tracking-wide text-muted-foreground">
-                        Or continue with
-                    </span>
-                </div>
-            </div>
-
-            <GoogleSignInButton
-                clientId={googleClientId}
-                onError={(err) => setCustomError(err)}
-            />
+                    <div className="space-y-2">
+                        <Label htmlFor="login-password" className="text-base font-semibold">Password</Label>
+                        <Input id="login-password" name="password" type="password" autoComplete="current-password" required className="h-12 text-base" />
+                    </div>
+                    <PendingButton type="submit" className="min-h-12 w-full text-base" pendingText="Signing in…">
+                        Sign in
+                    </PendingButton>
+                </form>
+            </details>
         </div>
     )
 }

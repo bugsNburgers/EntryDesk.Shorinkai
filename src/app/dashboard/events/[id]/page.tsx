@@ -1,18 +1,30 @@
 import { requireRole } from '@/lib/auth/require-role'
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Users, UserCheck, Shield, Medal, Building2, XCircle, Settings } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { ChevronRight, Printer, Settings } from "lucide-react"
+import { ExportEntries } from "@/components/events/export-entries"
+import { toOrganiserTab } from "@/components/events/organiser-entries-list-parts/tabs"
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import sql from '@/lib/db'
 import { OrganiserEntriesList } from "@/components/events/organiser-entries-list"
 
-export default async function EventOverviewPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function EventOverviewPage({
+    params,
+    searchParams,
+}: {
+    params: Promise<{ id: string }>
+    searchParams: Promise<{ status?: string }>
+}) {
     const { id } = await params
-    const { user } = await requireRole(['organizer', 'admin'], { redirectTo: '/dashboard' })
+    const { status } = await searchParams
+    const { user, role } = await requireRole(['organizer', 'admin'], { redirectTo: '/dashboard' })
 
-    // Security check: verify this organizer owns this event
+    // Security check: owner, a collaborator on this event, or admin (same rule the old entries page used)
     const eventRows = await sql<{ id: string; title: string }[]>`
-        SELECT id, title FROM events WHERE id = ${id} AND organizer_id = ${user.id} LIMIT 1
+        SELECT id, title FROM events
+        WHERE id = ${id}
+          ${role !== 'admin' ? sql`AND (organizer_id = ${user.id} OR EXISTS (SELECT 1 FROM event_collaborators WHERE event_id = ${id} AND user_id = ${user.id}))` : sql``}
+        LIMIT 1
     `
 
     if (eventRows.length === 0) {
@@ -43,6 +55,7 @@ export default async function EventOverviewPage({ params }: { params: Promise<{ 
                 student_rank: string | null
                 student_weight: number | null
                 student_dob: string | null
+                student_school_or_city: string | null
                 student_photo: string | null
                 student_registration_no: string | null
                 dojo_id: string | null
@@ -72,6 +85,7 @@ export default async function EventOverviewPage({ params }: { params: Promise<{ 
                 COALESCE(e.snap_rank, s.rank) AS student_rank,
                 COALESCE(e.declared_weight_kg, s.weight) AS student_weight,
                 COALESCE(e.snap_dob, s.date_of_birth)::text AS student_dob,
+                COALESCE(e.snap_school_or_city, s.school_or_city) AS student_school_or_city,
                 s.photo_url AS student_photo,
                 s.registration_no AS student_registration_no,
                 d.id AS dojo_id,
@@ -85,7 +99,7 @@ export default async function EventOverviewPage({ params }: { params: Promise<{ 
             LEFT JOIN event_days ed ON e.event_day_id = ed.id
             JOIN users p ON e.coach_id = p.id
             WHERE e.event_id = ${id}
-              AND e.status != 'draft'
+              AND e.status IN ('submitted', 'approved', 'rejected')
             ORDER BY e.created_at DESC
         `,
         sql<{ status: string; count: number }[]>`
@@ -207,219 +221,67 @@ export default async function EventOverviewPage({ params }: { params: Promise<{ 
 
     const distinctDojosCount = Object.keys(dojoCounts).length
 
+    const numbers: Array<[string, string | number]> = [
+        ['athletes', totalEntries],
+        [distinctDojosCount === 1 ? 'dojo' : 'dojos', distinctDojosCount],
+        ['Kata', totalKata],
+        ['Kumite', totalKumite],
+        ['Team events', teamKata + teamKumite],
+        ['boys · girls', `${genderStats.male} · ${genderStats.female}`],
+    ]
+
     return (
-        <div className="space-y-6">
-            {/* Top-level Key Metrics */}
-            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
-                <Link href={`/dashboard/events/${id}/entries`} className="group block h-full focus:outline-none">
-                    <Card className="h-full cursor-pointer border border-border bg-white shadow-xs transition-all group-hover:-translate-y-1 group-hover:bg-background group-hover:shadow-md group-hover:border-primary/40 dark:border-border dark:bg-card dark:shadow-black/40 dark:group-hover:border-primary/40 dark:group-hover:bg-muted">
-                        <CardHeader className="flex min-h-[52px] flex-row items-start justify-between gap-2 space-y-0 pb-2">
-                            <CardTitle className="min-w-0 whitespace-normal text-sm font-medium leading-snug">Total Entries</CardTitle>
-                            <Users className="h-4 w-4 shrink-0 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">{totalEntries}</div>
-                            <p className="text-xs text-muted-foreground">Across {distinctDojosCount} dojos</p>
-                        </CardContent>
-                    </Card>
-                </Link>
-
-                <Link href={`/dashboard/events/${id}/approvals?status=pending`} className="group block h-full focus:outline-none">
-                    <Card className="h-full cursor-pointer border border-border bg-white shadow-xs transition-all group-hover:-translate-y-1 group-hover:bg-background group-hover:shadow-md group-hover:border-primary/40 dark:border-border dark:bg-card dark:shadow-black/40 dark:group-hover:border-primary/40 dark:group-hover:bg-muted">
-                        <CardHeader className="flex min-h-[52px] flex-row items-start justify-between gap-2 space-y-0 pb-2">
-                            <CardTitle className="min-w-0 whitespace-normal text-sm font-medium leading-snug">Pending Approvals</CardTitle>
-                            <UserCheck className="h-4 w-4 shrink-0 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-amber-500">{pendingApprovals}</div>
-                            <p className="text-xs text-muted-foreground">Coach requests</p>
-                        </CardContent>
-                    </Card>
-                </Link>
-
-                <Link href={`/dashboard/events/${id}/approvals?status=approved`} className="group block h-full focus:outline-none">
-                    <Card className="h-full cursor-pointer border border-border bg-white shadow-xs transition-all group-hover:-translate-y-1 group-hover:bg-background group-hover:shadow-md group-hover:border-primary/40 dark:border-border dark:bg-card dark:shadow-black/40 dark:group-hover:border-primary/40 dark:group-hover:bg-muted">
-                        <CardHeader className="flex min-h-[52px] flex-row items-start justify-between gap-2 space-y-0 pb-2">
-                            <CardTitle className="min-w-0 whitespace-normal text-sm font-medium leading-snug">Approved Coaches</CardTitle>
-                            <Shield className="h-4 w-4 shrink-0 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-emerald-600">{approvedCoaches}</div>
-                            <p className="text-xs text-muted-foreground">Cleared to enter</p>
-                        </CardContent>
-                    </Card>
-                </Link>
-
-                <Link href={`/dashboard/events/${id}/entries?status=approved`} className="group block h-full focus:outline-none">
-                    <Card className="h-full cursor-pointer border border-border bg-white shadow-xs transition-all group-hover:-translate-y-1 group-hover:bg-background group-hover:shadow-md group-hover:border-primary/40 dark:border-border dark:bg-card dark:shadow-black/40 dark:group-hover:border-primary/40 dark:group-hover:bg-muted">
-                        <CardHeader className="flex min-h-[52px] flex-row items-start justify-between gap-2 space-y-0 pb-2">
-                            <CardTitle className="min-w-0 whitespace-normal text-sm font-medium leading-snug">Approved Entries</CardTitle>
-                            <Medal className="h-4 w-4 shrink-0 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-emerald-600">{statusStats.approved}</div>
-                            <p className="text-xs text-muted-foreground">Ready for event</p>
-                        </CardContent>
-                    </Card>
-                </Link>
-
-                <Link href={`/dashboard/events/${id}/entries?status=rejected`} className="group block h-full focus:outline-none">
-                    <Card className="h-full cursor-pointer border border-border bg-white shadow-xs transition-all group-hover:-translate-y-1 group-hover:bg-background group-hover:shadow-md group-hover:border-primary/40 dark:border-border dark:bg-card dark:shadow-black/40 dark:group-hover:border-primary/40 dark:group-hover:bg-muted">
-                        <CardHeader className="flex min-h-[52px] flex-row items-start justify-between gap-2 space-y-0 pb-2">
-                            <CardTitle className="min-w-0 whitespace-normal text-sm font-medium leading-snug">Rejected Entries</CardTitle>
-                            <XCircle className="h-4 w-4 shrink-0 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold text-red-600">{statusStats.rejected}</div>
-                            <p className="text-xs text-muted-foreground">Needs changes</p>
-                        </CardContent>
-                    </Card>
-                </Link>
+        <div className="space-y-5">
+            <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap">
+                {statusStats.approved > 0 && (
+                    <Button asChild className="min-h-12 gap-2 text-base">
+                        <Link href={`/dashboard/events/${id}/print`} target="_blank">
+                            <Printer className="h-5 w-5" aria-hidden="true" />
+                            Print ID cards ({statusStats.approved})
+                        </Link>
+                    </Button>
+                )}
+                <ExportEntries eventId={id} searchParams={{}} />
+                <Button asChild variant="outline" className="min-h-12 gap-2 text-base">
+                    <Link href={`/dashboard/events/${id}/settings`}>
+                        <Settings className="h-5 w-5" aria-hidden="true" />
+                        Event settings
+                    </Link>
+                </Button>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-                {/* Main Stats Area - Clean & Minimalist */}
-                <Card className="col-span-4 border border-border bg-white shadow-xs dark:border-border dark:bg-card">
-                    <CardHeader className="pb-3 border-b border-border/80 dark:border-border">
-                        <CardTitle className="text-base font-bold text-foreground">Overview</CardTitle>
-                        <p className="text-xs text-muted-foreground">
-                            {totalEntries} {totalEntries === 1 ? 'athlete' : 'athletes'} registered across {distinctDojosCount} {distinctDojosCount === 1 ? 'dojo' : 'dojos'}
-                        </p>
-                    </CardHeader>
-                    <CardContent className="pt-3 space-y-4">
-                        {/* Disciplines Minimalist Strip */}
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pb-3 border-b border-border/80 dark:border-border">
-                            <div>
-                                <div className="text-xs text-muted-foreground font-medium">Total Kata</div>
-                                <div className="text-2xl font-bold tracking-tight text-foreground mt-0.5">{totalKata}</div>
-                            </div>
-                            <div>
-                                <div className="text-xs text-muted-foreground font-medium">Total Kumite</div>
-                                <div className="text-2xl font-bold tracking-tight text-foreground mt-0.5">{totalKumite}</div>
-                            </div>
-                            <div>
-                                <div className="text-xs text-muted-foreground font-medium">Team Kata</div>
-                                <div className="text-2xl font-bold tracking-tight text-foreground mt-0.5">{teamKata}</div>
-                            </div>
-                            <div>
-                                <div className="text-xs text-muted-foreground font-medium">Team Kumite</div>
-                                <div className="text-2xl font-bold tracking-tight text-foreground mt-0.5">{teamKumite}</div>
-                            </div>
-                        </div>
-
-                        {/* Breakdown Sub-grid: Participation Mix & Demographics */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-1">
-                            {/* Participation Breakdown */}
-                            <div className="space-y-2">
-                                <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                                    Participation Mix
-                                </div>
-                                <div className="space-y-1.5 text-xs">
-                                    <div className="flex items-center justify-between py-1 border-b border-border/40">
-                                        <span className="text-foreground">Both (Kata &amp; Kumite)</span>
-                                        <span className="font-semibold text-foreground">
-                                            {optedBoth} <span className="text-muted-foreground font-normal">({bothPct.toFixed(0)}%)</span>
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center justify-between py-1 border-b border-border/40">
-                                        <span className="text-foreground">Only Kata</span>
-                                        <span className="font-semibold text-foreground">
-                                            {optedOnlyKata} <span className="text-muted-foreground font-normal">({onlyKataPct.toFixed(0)}%)</span>
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center justify-between py-1 border-b border-border/40">
-                                        <span className="text-foreground">Only Kumite</span>
-                                        <span className="font-semibold text-foreground">
-                                            {optedOnlyKumite} <span className="text-muted-foreground font-normal">({onlyKumitePct.toFixed(0)}%)</span>
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Demographics & Gender */}
-                            <div className="space-y-2">
-                                <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                                    Demographics
-                                </div>
-                                <div className="space-y-1.5 text-xs">
-                                    <div className="flex items-center justify-between py-1 border-b border-border/40">
-                                        <span className="text-foreground">Male</span>
-                                        <span className="font-semibold text-foreground">
-                                            {genderStats.male} <span className="text-muted-foreground font-normal">({malePct.toFixed(0)}%)</span>
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center justify-between py-1 border-b border-border/40">
-                                        <span className="text-foreground">Female</span>
-                                        <span className="font-semibold text-foreground">
-                                            {genderStats.female} <span className="text-muted-foreground font-normal">({femalePct.toFixed(0)}%)</span>
-                                        </span>
-                                    </div>
-                                </div>
-
-                                {/* Clean single subtle proportion bar */}
-                                {totalEntries > 0 && (
-                                    <div className="pt-2">
-                                        <div className="h-1.5 w-full rounded-full bg-border/60 dark:bg-border overflow-hidden flex">
-                                            <div
-                                                className="h-full bg-blue-500/80 transition-all"
-                                                style={{ width: `${malePct}%` }}
-                                                title={`Male: ${malePct.toFixed(0)}%`}
-                                            />
-                                            <div
-                                                className="h-full bg-pink-500/80 transition-all"
-                                                style={{ width: `${femalePct}%` }}
-                                                title={`Female: ${femalePct.toFixed(0)}%`}
-                                            />
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Top Dojos - Clean & Minimalist */}
-                <Card className="col-span-3 border border-border bg-white shadow-xs dark:border-border dark:bg-card">
-                    <CardHeader className="pb-3 border-b border-border/80 dark:border-border">
-                        <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
-                            <Building2 className="h-4 w-4 text-muted-foreground" /> Top Dojos
-                        </CardTitle>
-                        <p className="text-xs text-muted-foreground">
-                            {distinctDojosCount} {distinctDojosCount === 1 ? 'dojo' : 'dojos'} participating
-                        </p>
-                    </CardHeader>
-                    <CardContent className="pt-3">
-                        <div className="space-y-2">
-                            {topDojos.length > 0 ? topDojos.map(([name, count], i) => (
-                                <div key={name} className="flex items-center justify-between text-xs py-1 border-b border-border/40 last:border-0">
-                                    <div className="flex items-center gap-2 min-w-0">
-                                        <span className="text-muted-foreground font-mono text-[11px] w-4">{i + 1}.</span>
-                                        <span className="font-medium text-foreground truncate">{name}</span>
-                                    </div>
-                                    <span className="font-semibold text-foreground ml-2 shrink-0">{count} {count === 1 ? 'entry' : 'entries'}</span>
-                                </div>
-                            )) : (
-                                <p className="text-xs text-muted-foreground py-4 text-center">No dojo entries recorded yet.</p>
-                            )}
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-
-            {/* Organiser Tournament Entries Table Matching Coach View */}
-            <div className="pt-2">
-                <OrganiserEntriesList
-                    entries={entries}
-                    eventId={id}
-                    eventTitle={eventRows[0].title}
-                />
-            </div>
-
-            <div className="flex justify-end pt-4">
-                <Link href={`/dashboard/events/${id}/settings`} className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors">
-                    <Settings className="h-3 w-3" /> Event Settings
+            {pendingApprovals > 0 && (
+                <Link
+                    href={`/dashboard/events/${id}/approvals?status=pending`}
+                    className="flex min-h-14 items-center gap-3 rounded-2xl border border-[var(--status-pending)]/40 bg-[var(--status-pending-bg)] px-5 py-3"
+                >
+                    <span className="flex-1 text-base font-semibold">
+                        {pendingApprovals === 1 ? '1 coach wants to join this event' : `${pendingApprovals} coaches want to join this event`}
+                    </span>
+                    <span className="text-[15px] font-semibold">See requests</span>
+                    <ChevronRight className="h-5 w-5" aria-hidden="true" />
                 </Link>
-            </div>
+            )}
+
+            <section aria-label="Numbers" className="flex flex-wrap items-center gap-x-8 gap-y-3 rounded-2xl border border-border bg-card px-5 py-4">
+                {numbers.map(([label, value]) => (
+                    <div key={label} className="flex flex-col">
+                        <span className="text-xl font-bold tabular-nums">{value}</span>
+                        <span className="text-sm text-muted-foreground">{label}</span>
+                    </div>
+                ))}
+                <span className="text-sm text-muted-foreground sm:ml-auto">
+                    {approvedCoaches} {approvedCoaches === 1 ? 'coach' : 'coaches'} approved
+                    {topDojos[0] ? ` · Largest dojo: ${topDojos[0][0]} (${topDojos[0][1]})` : ''}
+                </span>
+            </section>
+
+            <OrganiserEntriesList
+                entries={entries}
+                eventId={id}
+                eventTitle={eventRows[0].title}
+                initialTab={toOrganiserTab(status)}
+            />
         </div>
     )
 }

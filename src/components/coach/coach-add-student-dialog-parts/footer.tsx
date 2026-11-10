@@ -2,7 +2,6 @@
 
 // Dialog footer — moved verbatim from coach-add-student-dialog.tsx.
 
-import { Dialog } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Check, Loader2 } from 'lucide-react'
 import type { CoachAddStudentDialogVM } from './use-coach-add-student-dialog'
@@ -30,16 +29,7 @@ export function AddStudentFooter({ vm }: { vm: CoachAddStudentDialogVM }) {
                             </Button>
                             <Button
                                 type="button"
-                                variant="outline"
-                                onClick={() => handleSubmit('draft')}
-                                disabled={isSubmitting}
-                                className="flex-1 sm:flex-none h-10 rounded-md text-xs font-semibold"
-                            >
-                                Save as Draft
-                            </Button>
-                            <Button
-                                type="button"
-                                onClick={() => handleSubmit('submitted')}
+                                onClick={handleSubmit}
                                 disabled={isSubmitting}
                                 className="flex-1 sm:flex-none h-10 rounded-md font-bold bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5 shadow-md shadow-primary/20 text-xs sm:text-sm"
                             >
@@ -48,7 +38,7 @@ export function AddStudentFooter({ vm }: { vm: CoachAddStudentDialogVM }) {
                                 ) : (
                                     <Check className="h-4 w-4" />
                                 )}
-                                Add & Submit Entry
+                                Save entry for payment review
                             </Button>
                         </div>
                     </div>

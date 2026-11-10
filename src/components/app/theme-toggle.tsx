@@ -1,7 +1,6 @@
-
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Moon, Sun } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -22,69 +21,42 @@ function applyTheme(theme: Theme) {
     }
 }
 
+/**
+ * One square button. Shows a moon in light mode (tap → dark) and a sun in dark mode (tap → light).
+ * 44px so it is an easy tap target on phones.
+ */
 export function ThemeSwitch({ className }: { className?: string }) {
     const [theme, setTheme] = useState<Theme>('light')
 
     useEffect(() => {
         setTheme(getThemeFromDom())
-
         const onStorage = (e: StorageEvent) => {
-            if (e.key !== 'theme') return
-            setTheme(getThemeFromDom())
+            if (e.key === 'theme') setTheme(getThemeFromDom())
         }
         window.addEventListener('storage', onStorage)
         return () => window.removeEventListener('storage', onStorage)
     }, [])
 
-    const nextTheme = useMemo<Theme>(() => (theme === 'dark' ? 'light' : 'dark'), [theme])
-
     const isDark = theme === 'dark'
+    const label = isDark ? 'Switch to light mode' : 'Switch to dark mode'
 
     return (
         <button
             type="button"
-            role="switch"
-            aria-checked={isDark}
-            aria-label={`Switch to ${nextTheme} mode`}
-            title={`Switch to ${nextTheme} mode`}
+            aria-label={label}
+            title={label}
             onClick={() => {
-                applyTheme(nextTheme)
-                setTheme(nextTheme)
+                const next: Theme = isDark ? 'light' : 'dark'
+                applyTheme(next)
+                setTheme(next)
             }}
             className={cn(
-                'group relative inline-flex h-10 w-[86px] items-center rounded-full p-1 transition-all',
-                'ring-1 ring-border/60 bg-background/70 backdrop-blur',
-                'shadow-sm hover:shadow-md active:scale-[0.98]',
-                'before:absolute before:inset-0 before:rounded-full before:opacity-0 before:transition-opacity',
-                'before:[background:radial-gradient(60%_100%_at_20%_0%,rgba(16,185,129,0.45)_0%,rgba(16,185,129,0)_55%),radial-gradient(50%_80%_at_90%_20%,rgba(52,211,153,0.35)_0%,rgba(52,211,153,0)_60%)]',
-                'hover:before:opacity-100',
+                'inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-border bg-card text-foreground',
+                'transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                 className,
             )}
         >
-            {/* Track accents */}
-            <span className="pointer-events-none absolute inset-0 rounded-full bg-gradient-to-r from-emerald-500/15 via-transparent to-emerald-500/15" />
-
-            {/* Left icon */}
-            <span className={cn('relative z-10 ml-1 flex h-7 w-7 items-center justify-center transition-opacity', isDark ? 'opacity-40' : 'opacity-100')}>
-                <Sun className="h-4 w-4" />
-            </span>
-
-            {/* Thumb */}
-            <span
-                className={cn(
-                    'pointer-events-none absolute top-1 z-20 flex h-8 w-8 items-center justify-center rounded-full',
-                    'bg-gradient-to-b from-white to-white/80 text-emerald-800 shadow-[0_6px_18px_rgba(0,0,0,0.25)]',
-                    'ring-1 ring-black/5 transition-transform duration-300 ease-out',
-                    isDark ? 'translate-x-[46px]' : 'translate-x-1',
-                )}
-            >
-                {isDark ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
-            </span>
-
-            {/* Right icon */}
-            <span className={cn('relative z-10 ml-auto mr-1 flex h-7 w-7 items-center justify-center transition-opacity', isDark ? 'opacity-100' : 'opacity-40')}>
-                <Moon className="h-4 w-4" />
-            </span>
+            {isDark ? <Sun className="h-5 w-5" aria-hidden="true" /> : <Moon className="h-5 w-5" aria-hidden="true" />}
         </button>
     )
 }

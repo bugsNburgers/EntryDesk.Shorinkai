@@ -1,262 +1,196 @@
 'use client'
 
-// Mobile entry cards — moved verbatim from organiser-entries-list.tsx.
+// Organiser entries on phone/tablet (< lg): one card per athlete with labelled buttons.
 
-import Link from 'next/link'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { Button } from '@/components/ui/button'
+import { Check, Download, Hash, Info, MoreHorizontal, X } from 'lucide-react'
 import { AthletePfp } from '@/components/ui/enlarged-pfp-dialog'
-import { Check, Eye } from 'lucide-react'
-import { CheckmarkSvg, getAthleteAge, formatBelt, getAppliedTags } from './shared'
+import { StatusBadge } from '@/components/ui/status-badge'
+import { SafeAvatar } from '@/components/ui/safe-avatar'
+import { EntrySnapshotDialog } from '@/components/events/entry-snapshot-dialog'
+import { getAthleteAge, formatBelt } from './shared'
 import type { OrganiserEntriesListVM } from './use-organiser-entries-list'
 
-export function OrganiserEntriesMobileList({ vm }: { vm: OrganiserEntriesListVM }) {
-    const { entries, filteredEntries, isAllSelected, handleToggleSelectAll, handleToggleSelectOne, handleApproveSingle, handleOpenRejectSingle, handleOpenChestDialog, selectedIds, isActionPending, setDetailDialogOpen, setSelectedDetailEntry } = vm
-    return (
-        <>
-            {/* ========================================================================= */}
-            {/* 4. MOBILE CARD VIEW (Responsive Light & Dark Modes)                       */}
-            {/* ========================================================================= */}
-            <div className="lg:hidden space-y-3 pb-8">
-                {/* Mobile Select All */}
-                <div className="flex items-center justify-between px-2 py-1">
-                    <span
-                        onClick={handleToggleSelectAll}
-                        className="flex items-center gap-2 text-xs font-semibold text-muted-foreground cursor-pointer"
-                    >
-                        <span
-                            className={`w-5 h-5 rounded-[6px] border-2 flex items-center justify-center transition ${
-                                isAllSelected
-                                    ? 'bg-primary border-primary'
-                                    : 'border-border bg-white dark:bg-transparent'
-                            }`}
-                        >
-                            {isAllSelected && <CheckmarkSvg />}
-                        </span>
-                        <span>Select All ({filteredEntries.length})</span>
-                    </span>
+export function eventsText(participation: string | null | undefined, category: string | null | undefined): string {
+    const t = `${participation || ''} ${category || ''}`.toLowerCase()
+    const out: string[] = []
+    const both = t.includes('both')
+    if (both || /\bkata\b/.test(t.replace('team_kata', '').replace('team kata', ''))) out.push('Kata')
+    if (both || /\bkumite\b/.test(t.replace('team_kumite', '').replace('team kumite', ''))) out.push('Kumite')
+    if (t.includes('team_kata') || t.includes('team kata')) out.push('Team Kata')
+    if (t.includes('team_kumite') || t.includes('team kumite')) out.push('Team Kumite')
+    return out.length ? out.join(', ') : '—'
+}
 
-                    {selectedIds.size > 0 && (
-                        <span className="text-xs text-primary font-semibold">
-                            {selectedIds.size} selected
-                        </span>
+export function OrganiserEntriesMobileList({ vm }: { vm: OrganiserEntriesListVM }) {
+    const {
+        visibleEntries, counts, activeTab, setActiveTab, handleApproveSingle, handleOpenRejectSingle, handleOpenChestDialog,
+        isActionPending, setDetailDialogOpen, setSelectedDetailEntry, selectedIds, handleToggleSelectOne,
+    } = vm
+
+    return (
+        <div className="block space-y-3 pb-8 lg:hidden">
+            <div>
+                <h3 className="text-lg font-bold">{vm.headingInfo.title}</h3>
+                <p className="text-[15px] text-muted-foreground">{vm.headingInfo.subtitle}</p>
+            </div>
+            {visibleEntries.length === 0 ? (
+                <div className="space-y-3 rounded-2xl border border-border bg-card px-4 py-10 text-center">
+                    <p className="text-base font-medium">
+                        {activeTab === 'pending' ? 'Nothing to accept right now.' : 'No entries here.'}
+                    </p>
+                    {activeTab !== 'all' && counts.all > 0 && (
+                        <button
+                            type="button"
+                            onClick={() => setActiveTab('all')}
+                            className="min-h-11 rounded-lg border border-border bg-background px-4 text-[15px] font-semibold"
+                        >
+                            See all entries ({counts.all})
+                        </button>
                     )}
                 </div>
-
-                {filteredEntries.length === 0 ? (
-                    <div className="py-12 text-center text-muted-foreground text-sm bg-card border border-border rounded-2xl shadow-xs">
-                        No tournament entries found.
-                    </div>
-                ) : (
-                    filteredEntries.map((entry) => {
-                        const isSelected = selectedIds.has(entry.id)
-                        const isApproved = entry.status === 'approved'
-                        const isPending = entry.status === 'submitted'
-                        const isRejected = entry.status === 'rejected'
-                        const tags = getAppliedTags(entry)
-                        const age = getAthleteAge(entry.student_dob)
-                        const dojo = entry.dojo_name || '—'
-                        const coach = entry.coach_name || entry.coach_email.split('@')[0] || '—'
-                        const rank = formatBelt(entry.student_rank)
-                        const weight = entry.declared_weight_kg || entry.student_weight || '—'
-
-                        return (
-                            <div
-                                key={entry.id}
-                                className={`p-4 rounded-2xl border transition-all ${
-                                    isSelected
-                                        ? 'bg-primary/5 dark:bg-muted border-primary/60 ring-1 ring-primary/30'
-                                        : 'bg-card border-border shadow-xs'
-                                }`}
-                            >
-                                <div className="flex items-start justify-between gap-3">
-                                    <div className="flex items-center gap-3">
-                                        <span
-                                            onClick={() => handleToggleSelectOne(entry.id)}
-                                            className={`w-5 h-5 rounded-[6px] border-2 cursor-pointer flex items-center justify-center shrink-0 transition ${
-                                                isSelected
-                                                    ? 'bg-primary border-primary'
-                                                    : 'border-border bg-white dark:bg-transparent'
-                                            }`}
-                                        >
-                                            {isSelected && <CheckmarkSvg />}
-                                        </span>
-
-                                        <AthletePfp
-                                            photoUrl={entry.student_photo}
-                                            name={entry.student_name}
-                                            subtitle={entry.dojo_name || entry.student_registration_no}
-                                            size={44}
-                                            extraDetails={{
-                                                dojo: entry.dojo_name,
-                                                chestNo: entry.chest_no,
-                                                age: age !== '—' ? age : undefined,
-                                                rank: entry.student_rank,
-                                                gender: entry.student_gender,
-                                                category: entry.category_name || undefined,
-                                                email: entry.coach_email,
-                                            }}
-                                        />
-
-                                        <div className="min-w-0">
-                                            <div className="font-bold text-sm text-foreground truncate">
-                                                {entry.student_name}
-                                            </div>
-                                            <div className="text-xs text-muted-foreground truncate">
-                                                {entry.student_registration_no || entry.student_gender || 'Athlete'}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Chest # badge */}
-                                    {entry.chest_no ? (
-                                        <span className="text-xs font-bold text-primary bg-primary/10 border border-primary/30 rounded-lg px-2 py-0.5 shrink-0">
-                                            #{String(entry.chest_no).padStart(3, '0')}
-                                        </span>
-                                    ) : (
-                                        <span className="text-xs text-muted-foreground">—</span>
-                                    )}
-                                </div>
-
-                                {/* Metadata Grid */}
-                                <div className="grid grid-cols-2 gap-2 mt-3.5 pt-3 border-t border-border/80 text-xs">
-                                    <div>
-                                        <span className="text-muted-foreground">Age / Belt: </span>
-                                        <span className="text-foreground font-semibold">{age} · {rank}</span>
-                                    </div>
-                                    <div>
-                                        <span className="text-muted-foreground">Weight: </span>
-                                        <span className="text-foreground font-semibold">{weight !== '—' ? `${weight} kg` : '—'}</span>
-                                    </div>
-                                    <div>
-                                        <span className="text-muted-foreground">Dojo: </span>
-                                        <span className="text-foreground font-semibold truncate">{dojo}</span>
-                                    </div>
-                                    <div>
-                                        <span className="text-muted-foreground">Coach: </span>
-                                        <span className="text-foreground font-semibold truncate">{coach}</span>
-                                    </div>
-                                </div>
-
-                                {/* Tags + Status */}
-                                <div className="flex items-center justify-between gap-2 mt-3 pt-2.5 border-t border-border/60">
-                                    <div className="flex gap-1.5 flex-wrap">
-                                        {tags.map((t, idx) => (
-                                            <span
-                                                key={idx}
-                                                className="text-[11px] font-semibold bg-muted text-muted-foreground dark:text-foreground border border-border rounded-full px-2 py-0.5"
-                                            >
-                                                {t}
+            ) : (
+                visibleEntries.map((entry) => {
+                    const age = getAthleteAge(entry.student_dob)
+                    const weight = entry.declared_weight_kg || entry.student_weight
+                    const toAccept = entry.status === 'submitted'
+                    return (
+                        <article key={entry.id} className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4">
+                            <div className="flex items-start gap-3">
+                                {toAccept && (
+                                    <input
+                                        type="checkbox"
+                                        aria-label={`Tick ${entry.student_name}`}
+                                        className="mt-3 h-6 w-6 shrink-0 accent-[var(--primary)]"
+                                        checked={selectedIds.has(entry.id)}
+                                        onChange={() => handleToggleSelectOne(entry.id)}
+                                    />
+                                )}
+                                <AthletePfp photoUrl={entry.student_photo} name={entry.student_name} subtitle={entry.dojo_name || ''} size={52} />
+                                <div className="min-w-0 flex-1">
+                                    <h4 className="text-lg font-bold leading-tight">
+                                        {entry.student_name}
+                                        {entry.chest_no ? (
+                                            <span className="ml-2 rounded-md bg-foreground px-1.5 py-0.5 align-middle text-xs font-bold text-background">
+                                                Chest {entry.chest_no}
                                             </span>
-                                        ))}
-                                    </div>
-
-                                    <div>
-                                        {isApproved && (
-                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border border-emerald-500/35">
-                                                Accepted ✓
-                                            </span>
-                                        )}
-                                        {isPending && (
-                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/35">
-                                                Review
-                                            </span>
-                                        )}
-                                        {isRejected && (
-                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-rose-500/15 text-rose-800 dark:text-rose-300 border border-rose-500/35">
-                                                Rejected
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* Mobile Actions */}
-                                <div className="flex items-center justify-end gap-2 mt-3 pt-2.5 border-t border-border/60">
-                                    {isPending && (
-                                        <>
-                                            <Button
-                                                size="sm"
-                                                disabled={isActionPending}
-                                                onClick={() => handleApproveSingle(entry)}
-                                                className="h-8 px-3 rounded-xl bg-primary hover:bg-primary/90 dark:bg-primary text-white dark:text-primary-foreground font-bold text-xs"
-                                            >
-                                                <Check className="h-3.5 w-3.5 mr-1" />
-                                                Approve
-                                            </Button>
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                disabled={isActionPending}
-                                                onClick={() => handleOpenRejectSingle(entry)}
-                                                className="h-8 px-3 rounded-xl border-rose-300 dark:border-rose-500/40 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/15 text-xs font-semibold"
-                                            >
-                                                Reject
-                                            </Button>
-                                        </>
-                                    )}
-
-                                    {isApproved && (
-                                        <Link
-                                            href={`/athlete/entries/${entry.id}/id-card`}
-                                            target="_blank"
-                                            className="h-8 px-3 rounded-xl border border-primary/40 text-primary hover:bg-primary/10 text-xs font-semibold inline-flex items-center gap-1.5"
-                                        >
-                                            <Eye className="h-3.5 w-3.5" />
-                                            View Pass
-                                        </Link>
-                                    )}
-
-                                    {/* Mobile 3-dot dropdown */}
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <button className="h-8 w-8 rounded-xl border border-border text-muted-foreground inline-flex items-center justify-center text-xs">
-                                                ···
-                                            </button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent
-                                            align="end"
-                                            className="w-48 bg-muted border border-border text-foreground rounded-xl shadow-xl p-1"
-                                        >
-                                            <DropdownMenuItem
-                                                onClick={() => {
-                                                    setSelectedDetailEntry(entry)
-                                                    setDetailDialogOpen(true)
-                                                }}
-                                                className="text-xs py-2 cursor-pointer"
-                                            >
-                                                Athlete Details
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem
-                                                onClick={() => handleOpenChestDialog(entry)}
-                                                className="text-xs py-2 text-primary cursor-pointer"
-                                            >
-                                                Edit Chest #
-                                            </DropdownMenuItem>
-                                            {!isApproved && (
-                                                <DropdownMenuItem
-                                                    onClick={() => handleApproveSingle(entry)}
-                                                    className="text-xs py-2 text-primary cursor-pointer"
-                                                >
-                                                    Accept Entry
-                                                </DropdownMenuItem>
-                                            )}
-                                            {!isRejected && (
-                                                <DropdownMenuItem
-                                                    onClick={() => handleOpenRejectSingle(entry)}
-                                                    className="text-xs py-2 text-rose-600 dark:text-rose-400 cursor-pointer"
-                                                >
-                                                    Reject Entry
-                                                </DropdownMenuItem>
-                                            )}
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
+                                        ) : null}
+                                    </h4>
+                                    <p className="text-sm text-muted-foreground">{entry.dojo_name || '—'}</p>
+                                    <p className="mt-0.5 flex items-center gap-1.5 text-sm text-muted-foreground">
+                                        <SafeAvatar src={entry.coach_avatar} name={entry.coach_name || entry.coach_email} size={22} enlargeable subtitle={entry.coach_email} />
+                                        <span className="truncate">{entry.coach_name || entry.coach_email}</span>
+                                    </p>
+                                    <StatusBadge status={entry.status} size="sm" className="mt-1.5" />
                                 </div>
                             </div>
-                        )
-                    })
-                )}
 
-            </div>
-        </>
+                            <div className="flex flex-col gap-1 rounded-lg bg-background px-3 py-2.5 text-base">
+                                <div className="font-semibold">
+                                    {age !== '—' ? `${age} yrs` : 'Age —'} · {formatBelt(entry.student_rank)} belt · {weight ? `${weight} kg` : 'Weight —'}
+                                </div>
+                                <div className="text-foreground/80">
+                                    {[entry.category_name || 'Category not set', eventsText(entry.participation_type, entry.category_name)].join(' · ')}
+                                </div>
+                            </div>
+
+                            {entry.rejection_reason && (entry.status === 'rejected' || entry.status === 'coach_declined') && (
+                                <p className="rounded-lg bg-[var(--status-closed-bg)] px-3 py-2 text-[15px] text-[var(--status-closed-fg)]">
+                                    Reason: “{entry.rejection_reason}”
+                                </p>
+                            )}
+
+                            <div className="flex gap-2">
+                                {toAccept && (
+                                    <>
+                                        <button
+                                            type="button"
+                                            disabled={isActionPending}
+                                            onClick={() => handleApproveSingle(entry)}
+                                            className="inline-flex min-h-[52px] flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-3 text-base font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+                                        >
+                                            <Check className="h-5 w-5" strokeWidth={2.6} aria-hidden="true" />
+                                            Accept
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleOpenRejectSingle(entry)}
+                                            className="inline-flex min-h-[52px] flex-1 items-center justify-center gap-2 rounded-xl border-[1.5px] border-border bg-card px-3 text-base font-semibold transition-colors hover:bg-muted"
+                                        >
+                                            Don&apos;t accept
+                                        </button>
+                                    </>
+                                )}
+                                {entry.status === 'approved' && (
+                                    <a
+                                        href={`/athlete/entries/${entry.id}/id-card`}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl border-[1.5px] border-border bg-card px-3 text-base font-semibold transition-colors hover:bg-muted"
+                                    >
+                                        <Download className="h-5 w-5" aria-hidden="true" />
+                                        ID card
+                                    </a>
+                                )}
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <button
+                                            type="button"
+                                            aria-label={`More for ${entry.student_name}`}
+                                            className="inline-flex min-h-12 min-w-12 items-center justify-center rounded-xl border-[1.5px] border-border bg-card transition-colors hover:bg-muted"
+                                        >
+                                            <MoreHorizontal className="h-5 w-5" aria-hidden="true" />
+                                        </button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" className="w-56 rounded-xl p-1.5">
+                                        <DropdownMenuItem
+                                            className="min-h-11 gap-2.5 rounded-lg px-3 text-[15px] font-semibold"
+                                            onClick={() => {
+                                                setSelectedDetailEntry(entry)
+                                                setDetailDialogOpen(true)
+                                            }}
+                                        >
+                                            <Info className="h-4 w-4" aria-hidden="true" />
+                                            See all details
+                                        </DropdownMenuItem>
+                                        {entry.status === 'approved' && (
+                                            <DropdownMenuItem className="min-h-11 gap-2.5 rounded-lg px-3 text-[15px] font-semibold" onClick={() => handleOpenChestDialog(entry)}>
+                                                <Hash className="h-4 w-4" aria-hidden="true" />
+                                                Change chest number
+                                            </DropdownMenuItem>
+                                        )}
+                                        {entry.status === 'approved' && (
+                                            <DropdownMenuItem
+                                                className="min-h-11 gap-2.5 rounded-lg px-3 text-[15px] font-semibold text-destructive"
+                                                onClick={() => handleOpenRejectSingle(entry)}
+                                            >
+                                                <X className="h-4 w-4" aria-hidden="true" />
+                                                Don&apos;t accept
+                                            </DropdownMenuItem>
+                                        )}
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </div>
+                            {(entry.status === 'submitted' || entry.status === 'approved' || entry.status === 'correction_needed') && (
+                                <EntrySnapshotDialog
+                                    entryId={entry.id}
+                                    labelled
+                                    triggerLabel="Fix name, age, belt or weight"
+                                    triggerClassName="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border-[1.5px] border-border bg-card px-3 text-base font-semibold hover:bg-muted"
+                                    initial={{
+                                        name: entry.student_name,
+                                        gender: entry.student_gender,
+                                        date_of_birth: entry.student_dob,
+                                        rank: entry.student_rank,
+                                        weight: entry.declared_weight_kg ?? entry.student_weight,
+                                        school_or_city: entry.student_school_or_city ?? null,
+                                    }}
+                                />
+                            )}
+                        </article>
+                    )
+                })
+            )}
+        </div>
     )
 }

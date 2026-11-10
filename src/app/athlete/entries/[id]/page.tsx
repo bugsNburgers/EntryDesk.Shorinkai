@@ -16,10 +16,11 @@ import {
     formatStepDate,
 } from '@/lib/date'
 import { isRegistrationClosed } from '@/lib/events/registration'
+import { StatusBadge } from '@/components/ui/status-badge'
 import { AthleteIdActions } from '@/components/id-card/athlete-id-actions'
 import { EntryWithdrawSection } from '@/components/parent/entry-withdraw-dialog'
 import { EntryDaySelector } from '@/components/parent/entry-day-selector'
-import { QrCode, Smartphone } from 'lucide-react'
+import { Check, Smartphone } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { IdCardDownload } from '@/components/id-card/id-card-download'
 
@@ -198,7 +199,7 @@ export default async function ParentEntryDetailPage({ params }: EntryPageProps) 
                     className="inline-flex items-center gap-1.5 text-[14.5px] font-medium text-muted-foreground hover:text-foreground dark:text-muted-foreground dark:hover:text-foreground transition-colors group"
                 >
                     <span className="text-xl leading-none font-light group-hover:-translate-x-0.5 transition-transform">‹</span>
-                    <span>Back to {entry.student_name}’s profile</span>
+                    <span>{entry.student_name}</span>
                 </Link>
             </div>
 
@@ -208,48 +209,18 @@ export default async function ParentEntryDetailPage({ params }: EntryPageProps) 
                 <div className="lg:col-span-5 2xl:col-span-4 order-1">
                     <div className="bg-white border border-border dark:bg-card dark:border-border rounded-[18px] p-5 sm:p-6 shadow-xs">
                         <div className="flex justify-between items-center">
-                            <span className="text-[11.5px] font-bold tracking-[0.14em] uppercase text-primary">
-                                Tournament entry
+                            <span className="text-[15px] font-semibold text-muted-foreground">
+                                {entry.student_name}
                             </span>
 
-                            {/* Status Badge */}
-                            {isPendingCoach && (
-                                <span className="text-[12.5px] font-bold text-amber-800 bg-amber-100 border border-amber-300 dark:text-[#f5c542] dark:bg-[#f5c542]/12 dark:border-[#f5c542]/35 rounded-md px-2.5 py-1">
-                                    Waiting for coach
-                                </span>
-                            )}
-                            {isSubmitted && (
-                                <span className="text-[12.5px] font-bold text-amber-800 bg-amber-100 border border-amber-300 dark:text-[#f5c542] dark:bg-[#f5c542]/12 dark:border-[#f5c542]/35 rounded-md px-2.5 py-1">
-                                    Waiting for organiser
-                                </span>
-                            )}
-                            {isApproved && (
-                                <span className="text-[12.5px] font-bold text-[#14532d] bg-[#dcfce7] border border-[#86efac] dark:text-primary dark:bg-primary/12 dark:border-primary/35 rounded-md px-2.5 py-1">
-                                    Entry accepted
-                                </span>
-                            )}
-                            {isCorrectionNeeded && (
-                                <span className="text-[12.5px] font-bold text-orange-800 bg-orange-100 border border-orange-300 dark:text-[#fb923c] dark:bg-[#fb923c]/12 dark:border-[#fb923c]/35 rounded-md px-2.5 py-1">
-                                    Correction needed
-                                </span>
-                            )}
-                            {(isDeclined || isRejected) && (
-                                <span className="text-[12.5px] font-bold text-rose-800 bg-rose-100 border border-rose-300 dark:text-[#f87171] dark:bg-[#f87171]/12 dark:border-[#f87171]/35 rounded-md px-2.5 py-1">
-                                    {isDeclined ? 'Coach declined' : 'Rejected'}
-                                </span>
-                            )}
-                            {isWithdrawn && (
-                                <span className="text-[12.5px] font-bold text-muted-foreground bg-muted border border-border dark:text-muted-foreground dark:bg-muted-foreground/12 dark:border-muted-foreground/35 rounded-md px-2.5 py-1">
-                                    Withdrawn
-                                </span>
-                            )}
+                            <StatusBadge status={status} />
                         </div>
 
                         <div className="text-[23px] sm:text-[25px] font-bold leading-[1.15] mt-3.5 text-foreground">
                             {entry.event_title}
                         </div>
 
-                        <div className="mt-3 text-[14.5px] leading-[1.5]">
+                        <div className="mt-3 text-base leading-[1.5]">
                             <div className="text-foreground">{datesFormatted}</div>
                             {entry.event_location && (
                                 <div className="text-muted-foreground">{entry.event_location}</div>
@@ -260,137 +231,89 @@ export default async function ParentEntryDetailPage({ params }: EntryPageProps) 
 
                 {/* 2. Right Column: ID Pass & Progress Stepper */}
                 <div className="lg:col-span-7 2xl:col-span-8 lg:row-span-2 order-2 lg:order-2 space-y-4">
-                    {/* Official Athlete ID Pass Card (when approved) */}
+                    {/* Accepted: one card, two big buttons */}
                     {isApproved && (
-                        <div className="relative overflow-hidden rounded-2xl p-5 sm:p-6 border border-emerald-500/40 bg-gradient-to-br from-[#0c2238] via-[#091b2c] to-[#040d18] text-white shadow-xl shadow-emerald-950/40 space-y-4">
-                            {/* Ambient background glow accents */}
-                            <div className="absolute -right-10 -top-10 w-44 h-44 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
-                            <div className="absolute -left-10 -bottom-10 w-44 h-44 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
-
-                            <div className="relative z-10 flex items-center justify-between gap-2 flex-wrap">
-                                <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-black tracking-wider uppercase bg-emerald-500/20 text-primary/90 border border-emerald-500/40">
-                                    <span className="h-2 w-2 rounded-full bg-primary/90 animate-pulse" />
-                                    Official ID Pass Ready
+                        <div className="rounded-2xl border border-[var(--status-approved)]/40 bg-[var(--status-approved-bg)] p-5 sm:p-6 space-y-4">
+                            <div className="flex items-center gap-3.5">
+                                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[var(--status-approved-fg)] text-[var(--status-approved-bg)]">
+                                    <Check className="h-7 w-7" strokeWidth={2.8} aria-hidden="true" />
                                 </span>
-                                {entry.chest_no && (
-                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs sm:text-sm font-mono font-black bg-emerald-400 text-primary-foreground shadow-sm">
-                                        Chest #{entry.chest_no}
-                                    </span>
-                                )}
-                            </div>
-
-                            <div className="relative z-10 flex items-start gap-3.5">
-                                <div className="w-11 h-11 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center shrink-0 text-primary/90">
-                                    <QrCode className="w-6 h-6" />
-                                </div>
-                                <div className="space-y-1">
-                                    <h4 className="text-base sm:text-lg font-bold text-white tracking-tight">
-                                        Accreditation Pass Confirmed
-                                    </h4>
-                                    <p className="text-xs sm:text-sm text-neutral-300 leading-relaxed">
-                                        Show pass on phone for venue &amp; weigh-in scanning, or download the official card.
+                                <div>
+                                    <h2 className="text-2xl font-bold text-[var(--status-approved-fg)]">Accepted</h2>
+                                    <p className="text-base text-foreground">
+                                        {entry.student_name.split(' ')[0]} can compete.
+                                        {entry.chest_no ? <b> Chest number {entry.chest_no}.</b> : null}
                                     </p>
                                 </div>
                             </div>
-
-                            <div className="relative z-10 pt-1 flex items-center gap-3 flex-wrap">
-                                <Link href={`/athlete/entries/${entry.id}/id-card`}>
-                                    <Button
-                                        size="default"
-                                        className="gap-2 rounded-xl font-bold bg-primary/90 hover:bg-primary/90 text-primary-foreground shadow-lg shadow-[#3fd8c3]/20 h-10 px-5 text-xs sm:text-sm transition-all cursor-pointer"
-                                    >
-                                        <Smartphone className="h-4 w-4" />
-                                        View Pass
-                                    </Button>
+                            <div className="grid gap-2 sm:grid-cols-2">
+                                <Link
+                                    href={`/athlete/entries/${entry.id}/id-card`}
+                                    className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-xl bg-primary px-4 text-base font-semibold text-primary-foreground hover:bg-primary/90"
+                                >
+                                    <Smartphone className="h-5 w-5" aria-hidden="true" />
+                                    Show ID card
                                 </Link>
-
                                 <IdCardDownload
                                     entryId={entry.id}
-                                    label="Print A4"
+                                    label="Download to print (A4)"
                                     size="default"
                                     variant="outline"
-                                    customButtonClass="h-10 px-4 rounded-xl border-neutral-700 bg-neutral-800/90 text-neutral-200 hover:bg-neutral-700 hover:text-white font-semibold text-xs sm:text-sm gap-2"
+                                    customButtonClass="min-h-[52px] w-full rounded-xl text-base font-semibold gap-2"
                                 />
                             </div>
+                            <p className="text-[15px] text-[var(--status-approved-fg)]">
+                                Show the ID card on your phone at the gate, or bring it printed.
+                            </p>
                         </div>
                     )}
 
                     {/* Card 2: Registration Progress & Stepper */}
                     <div className="bg-white border border-border dark:bg-card dark:border-border rounded-[18px] p-5 sm:p-6 shadow-xs">
-                        <div className="text-[11.5px] font-bold tracking-[0.14em] uppercase text-primary mb-3">
-                            Registration progress
-                        </div>
+                        <h2 className="text-lg font-bold text-foreground mb-3">What happened</h2>
 
                 {/* Status Callout Box */}
                 {isPendingCoach && (
                     <div className="bg-amber-500/10 border border-amber-500/35 rounded-[12px] p-[14px_16px] mb-5">
-                        <div className="text-[12px] text-amber-800 dark:text-[#f5c542] font-bold tracking-[0.08em] uppercase">
-                            STEP 2 OF 3
-                        </div>
                         <div className="text-[19px] font-bold mt-1 text-foreground">
-                            Waiting for your coach
+                            With your coach
                         </div>
-                        <div className="text-[14px] text-muted-foreground dark:text-foreground mt-1 leading-[1.4]">
-                            Your coach will review and forward your entry to the organiser.
+                        <div className="text-base text-muted-foreground dark:text-foreground mt-1 leading-[1.45]">
+                            Your coach is checking it. Then they send it to the organiser.
                         </div>
                     </div>
                 )}
 
                 {isSubmitted && (
                     <div className="bg-amber-500/10 border border-amber-500/35 rounded-[12px] p-[14px_16px] mb-5">
-                        <div className="text-[12px] text-amber-800 dark:text-[#f5c542] font-bold tracking-[0.08em] uppercase">
-                            STEP 3 OF 3
-                        </div>
                         <div className="text-[19px] font-bold mt-1 text-foreground">
-                            Waiting for organiser
+                            With the organiser
                         </div>
-                        <div className="text-[14px] text-muted-foreground dark:text-foreground mt-1 leading-[1.4]">
-                            Coach verified and forwarded! Waiting for the tournament organiser to confirm your entry.
-                        </div>
-                    </div>
-                )}
-
-                {isApproved && (
-                    <div className="bg-[#dcfce7] border border-[#86efac] dark:bg-primary/10 dark:border-primary/35 rounded-[12px] p-[14px_16px] mb-5">
-                        <div className="text-[12px] text-[#14532d] dark:text-primary font-bold tracking-[0.08em] uppercase">
-                            OFFICIALLY REGISTERED
-                        </div>
-                        <div className="text-[19px] font-bold mt-1 text-[#14532d] dark:text-foreground">
-                            Entry Accepted!
-                        </div>
-                        <div className="text-[14px] text-[#166534] dark:text-foreground mt-1 leading-[1.4]">
-                            {entry.chest_no
-                                ? `Chest number #${entry.chest_no} assigned. Official ID Pass is ready below.`
-                                : 'The athlete is confirmed. Official ID Pass is ready below.'}
+                        <div className="text-base text-muted-foreground dark:text-foreground mt-1 leading-[1.45]">
+                            Your coach checked it and sent it on. The organiser will accept it.
                         </div>
                     </div>
                 )}
 
                 {isCorrectionNeeded && (
                     <div className="bg-orange-500/10 border border-orange-500/35 rounded-[12px] p-[14px_16px] mb-5">
-                        <div className="text-[12px] text-orange-800 dark:text-[#fb923c] font-bold tracking-[0.08em] uppercase">
-                            ACTION NEEDED
-                        </div>
                         <div className="text-[19px] font-bold mt-1 text-foreground">
-                            Updates requested by coach
+                            Needs a fix
                         </div>
-                        <div className="text-[14px] text-muted-foreground dark:text-foreground mt-1 leading-[1.4]">
+                        <div className="text-base text-muted-foreground dark:text-foreground mt-1 leading-[1.45]">
                             {entry.coach_notes
-                                ? `Note from coach: "${entry.coach_notes}"`
-                                : 'Your coach requested updates before approving this entry.'}
+                                ? `Coach says: "${entry.coach_notes}"`
+                                : 'Your coach asked you to change something. Fix it below and send it again.'}
                         </div>
                     </div>
                 )}
 
                 {(isDeclined || isRejected) && (
                     <div className="bg-rose-500/10 border border-rose-500/35 rounded-[12px] p-[14px_16px] mb-5">
-                        <div className="text-[12px] text-rose-800 dark:text-[#f87171] font-bold tracking-[0.08em] uppercase">
-                            NOT ACCEPTED
-                        </div>
                         <div className="text-[19px] font-bold mt-1 text-foreground">
-                            {isDeclined ? 'Entry declined by coach' : 'Entry not accepted'}
+                            {isDeclined ? 'Not accepted by your coach' : 'Not accepted by the organiser'}
                         </div>
-                        <div className="text-[14px] text-muted-foreground dark:text-foreground mt-1 leading-[1.4]">
+                        <div className="text-base text-muted-foreground dark:text-foreground mt-1 leading-[1.45]">
                             {entry.rejection_reason || entry.coach_notes || 'This entry was not accepted for this event.'}
                         </div>
                     </div>
@@ -398,21 +321,18 @@ export default async function ParentEntryDetailPage({ params }: EntryPageProps) 
 
                 {isWithdrawn && (
                     <div className="bg-muted border border-border dark:bg-muted-foreground/10 dark:border-muted-foreground/35 rounded-[12px] p-[14px_16px] mb-5">
-                        <div className="text-[12px] text-muted-foreground font-bold tracking-[0.08em] uppercase">
-                            STATUS
-                        </div>
                         <div className="text-[19px] font-bold mt-1 text-foreground">
-                            Entry withdrawn
+                            Cancelled
                         </div>
-                        <div className="text-[14px] text-muted-foreground dark:text-foreground mt-1 leading-[1.4]">
-                            {entry.rejection_reason || 'This registration was withdrawn by the parent.'}
+                        <div className="text-base text-muted-foreground dark:text-foreground mt-1 leading-[1.45]">
+                            {entry.rejection_reason || 'You cancelled this entry.'}
                         </div>
                     </div>
                 )}
 
                 {/* Vertical Stepper: Step 1, Step 2, Step 3 */}
                 <div className="space-y-0">
-                    {/* Step 1: Registration sent */}
+                    {/* Step 1: You sent the entry */}
                     <div className="flex gap-3.5 h-[70px]">
                         <div className="flex flex-col items-center w-[30px] shrink-0">
                             <div className="w-[30px] h-[30px] rounded-full bg-primary flex items-center justify-center shrink-0">
@@ -437,10 +357,10 @@ export default async function ParentEntryDetailPage({ params }: EntryPageProps) 
                         </div>
                         <div className="pt-1 flex-1">
                             <b className="text-[16px] font-semibold block text-foreground">
-                                Registration sent
+                                You sent the entry
                             </b>
-                            <small className="text-[13.5px] text-muted-foreground block mt-0.5 leading-[1.4]">
-                                {step1Date || 'Submitted'}
+                            <small className="text-[15px] text-muted-foreground block mt-0.5 leading-[1.4]">
+                                {step1Date || 'Sent'}
                             </small>
                         </div>
                     </div>
@@ -537,20 +457,20 @@ export default async function ParentEntryDetailPage({ params }: EntryPageProps) 
                                         : 'text-foreground'
                                 }`}
                             >
-                                Coach review
+                                Coach checks it
                             </b>
-                            <small className="text-[13.5px] text-muted-foreground block mt-0.5 leading-[1.4]">
+                            <small className="text-[15px] text-muted-foreground block mt-0.5 leading-[1.4]">
                                 {isPendingCoach
-                                    ? 'In progress'
+                                    ? 'Checking now'
                                     : isSubmitted || isApproved
                                     ? step2Date
-                                        ? `Verified · ${step2Date}`
-                                        : 'Verified'
+                                        ? `Done · ${step2Date}`
+                                        : 'Done'
                                     : isCorrectionNeeded
-                                    ? 'Correction requested'
+                                    ? 'Asked you to fix something'
                                     : isDeclined
-                                    ? 'Declined by coach'
-                                    : 'Awaiting review'}
+                                    ? 'Coach did not send it'
+                                    : 'Not yet'}
                             </small>
                         </div>
                     </div>
@@ -617,18 +537,18 @@ export default async function ParentEntryDetailPage({ params }: EntryPageProps) 
                                         : 'text-muted-foreground'
                                 }`}
                             >
-                                Organiser acceptance
+                                Organiser accepts it
                             </b>
-                            <small className="text-[13.5px] text-muted-foreground block mt-0.5 leading-[1.4]">
+                            <small className="text-[15px] text-muted-foreground block mt-0.5 leading-[1.4]">
                                 {isApproved
                                     ? entry.chest_no
-                                        ? `Confirmed · Chest #${entry.chest_no}`
-                                        : 'Confirmed'
+                                        ? `Accepted · Chest number ${entry.chest_no}`
+                                        : 'Accepted'
                                     : isSubmitted
-                                    ? 'In review by organiser'
+                                    ? 'Checking now'
                                     : isRejected
-                                    ? 'Not accepted by organiser'
-                                    : 'Chest number assigned once confirmed'}
+                                    ? 'Not accepted'
+                                    : 'Not yet'}
                             </small>
                         </div>
                     </div>
@@ -640,37 +560,37 @@ export default async function ParentEntryDetailPage({ params }: EntryPageProps) 
         <div className="lg:col-span-5 2xl:col-span-4 order-3 lg:order-3 space-y-4">
                     {/* Card 3: Registration Details (matches Entry.dc.html lines 62-71) */}
                     <div className="bg-white border border-border dark:bg-card dark:border-border rounded-[18px] p-5 sm:p-6 pb-2 shadow-xs">
-                        <div className="text-[11.5px] font-bold tracking-[0.14em] uppercase text-primary mb-0.5">
-                            Registration details
+                        <div className="text-lg font-bold text-foreground mb-0.5">
+                            Entry details
                         </div>
 
                 <div className="divide-y divide-border">
                     <div className="flex justify-between items-baseline gap-3.5 py-3">
-                        <span className="text-[14px] text-muted-foreground shrink-0">Athlete</span>
-                        <b className="text-[15.5px] font-semibold text-right break-words text-foreground">
+                        <span className="text-[15px] text-muted-foreground shrink-0">Athlete</span>
+                        <b className="text-base font-semibold text-right break-words text-foreground">
                             {entry.student_name}
                         </b>
                     </div>
 
                     <div className="flex justify-between items-baseline gap-3.5 py-3">
-                        <span className="text-[14px] text-muted-foreground shrink-0">Coach</span>
-                        <b className="text-[15.5px] font-semibold text-right break-words text-foreground">
+                        <span className="text-[15px] text-muted-foreground shrink-0">Coach</span>
+                        <b className="text-base font-semibold text-right break-words text-foreground">
                             {entry.coach_name || '—'}
                         </b>
                     </div>
 
                     {entry.category_name && (
                         <div className="flex justify-between items-baseline gap-3.5 py-3">
-                            <span className="text-[14px] text-muted-foreground shrink-0">Category</span>
-                            <b className="text-[15.5px] font-semibold text-right break-words text-foreground">
+                            <span className="text-[15px] text-muted-foreground shrink-0">Category</span>
+                            <b className="text-base font-semibold text-right break-words text-foreground">
                                 {entry.category_name}
                             </b>
                         </div>
                     )}
 
                     <div className="flex justify-between items-baseline gap-3.5 py-3">
-                        <span className="text-[14px] text-muted-foreground shrink-0">Weight</span>
-                        <b className="text-[15.5px] font-semibold text-right break-words text-foreground">
+                        <span className="text-[15px] text-muted-foreground shrink-0">Weight</span>
+                        <b className="text-base font-semibold text-right break-words text-foreground">
                             {entry.declared_weight_kg ? `${entry.declared_weight_kg} kg` : '—'}
                         </b>
                     </div>
@@ -686,134 +606,23 @@ export default async function ParentEntryDetailPage({ params }: EntryPageProps) 
                     />
 
                     <div className="flex justify-between items-baseline gap-3.5 py-3">
-                        <span className="text-[14px] text-muted-foreground shrink-0">Submitted</span>
-                        <b className="text-[15.5px] font-semibold text-right break-words text-foreground">
+                        <span className="text-[15px] text-muted-foreground shrink-0">Sent on</span>
+                        <b className="text-base font-semibold text-right break-words text-foreground">
                             {submittedFormatted}
                         </b>
                     </div>
 
-                    {/* Events applied 2x2 grid */}
-                    <div className="py-3 pb-3.5">
-                        <div className="text-[14px] text-muted-foreground mb-3">
-                            Events applied
-                        </div>
-                        <div className="grid grid-cols-2 gap-x-2.5 gap-y-3.5">
-                            {/* Kata */}
-                            <div
-                                className={`flex items-center gap-2.5 text-[15.5px] ${
-                                    applied.kata
-                                        ? 'font-semibold text-foreground'
-                                        : 'font-medium text-muted-foreground/60 dark:text-muted-foreground'
-                                }`}
-                            >
-                                <span
-                                    className={`w-[22px] h-[22px] rounded-[7px] border-2 box-border flex items-center justify-center shrink-0 ${
-                                        applied.kata
-                                            ? 'bg-primary border-primary dark:bg-primary dark:border-primary'
-                                            : 'border-border'
-                                    }`}
-                                >
-                                    {applied.kata && (
-                                        <svg width="13" height="13" viewBox="0 0 14 14">
-                                            <path
-                                                d="M2 7.5l3 3 7-7.5"
-                                                fill="none"
-                                                stroke="#ffffff"
-                                                strokeWidth="2.4"
-                                            />
-                                        </svg>
-                                    )}
-                                </span>
-                                <span>Kata</span>
-                            </div>
-
-                            {/* Kumite */}
-                            <div
-                                className={`flex items-center gap-2.5 text-[15.5px] ${
-                                    applied.kumite
-                                        ? 'font-semibold text-foreground'
-                                        : 'font-medium text-muted-foreground/60 dark:text-muted-foreground'
-                                }`}
-                            >
-                                <span
-                                    className={`w-[22px] h-[22px] rounded-[7px] border-2 box-border flex items-center justify-center shrink-0 ${
-                                        applied.kumite
-                                            ? 'bg-primary border-primary dark:bg-primary dark:border-primary'
-                                            : 'border-border'
-                                    }`}
-                                >
-                                    {applied.kumite && (
-                                        <svg width="13" height="13" viewBox="0 0 14 14">
-                                            <path
-                                                d="M2 7.5l3 3 7-7.5"
-                                                fill="none"
-                                                stroke="#ffffff"
-                                                strokeWidth="2.4"
-                                            />
-                                        </svg>
-                                    )}
-                                </span>
-                                <span>Kumite</span>
-                            </div>
-
-                            {/* Team Kata */}
-                            <div
-                                className={`flex items-center gap-2.5 text-[15.5px] ${
-                                    applied.teamKata
-                                        ? 'font-semibold text-foreground'
-                                        : 'font-medium text-muted-foreground/60 dark:text-muted-foreground'
-                                }`}
-                            >
-                                <span
-                                    className={`w-[22px] h-[22px] rounded-[7px] border-2 box-border flex items-center justify-center shrink-0 ${
-                                        applied.teamKata
-                                            ? 'bg-primary border-primary dark:bg-primary dark:border-primary'
-                                            : 'border-border'
-                                    }`}
-                                >
-                                    {applied.teamKata && (
-                                        <svg width="13" height="13" viewBox="0 0 14 14">
-                                            <path
-                                                d="M2 7.5l3 3 7-7.5"
-                                                fill="none"
-                                                stroke="#ffffff"
-                                                strokeWidth="2.4"
-                                            />
-                                        </svg>
-                                    )}
-                                </span>
-                                <span>Team Kata</span>
-                            </div>
-
-                            {/* Team Kumite */}
-                            <div
-                                className={`flex items-center gap-2.5 text-[15.5px] ${
-                                    applied.teamKumite
-                                        ? 'font-semibold text-foreground'
-                                        : 'font-medium text-muted-foreground/60 dark:text-muted-foreground'
-                                }`}
-                            >
-                                <span
-                                    className={`w-[22px] h-[22px] rounded-[7px] border-2 box-border flex items-center justify-center shrink-0 ${
-                                        applied.teamKumite
-                                            ? 'bg-primary border-primary dark:bg-primary dark:border-primary'
-                                            : 'border-border'
-                                    }`}
-                                >
-                                    {applied.teamKumite && (
-                                        <svg width="13" height="13" viewBox="0 0 14 14">
-                                            <path
-                                                d="M2 7.5l3 3 7-7.5"
-                                                fill="none"
-                                                stroke="#ffffff"
-                                                strokeWidth="2.4"
-                                            />
-                                        </svg>
-                                    )}
-                                </span>
-                                <span>Team Kumite</span>
-                            </div>
-                        </div>
+                    {/* Events: only what was chosen, in words */}
+                    <div className="flex justify-between items-baseline gap-3.5 py-3">
+                        <span className="text-[15px] text-muted-foreground shrink-0">Events</span>
+                        <b className="text-base font-semibold text-right text-foreground">
+                            {[
+                                applied.kata && 'Kata',
+                                applied.kumite && 'Kumite',
+                                applied.teamKata && 'Team Kata',
+                                applied.teamKumite && 'Team Kumite',
+                            ].filter(Boolean).join(', ') || '—'}
+                        </b>
                     </div>
                 </div>
             </div>

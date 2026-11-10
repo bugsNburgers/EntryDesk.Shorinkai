@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { SESSION_COOKIE_NAME } from '@/lib/auth/session'
 
 // Routes that require authentication (any role)
-const PROTECTED_PREFIXES = ['/dashboard', '/parent', '/athlete']
+const PROTECTED_PREFIXES = ['/admin', '/dashboard', '/parent', '/athlete']
 
 // Routes that must always be public (no auth required, no redirect)
 // /join/:slug — dojo join landing pages
@@ -53,6 +53,6 @@ export function proxy(request: NextRequest) {
 export const config = {
     // Match all protected routes. Public routes (/join, /v, /login, etc.) are NOT matched
     // so they are always accessible without any middleware processing.
-    matcher: ['/dashboard/:path*', '/parent', '/parent/:path*', '/athlete', '/athlete/:path*'],
+    matcher: ['/admin/:path*', '/dashboard/:path*', '/parent', '/parent/:path*', '/athlete', '/athlete/:path*'],
 }
 

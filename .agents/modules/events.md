@@ -24,7 +24,7 @@ Parent-visible labels: Waiting for coach · Waiting for organiser · Please corr
 - **Per-event snapshot (owner decision)**: the athlete's name/gender/DOB/rank/school + `declared_weight_kg` are frozen on the entry
   (`entries.snap_*`, migration 003) when it is created or re-activated (re-register after withdraw/decline, resubmit after a correction
   request, coach draft → sent). Profile edits only affect entries made later. Coach/organiser can fix typos with
-  `correctEntrySnapshot` (pencil button in the organiser entries table and coach parent-entries table; audited). Parents cannot.
+  `correctEntrySnapshot` ("Fix details" button on the organiser event page rows/cards and on the coach entries rows/cards once sent; audited). Parents cannot.
 - **Category label** (informational; RingFlow categorises itself): `category_snapshot` = `calculateCategory()` with age measured on
   `ageReferenceDate(event.start_date, event.age_cutoff_rule)` (`tournament_day` = start date, `jan_1` = 1 Jan of the start year).
   Written by `submitParentEntry`, `coachAddManualStudentAndEntry`, recomputed when coach drafts are sent and when a snapshot is corrected.
@@ -33,7 +33,7 @@ Parent-visible labels: Waiting for coach · Waiting for organiser · Please corr
 - **Chest numbers**: assigned on first approval as per-event MAX+1 under `pg_advisory_xact_lock`, unique index `idx_entries_event_chest`.
   Numbers are never reassigned automatically: rejected/withdrawn entries keep their number, re-approval keeps the old one. Only an organiser
   editing numbers by hand (`updateEntryChestNo`, friendly error on duplicates, audited `entry.chest_no_changed`) can free or move one.
-- Organiser exports: `exportEventEntries` (generic xlsx), **Export for RingFlow** (`exportEventForRingFlow` → `lib/export/ringflow.ts`), print views under `…/print`.
+- Organiser exports: `exportEventEntries` ("Download Excel"), print views under `…/print`. RingFlow export is available only from the admin portal.
 
 ## RingFlow export (official-roster format)
 First sheet, exact headers: `Number, School, School Code, SPORTS ID, Name, category, age, sex, belt, day, weight, kata, kumite, Team Kata, Team Kumite`.
@@ -50,3 +50,14 @@ still matches RingFlow's source when that repo is present).
 `coach/coach-add-student-dialog.tsx` → `coach-add-student-dialog-parts/` (header, athlete/discipline/guardian sections, success-screen, footer).
 `id-card/id-card-preview.tsx` re-exports `id-card-parts/{card-data,phone-pass,a4-sheet}.tsx` (moved byte-for-byte; **print output must stay
 pixel-identical — fixed colours there are intentional**). The parent files keep their names/exports, so imports did not change.
+
+### Payment and forwarding
+
+Parent submissions always start with the coach. Coaches record payment using
+the existing Paid control before forwarding. Coach-created entries start as
+drafts. Both single and bulk forwarding check the stored payment flag when
+updating the entry, and organiser decisions cannot move entries directly from
+the coach queue.
+
+Organiser event creation requires the admin-controlled permission from migration 006.
+The Events page shows 50 matching roster rows at a time and keeps full-roster bulk actions.

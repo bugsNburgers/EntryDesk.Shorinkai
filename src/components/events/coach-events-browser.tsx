@@ -1,3 +1,4 @@
+import { formatDateRangeStable } from '@/lib/date'
 import { ApplyButton } from '@/components/events/apply-button'
 import Link from 'next/link'
 import { DashboardPageHeader } from '@/components/dashboard/page-header'
@@ -70,9 +71,9 @@ export async function CoachEventsBrowser({ user, searchParams }: CoachEventsBrow
     }
 
     const getStatusText = (status: string | undefined) => {
-        if (status === 'approved') return 'Approved'
-        if (status === 'pending') return 'Pending'
-        if (status === 'rejected') return 'Rejected'
+        if (status === 'approved') return 'You can enter'
+        if (status === 'pending') return 'Request sent'
+        if (status === 'rejected') return 'Not accepted'
         return null
     }
 
@@ -125,7 +126,7 @@ export async function CoachEventsBrowser({ user, searchParams }: CoachEventsBrow
                                                 </div>
                                                 <div className="flex items-center gap-2 text-[11px] text-muted-foreground mt-0.5">
                                                     <span>
-                                                        {new Date(event.start_date).toLocaleDateString('en-IN', { timeZone: 'UTC' })} – {new Date(event.end_date).toLocaleDateString('en-IN', { timeZone: 'UTC' })}
+                                                        {formatDateRangeStable(event.start_date, event.end_date)}
                                                     </span>
                                                     {event.location && (
                                                         <>
@@ -208,7 +209,7 @@ export async function CoachEventsBrowser({ user, searchParams }: CoachEventsBrow
                                                 </div>
                                                 <div className="flex items-center gap-2 text-[11px] text-muted-foreground mt-0.5">
                                                     <span>
-                                                        {new Date(event.start_date).toLocaleDateString('en-IN', { timeZone: 'UTC' })} – {new Date(event.end_date).toLocaleDateString('en-IN', { timeZone: 'UTC' })}
+                                                        {formatDateRangeStable(event.start_date, event.end_date)}
                                                     </span>
                                                     {event.location && (
                                                         <>
@@ -277,7 +278,7 @@ export async function CoachEventsBrowser({ user, searchParams }: CoachEventsBrow
                                                         </div>
                                                         <div className="flex items-center gap-2 text-[11px] text-muted-foreground mt-0.5">
                                                             <span>
-                                                                {new Date(event.start_date).toLocaleDateString('en-IN', { timeZone: 'UTC' })} – {new Date(event.end_date).toLocaleDateString('en-IN', { timeZone: 'UTC' })}
+                                                                {formatDateRangeStable(event.start_date, event.end_date)}
                                                             </span>
                                                             {event.location && (
                                                                 <>
@@ -321,7 +322,7 @@ export async function CoachEventsBrowser({ user, searchParams }: CoachEventsBrow
                                                     </div>
                                                     <div className="flex items-center gap-2 text-[11px] text-muted-foreground mt-0.5">
                                                         <span>
-                                                            {new Date(event.start_date).toLocaleDateString('en-IN', { timeZone: 'UTC' })} – {new Date(event.end_date).toLocaleDateString('en-IN', { timeZone: 'UTC' })}
+                                                            {formatDateRangeStable(event.start_date, event.end_date)}
                                                         </span>
                                                         {event.location && (
                                                             <>

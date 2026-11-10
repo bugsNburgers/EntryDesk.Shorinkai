@@ -29,7 +29,7 @@ export default function ParentNotFound() {
                 <Button asChild className="gap-2">
                     <Link href="/athlete">
                         <Home className="h-4 w-4" />
-                        My Profile(s)
+                        My children
                     </Link>
                 </Button>
             </div>

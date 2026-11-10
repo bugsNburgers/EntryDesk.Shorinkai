@@ -1,345 +1,238 @@
 'use client'
 
-// Mobile entries list — moved verbatim from coach-entries-list.tsx.
+// Coach entries on phone/tablet (< lg). One card per athlete:
+//   name + who sent it + a "Paid / Not paid" button in the corner
+//   line 1: age · belt · weight      line 2: day · events
+//   big "Send to organiser", then "Send back to fix" / "Remove"
+// Layout agreed with the owner on the design canvas (09/11/2026).
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { Button } from '@/components/ui/button'
-import { Check, X, Circle } from 'lucide-react'
+import { Check, Download, Loader2, MoreHorizontal, Send, Trash2 } from 'lucide-react'
 import { AthletePfp } from '@/components/ui/enlarged-pfp-dialog'
-import { CheckmarkSvg, PillCheckmarkSvg, MenuDownloadSvg, MenuLockSvg, MenuRejectSvg, getAthleteAge, formatBelt, getAppliedTags } from './shared'
+import { StatusBadge } from '@/components/ui/status-badge'
+import { EntrySnapshotDialog } from '@/components/events/entry-snapshot-dialog'
+import { formatStepDate } from '@/lib/date'
+import { cn } from '@/lib/utils'
+import { getAthleteAge, formatBelt, getAppliedTags } from './shared'
 import type { CoachEntriesListVM } from './use-coach-entries-list'
 
 export function CoachEntriesMobileList({ vm }: { vm: CoachEntriesListVM }) {
-    const { onStatusChange, effectiveFilter, getDojo, filteredEntries, tabCounts, selectableEntries, isAllSelected, handleToggleSelect, handleToggleSelectAll, handleTogglePaid, handleMarkAllPaid, entries, selectedIds, genericCheckedMap, setStatusFilter, setRejectDialogOpen, setEntryToReject } = vm
-    return (
-        <>
-            {/* ========================================================================= */}
-            {/* 2. MOBILE VIEW (Responsive Light & Dark Modes)                            */}
-            {/* ========================================================================= */}
-            <div className="block lg:hidden space-y-3 pb-8">
-                {/* Mobile Top Controls Bar */}
-                <div className="flex justify-between items-center px-1">
-                    <div
-                        onClick={selectableEntries.length > 0 ? handleToggleSelectAll : undefined}
-                        className={`flex items-center gap-2 text-xs font-semibold ${
-                            selectableEntries.length === 0
-                                ? 'opacity-40 cursor-not-allowed text-muted-foreground'
-                                : 'text-muted-foreground dark:text-foreground cursor-pointer'
-                        }`}
-                    >
-                        <span
-                            className={`w-5 h-5 rounded-[6px] border-2 flex items-center justify-center transition ${
-                                selectableEntries.length === 0
-                                    ? 'opacity-30 cursor-not-allowed border-border bg-transparent'
-                                    : isAllSelected
-                                    ? 'bg-primary border-primary'
-                                    : 'border-border bg-white dark:bg-transparent'
-                            }`}
-                        >
-                            {isAllSelected && selectableEntries.length > 0 && <CheckmarkSvg />}
-                        </span>
-                        <span>Select all ({selectableEntries.length})</span>
-                    </div>
+    const {
+        onStatusChange, effectiveFilter, filteredEntries, tabCounts, handleTogglePaid, handleMarkAllPaid,
+        genericCheckedMap, setStatusFilter, setRejectDialogOpen, setEntryToReject, isReadOnly,
+        handleForwardOne, busyEntryId, setSendBackEntry, setSendBackNote,
+    } = vm
+    const waiting = filteredEntries.filter((e) => e.status === 'draft' || e.status === 'pending_coach')
 
+    return (
+        <div className="block lg:hidden space-y-3 pb-8">
+            {!isReadOnly && waiting.length > 1 && (
+                <div className="flex justify-end">
                     <button
+                        type="button"
                         onClick={handleMarkAllPaid}
-                        className="h-8 px-3 border border-primary text-primary rounded-full text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer hover:bg-primary/10 transition"
+                        className="min-h-11 rounded-lg border border-border bg-card px-4 text-[15px] font-semibold text-foreground transition-colors hover:bg-muted"
                     >
-                        <PillCheckmarkSvg />
-                        Mark all paid &amp; verified
+                        Mark all as paid
                     </button>
                 </div>
+            )}
 
-                {/* Mobile Cards List */}
-                <div className="flex flex-col gap-3">
-                    {filteredEntries.length === 0 ? (
-                        <div className="py-12 px-4 text-center text-muted-foreground text-sm bg-card rounded-2xl border border-border shadow-xs space-y-3">
-                            <p className="font-medium">
-                                {effectiveFilter === 'not_forwarded'
-                                    ? 'No pending approvals! All entries have been processed.'
-                                    : 'No tournament entries found.'}
-                            </p>
-                            {effectiveFilter === 'not_forwarded' && tabCounts.all > 0 && (
-                                <div className="flex items-center justify-center gap-2 pt-1">
-                                    {tabCounts.approved > 0 && (
+            <div className="flex flex-col gap-3">
+                {filteredEntries.length === 0 ? (
+                    <div className="space-y-3 rounded-2xl border border-border bg-card px-4 py-10 text-center">
+                        <p className="text-base font-medium text-foreground">
+                            {effectiveFilter === 'not_forwarded' ? 'Nothing waiting for you. All entries are checked.' : 'No entries here.'}
+                        </p>
+                        {effectiveFilter === 'not_forwarded' && tabCounts.all > 0 && (
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setStatusFilter('all')
+                                    onStatusChange?.('all')
+                                }}
+                                className="min-h-11 rounded-lg border border-border bg-background px-4 text-[15px] font-semibold"
+                            >
+                                See all entries ({tabCounts.all})
+                            </button>
+                        )}
+                    </div>
+                ) : (
+                    filteredEntries.map((entry) => {
+                        const isPaid = Boolean(genericCheckedMap[entry.id])
+                        const canAct = !isReadOnly && (entry.status === 'draft' || entry.status === 'pending_coach')
+                        const canSendBack = !isReadOnly && entry.status === 'pending_coach'
+                        const tags = getAppliedTags(entry).filter((t) => !t.toLowerCase().startsWith('day'))
+                        const age = getAthleteAge(entry.students?.date_of_birth)
+                        const rank = formatBelt(entry.students?.rank)
+                        const weight = entry.declared_weight_kg || entry.students?.weight
+                        const day = entry.event_days?.date ? formatStepDate(entry.event_days.date) : entry.event_days?.name
+                        const sentBy = entry.parent_name || entry.parent_email
+                        const busy = busyEntryId === entry.id
+
+                        return (
+                            <article key={entry.id} className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4">
+                                <div className="flex items-start gap-3">
+                                    <AthletePfp
+                                        photoUrl={entry.students?.photo_url}
+                                        name={entry.students?.name || 'Athlete'}
+                                        subtitle={entry.dojos?.name || 'Athlete'}
+                                        size={52}
+                                        extraDetails={{
+                                            dojo: entry.dojos?.name,
+                                            chestNo: entry.chest_no,
+                                            age: age !== '—' ? age : undefined,
+                                            rank: entry.students?.rank,
+                                            gender: entry.students?.gender,
+                                            email: entry.parent_email,
+                                            phone: entry.students?.phone,
+                                        }}
+                                    />
+                                    <div className="min-w-0 flex-1">
+                                        <h3 className="text-lg font-bold leading-tight text-foreground">{entry.students?.name || 'Athlete'}</h3>
+                                        <p className="text-sm text-muted-foreground">
+                                            {sentBy ? `Sent by ${sentBy}` : 'Added by you'}
+                                            {entry.created_at ? ` on ${formatStepDate(entry.created_at)}` : ''}
+                                        </p>
+                                        {entry.students?.phone && (
+                                            <a href={`tel:${entry.students.phone}`} className="text-[15px] font-semibold text-primary">
+                                                Call parent
+                                            </a>
+                                        )}
+                                    </div>
+                                    {canAct ? (
+                                        <button
+                                            type="button"
+                                            aria-pressed={isPaid}
+                                            onClick={() => handleTogglePaid(entry)}
+                                            className={cn(
+                                                'inline-flex min-h-11 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-3 text-sm font-bold transition-colors',
+                                                isPaid
+                                                    ? 'border-[1.5px] border-[var(--status-approved)]/40 bg-[var(--status-approved-bg)] text-[var(--status-approved-fg)]'
+                                                    : 'border-[1.5px] border-dashed border-[var(--status-pending)] bg-[var(--status-pending-bg)] text-[var(--status-pending-fg)]',
+                                            )}
+                                        >
+                                            {isPaid && <Check className="h-4 w-4" strokeWidth={2.6} aria-hidden="true" />}
+                                            {isPaid ? 'Paid' : 'Not paid'}
+                                        </button>
+                                    ) : (
+                                        <StatusBadge status={entry.status} size="sm" className="shrink-0" />
+                                    )}
+                                </div>
+
+                                <div className="flex flex-col gap-1 rounded-lg bg-background px-3 py-2.5 text-base">
+                                    <div className="flex flex-wrap items-center gap-x-2 font-semibold text-foreground">
+                                        <span>{age !== '—' ? `${age} yrs` : 'Age —'}</span>
+                                        <span className="text-muted-foreground" aria-hidden="true">·</span>
+                                        <span>{rank} belt</span>
+                                        <span className="text-muted-foreground" aria-hidden="true">·</span>
+                                        <span>{weight ? `${weight} kg` : 'Weight —'}</span>
+                                        {entry.chest_no ? (
+                                            <>
+                                                <span className="text-muted-foreground" aria-hidden="true">·</span>
+                                                <span>Chest {entry.chest_no}</span>
+                                            </>
+                                        ) : null}
+                                    </div>
+                                    <div className="text-foreground/80">
+                                        {[day, tags.join(' and ')].filter(Boolean).join(' · ')}
+                                    </div>
+                                </div>
+
+                                {entry.status === 'correction_needed' && entry.coach_notes && (
+                                    <p className="rounded-lg bg-[var(--status-rejected-bg)] px-3 py-2 text-[15px] text-[var(--status-rejected-fg)]">
+                                        You asked: “{entry.coach_notes}”
+                                    </p>
+                                )}
+                                {(entry.status === 'rejected' || entry.status === 'coach_declined') && entry.rejection_reason && (
+                                    <p className="rounded-lg bg-[var(--status-closed-bg)] px-3 py-2 text-[15px] text-[var(--status-closed-fg)]">
+                                        Reason: “{entry.rejection_reason}”
+                                    </p>
+                                )}
+
+                                {canAct && (
+                                    <button
+                                        type="button"
+                                        disabled={!isPaid || busy}
+                                        onClick={() => handleForwardOne(entry)}
+                                        className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 text-base font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-45"
+                                    >
+                                        {busy ? <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" /> : <Send className="h-5 w-5" aria-hidden="true" />}
+                                        {isPaid ? 'Send to organiser' : 'Mark as paid first'}
+                                    </button>
+                                )}
+
+                                <div className="flex gap-2">
+                                    {canSendBack && (
                                         <button
                                             type="button"
                                             onClick={() => {
-                                                setStatusFilter('approved')
-                                                if (onStatusChange) onStatusChange('approved')
+                                                setSendBackNote('')
+                                                setSendBackEntry(entry)
                                             }}
-                                            className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer transition shadow-2xs"
+                                            className="min-h-12 flex-1 rounded-xl border-[1.5px] border-border bg-card px-3 text-base font-semibold text-foreground transition-colors hover:bg-muted"
                                         >
-                                            View Approved ({tabCounts.approved})
+                                            Send back to fix
                                         </button>
                                     )}
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setStatusFilter('all')
-                                            if (onStatusChange) onStatusChange('all')
-                                        }}
-                                        className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-muted dark:bg-border text-foreground hover:bg-border cursor-pointer transition"
-                                    >
-                                        View All ({tabCounts.all})
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                    ) : (
-                        filteredEntries.map((entry) => {
-                            const isSelected = selectedIds.has(entry.id)
-                            const isPaid = Boolean(genericCheckedMap[entry.id])
-                            const isLocked = entry.status === 'approved' || entry.status === 'submitted'
-                            const tags = getAppliedTags(entry)
-                            const age = getAthleteAge(entry.students?.date_of_birth)
-                            const dojo = getDojo(entry)
-                            const rank = formatBelt(entry.students?.rank)
-                            const weight = entry.declared_weight_kg || entry.students?.weight || '—'
-
-                            return (
-                                <div
-                                    key={entry.id}
-                                    className={`rounded-2xl p-4 transition-all border ${
-                                        isSelected
-                                            ? 'bg-primary/5 dark:bg-muted border-primary/60 ring-1 ring-primary/30'
-                                            : 'bg-card border-border shadow-xs'
-                                    }`}
-                                >
-                                    {/* Card Header: Checkbox + Avatar + Name/Email + Chest */}
-                                    <div className="flex gap-3 items-center">
-                                        {entry.status === 'approved' ? (
-                                            <span
-                                                title="Approved athletes cannot be selected"
-                                                className="w-5 h-5 rounded-[6px] border border-border/80 dark:border-border bg-muted/40 dark:bg-white/5 opacity-30 cursor-not-allowed flex items-center justify-center select-none shrink-0"
-                                            />
-                                        ) : (
-                                            <span
-                                                onClick={() => handleToggleSelect(entry.id)}
-                                                className={`w-5 h-5 rounded-[6px] border-2 flex items-center justify-center cursor-pointer transition shrink-0 ${
-                                                    isSelected
-                                                        ? 'bg-primary border-primary'
-                                                        : 'border-border bg-white dark:bg-transparent'
-                                                }`}
-                                            >
-                                                {isSelected && <CheckmarkSvg />}
-                                            </span>
-                                        )}
-
-                                        <AthletePfp
-                                            photoUrl={entry.students?.photo_url}
-                                            name={entry.students?.name || 'Athlete'}
-                                            subtitle={entry.dojos?.name || entry.parent_email || 'Athlete'}
-                                            size={44}
-                                            extraDetails={{
-                                                dojo: entry.dojos?.name,
-                                                chestNo: entry.chest_no,
-                                                age: age !== '—' ? age : undefined,
-                                                rank: entry.students?.rank,
-                                                gender: entry.students?.gender,
-                                                category: [entry.kata_category, entry.kumite_category].filter(Boolean).join(' • ') || undefined,
-                                                email: entry.parent_email,
-                                                phone: entry.students?.phone,
-                                            }}
-                                        />
-
-                                        <div className="min-w-0 flex-1">
-                                            <div className="text-sm font-bold text-foreground truncate">
-                                                {entry.students?.name || 'Athlete'}
-                                            </div>
-                                            <div className="text-xs text-muted-foreground mt-0.5 truncate">
-                                                {entry.parent_email || entry.students?.phone || 'athlete@email.com'}
-                                            </div>
-                                        </div>
-
-                                        <div className="text-right shrink-0">
-                                            <div className="text-[10px] tracking-wider uppercase font-bold text-muted-foreground">
-                                                Chest
-                                            </div>
-                                            <div
-                                                className={`text-sm font-bold ${
-                                                    entry.chest_no ? 'text-primary' : 'text-muted-foreground'
-                                                }`}
-                                            >
-                                                {entry.chest_no ? `#${String(entry.chest_no).padStart(3, '0')}` : '—'}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* 4-Item Spec Grid (Age / Belt / Weight / Dojo) */}
-                                    <div className="grid grid-cols-4 gap-2 mt-3 py-2.5 border-t border-b border-border/80 dark:border-border text-xs">
-                                        <div>
-                                            <div className="text-[10px] uppercase font-bold text-muted-foreground">
-                                                Age
-                                            </div>
-                                            <div className="text-xs font-semibold text-foreground mt-0.5 truncate">
-                                                {age}
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <div className="text-[10px] uppercase font-bold text-muted-foreground">
-                                                Belt
-                                            </div>
-                                            <div className="text-xs font-semibold text-foreground mt-0.5 truncate">
-                                                {rank}
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <div className="text-[10px] uppercase font-bold text-muted-foreground">
-                                                Weight
-                                            </div>
-                                            <div className="text-xs font-semibold text-foreground mt-0.5 truncate">
-                                                {weight !== '—' ? `${weight} kg` : '—'}
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <div className="text-[10px] uppercase font-bold text-muted-foreground">
-                                                Dojo
-                                            </div>
-                                            <div className="text-xs font-semibold text-foreground mt-0.5 truncate">
-                                                {dojo}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Events Applied Tags */}
-                                    <div className="flex gap-1.5 flex-wrap mt-3">
-                                        {tags.map((t, idx) => {
-                                            const isDay = t.toLowerCase().startsWith('day')
-                                            return (
-                                                <span
-                                                    key={idx}
-                                                    className={`text-[11px] font-semibold rounded-full px-2 py-0.5 whitespace-nowrap ${
-                                                        isDay
-                                                            ? 'bg-primary/12 text-primary dark:bg-primary/20 dark:text-primary border border-primary/30 dark:border-primary/40 font-bold'
-                                                            : 'bg-muted text-muted-foreground dark:text-foreground border border-border'
-                                                    }`}
-                                                >
-                                                    {t}
-                                                </span>
-                                            )
-                                        })}
-                                    </div>
-
-                                    {/* Card Footer: Paid Toggle + Status + Three-dot Menu */}
-                                    <div className="flex gap-2.5 mt-3 items-center">
-                                        {/* Paid Toggle Button */}
-                                        <div
-                                            onClick={() => handleTogglePaid(entry)}
-                                            className={`h-9 px-3 rounded-xl text-xs font-semibold inline-flex items-center gap-2 select-none cursor-pointer transition flex-1 ${
-                                                isPaid
-                                                    ? 'bg-primary/10 dark:bg-primary/15 border border-primary/40 dark:border-primary text-primary font-bold'
-                                                    : 'bg-white dark:bg-transparent border border-border text-muted-foreground dark:text-foreground'
-                                            } ${isLocked ? 'opacity-55 cursor-default' : ''}`}
+                                    {entry.status === 'approved' && (
+                                        <a
+                                            href={`/athlete/entries/${entry.id}/id-card`}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl border-[1.5px] border-border bg-card px-3 text-base font-semibold text-foreground transition-colors hover:bg-muted"
                                         >
-                                            <span
-                                                className={`w-4 h-4 rounded-[4px] border flex items-center justify-center transition shrink-0 ${
-                                                    isPaid
-                                                        ? 'bg-primary border-primary'
-                                                        : 'border-border'
-                                                }`}
-                                            >
-                                                {isPaid && <CheckmarkSvg />}
-                                            </span>
-                                            <span>Paid &amp; verified</span>
-                                        </div>
-
-                                        {/* Status */}
-                                        {entry.status === 'approved' ? (
-                                            <span className="text-xs font-bold text-primary inline-flex items-center gap-1 whitespace-nowrap">
-                                                <Check className="h-3 w-3" />
-                                                Approved
-                                            </span>
-                                        ) : entry.status === 'submitted' ? (
-                                            <span className="text-xs font-semibold text-muted-foreground inline-flex items-center gap-1 whitespace-nowrap">
-                                                <Check className="h-3 w-3" />
-                                                Forwarded
-                                            </span>
-                                        ) : entry.status === 'rejected' || entry.status === 'coach_declined' ? (
-                                            <span className="text-xs font-semibold text-rose-600 dark:text-rose-400 inline-flex items-center gap-1 whitespace-nowrap">
-                                                <X className="h-3 w-3" />
-                                                Rejected
-                                            </span>
-                                        ) : (
-                                            <span className="text-xs font-medium text-muted-foreground inline-flex items-center gap-1 whitespace-nowrap">
-                                                <Circle className="h-2.5 w-2.5" />
-                                                Not forwarded
-                                            </span>
-                                        )}
-
-                                        {/* Three-dot Button */}
+                                            <Download className="h-5 w-5" aria-hidden="true" />
+                                            ID card
+                                        </a>
+                                    )}
+                                    {!isReadOnly && entry.status !== 'approved' && (
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
                                                 <button
-                                                    className="w-9 h-9 rounded-xl border border-border text-muted-foreground inline-flex items-center justify-center text-xs hover:text-foreground transition shrink-0"
-                                                    aria-label="Row menu"
+                                                    type="button"
+                                                    className="inline-flex min-h-12 min-w-12 items-center justify-center rounded-xl border-[1.5px] border-border bg-card text-foreground transition-colors hover:bg-muted"
+                                                    aria-label={`More for ${entry.students?.name || 'this athlete'}`}
                                                 >
-                                                    ···
+                                                    <MoreHorizontal className="h-5 w-5" aria-hidden="true" />
                                                 </button>
                                             </DropdownMenuTrigger>
-
-                                            <DropdownMenuContent
-                                                align="end"
-                                                className="w-56 bg-muted border border-border rounded-xl p-1.5 shadow-xl z-50 text-foreground"
-                                            >
-                                                {entry.status === 'approved' ? (
-                                                    <DropdownMenuItem
-                                                        onClick={() =>
-                                                            window.open(`/athlete/entries/${entry.id}/id-card`, '_blank')
-                                                        }
-                                                        className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold hover:bg-background dark:hover:bg-[#1f304d] rounded-lg cursor-pointer transition"
-                                                    >
-                                                        <span className="text-primary flex">
-                                                            <MenuDownloadSvg />
-                                                        </span>
-                                                        <div>
-                                                            <div className="font-semibold text-xs">
-                                                                Download ID card
-                                                            </div>
-                                                            <div className="text-muted-foreground text-[10.5px]">
-                                                                PDF · Chest #{entry.chest_no ? String(entry.chest_no).padStart(3, '0') : '001'}
-                                                            </div>
-                                                        </div>
-                                                    </DropdownMenuItem>
-                                                ) : (
-                                                    <div className="flex items-center gap-2.5 px-3 py-2 cursor-not-allowed select-none opacity-50">
-                                                        <span className="flex text-muted-foreground">
-                                                            <MenuDownloadSvg />
-                                                        </span>
-                                                        <div>
-                                                            <div className="font-semibold text-xs text-muted-foreground">
-                                                                Download ID card
-                                                            </div>
-                                                            <div className="flex items-center gap-1 text-[10.5px] text-muted-foreground">
-                                                                <MenuLockSvg />
-                                                                Not generated yet
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                <div className="h-[1px] bg-border my-1" />
-
+                                            <DropdownMenuContent align="end" className="w-56 rounded-xl p-1.5">
                                                 <DropdownMenuItem
                                                     onClick={() => {
                                                         setEntryToReject(entry)
                                                         setRejectDialogOpen(true)
                                                     }}
-                                                    className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg cursor-pointer transition"
+                                                    className="min-h-11 gap-2.5 rounded-lg px-3 text-[15px] font-semibold text-destructive"
                                                 >
-                                                    <MenuRejectSvg />
-                                                    Reject entry
+                                                    <Trash2 className="h-4 w-4" aria-hidden="true" />
+                                                    Remove from this event
                                                 </DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
-                                    </div>
+                                    )}
                                 </div>
-                            )
-                        })
-                    )}
-                </div>
-
+                                {!isReadOnly && (entry.status === 'submitted' || entry.status === 'approved') && (
+                                    <EntrySnapshotDialog
+                                        entryId={entry.id}
+                                        labelled
+                                        triggerLabel="Fix name, age, belt or weight"
+                                        triggerClassName="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border-[1.5px] border-border bg-card px-3 text-base font-semibold hover:bg-muted"
+                                        initial={{
+                name: entry.students?.name ?? '',
+                gender: entry.students?.gender ?? null,
+                date_of_birth: entry.students?.date_of_birth ?? null,
+                rank: entry.students?.rank ?? null,
+                weight: entry.declared_weight_kg ?? entry.students?.weight ?? null,
+                school_or_city: entry.students?.school_or_city ?? null,
+            }}
+                                    />
+                                )}
+                            </article>
+                        )
+                    })
+                )}
             </div>
-        </>
+        </div>
     )
 }

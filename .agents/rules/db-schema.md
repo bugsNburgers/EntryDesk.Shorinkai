@@ -1,8 +1,8 @@
-# DB schema (schema.sql + migrations 001–005; Neon verified up to 001 on 2026-11-09)
+# Database schema and migrations
 
-Apply order on a fresh DB: `schema.sql` → `migrations/001…005` in number order (tests/db/sql-files.ts does exactly this).
-Migrations: 001 parent portal · 002 registration_no overflow · 003 entry snapshot · 004 chest_no unique · 005 repair double-encoded JSONB.
-Pending on Neon (2026-11-09): 002, 003, 004, 005 — see the run-order note in the final report / migration headers.
+On a fresh database, apply `schema.sql`, then run `npm run db:migrate` from the repo root. On an existing database, run only `npm run db:migrate`. It reads `DATABASE_URL` from the terminal or `.env` and replays numbered migrations in order without a history table. Pass `-- <migration-filename.sql>` when deliberately applying one file. The runner uses transactions except for migration 004's concurrent index statement, which runs on its own. Add future migrations using the next number and verify that applying the full sequence twice preserves existing data.
+
+Migrations: 001 parent portal · 002 registration number overflow · 003 entry snapshot · 004 unique chest numbers · 005 repair double-encoded JSONB · 006 organizer event creation permission (defaults to `false`).
 IDs are UUID (`gen_random_uuid()`). Neon runs Postgres 18; local Docker uses 16 (same behaviour).
 
 ## users  (ALL roles incl. parents)

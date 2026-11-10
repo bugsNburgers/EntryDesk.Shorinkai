@@ -1,3 +1,4 @@
+import { formatStepDate } from '@/lib/date'
 import React from 'react'
 import { CheckCircle2, Clock, AlertTriangle, XCircle, ArrowRight, Ban } from 'lucide-react'
 import { getStatusLabel, getStatusBgClass, getStatusDescription } from '@/lib/status'
@@ -20,19 +21,8 @@ export function StatusTimeline({
     rejectionReason,
     className,
 }: StatusTimelineProps) {
-    const createdDate = new Date(createdAt).toLocaleDateString('en-IN', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-    })
-
-    const updatedDate = updatedAt
-        ? new Date(updatedAt).toLocaleDateString('en-IN', {
-              day: 'numeric',
-              month: 'short',
-              year: 'numeric',
-          })
-        : null
+    const createdDate = formatStepDate(createdAt)
+    const updatedDate = updatedAt ? formatStepDate(updatedAt) : null
 
     // Determine status of each step: 'complete' | 'current' | 'upcoming' | 'error' | 'warning'
     let step1State: 'complete' = 'complete'

@@ -1,3 +1,7 @@
+import Link from 'next/link'
+import { ChevronLeft } from 'lucide-react'
+import { formatDateRangeStable } from '@/lib/date'
+import { RegistrationDeadline } from '@/components/events/registration-deadline'
 import { requireRole } from '@/lib/auth/require-role'
 import { notFound } from 'next/navigation'
 import sql from '@/lib/db'
@@ -32,15 +36,18 @@ export default async function EventLayout({
     const event = events[0]
 
     return (
-        <div className="space-y-6">
-            <div className="flex items-start justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold tracking-tight">{event.title}</h1>
-                    <div className="flex text-sm text-muted-foreground gap-4">
-                        <span>{new Date(event.start_date).toLocaleDateString()}</span>
-                        <span className="capitalize">{event.event_type}</span>
-                    </div>
-                </div>
+        <div className="space-y-5">
+            <div>
+                <Link href="/dashboard/events" className="inline-flex min-h-11 items-center gap-1 text-[15px] font-semibold text-primary">
+                    <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+                    All events
+                </Link>
+                <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{event.title}</h1>
+                <p className="mt-1 text-base text-muted-foreground">
+                    {formatDateRangeStable(event.start_date, event.end_date)}
+                    {event.location ? ` · ${event.location}` : ''}
+                </p>
+                <RegistrationDeadline event={event} className="mt-1" />
             </div>
 
             {children}

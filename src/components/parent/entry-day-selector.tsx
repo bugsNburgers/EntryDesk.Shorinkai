@@ -1,5 +1,6 @@
 'use client'
 
+import { formatDateStable, weekdayName } from '@/lib/date'
 import React, { useState, useTransition } from 'react'
 import { Calendar, Check, ChevronDown, Loader2 } from 'lucide-react'
 import { updateParentEntryDay } from '@/app/athlete/entry-actions'
@@ -47,14 +48,9 @@ export function EntryDaySelector({
 
     const formatDayDate = (d?: string | null) => {
         if (!d) return ''
-        const dateObj = new Date(d)
-        if (isNaN(dateObj.getTime())) return d
-        return dateObj.toLocaleDateString('en-IN', {
-            timeZone: 'UTC',
-            weekday: 'short',
-            month: 'short',
-            day: 'numeric',
-        })
+        const out = formatDateStable(d)
+        const wd = weekdayName(d)
+        return wd ? `${out}, ${wd}` : out
     }
 
     const handleSave = () => {
@@ -76,7 +72,7 @@ export function EntryDaySelector({
             <div className="flex justify-between items-baseline gap-3.5 py-3">
                 <span className="text-[14px] text-muted-foreground shrink-0 flex items-center gap-1.5">
                     <Calendar className="h-3.5 w-3.5 text-primary" />
-                    <span>Participation Day</span>
+                    <span>Day</span>
                 </span>
 
                 <div className="flex items-center gap-2">
@@ -108,7 +104,7 @@ export function EntryDaySelector({
                         <DialogHeader>
                             <DialogTitle className="text-lg font-bold text-foreground flex items-center gap-2">
                                 <Calendar className="h-5 w-5 text-primary" />
-                                <span>Choose Participation Day</span>
+                                <span>Choose the day</span>
                             </DialogTitle>
                             <DialogDescription className="text-xs text-muted-foreground">
                                 Select which tournament day the athlete will participate in.

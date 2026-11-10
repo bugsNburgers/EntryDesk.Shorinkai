@@ -181,10 +181,12 @@ export function normalizeCoachStatus(s?: string) {
         lower === 'pending_submission' ||
         lower === 'pending' ||
         lower === 'pending_coach' ||
-        lower === 'draft' ||
-        lower === 'correction_needed'
+        lower === 'draft'
     ) {
         return 'not_forwarded'
+    }
+    if (lower === 'correction_needed' || lower === 'correction') {
+        return 'correction'
     }
     if (lower === 'forwarded' || lower === 'submitted' || lower === 'under_review') {
         return 'forwarded'

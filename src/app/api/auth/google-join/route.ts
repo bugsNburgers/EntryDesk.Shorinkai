@@ -33,6 +33,13 @@ export async function POST(request: NextRequest) {
             )
         }
 
+        const [dojo] = await sql`
+            SELECT id FROM dojos WHERE slug = ${dojoSlug} AND join_link_enabled IS TRUE
+        `
+        if (!dojoSlug || !dojo) {
+            return NextResponse.json({ error: 'Ask your coach for an active dojo link.' }, { status: 403 })
+        }
+
         // Verify the token with Google
         const verifyResult = await verifyGoogleIdToken(idToken, { allowNewParent: true })
 
@@ -50,20 +57,11 @@ export async function POST(request: NextRequest) {
 
         const { user } = verifyResult
 
-        // Validate dojo slug if provided
-        let redirectTo = '/athlete'
-        if (dojoSlug) {
-            const dojos = await sql<{ id: string; join_link_enabled: boolean }[]>`
-                SELECT id, join_link_enabled
-                FROM dojos
-                WHERE slug = ${dojoSlug}
-                LIMIT 1
-            `
-            if (dojos.length > 0 && dojos[0].join_link_enabled) {
-                redirectTo = `/athlete?joinedDojo=${dojoSlug}`
-            }
+        if (user.role !== 'parent') {
+            return NextResponse.json({ error: 'Use the staff sign-in page.' }, { status: 403 })
         }
 
+        const redirectTo = `/athlete?joinedDojo=${encodeURIComponent(dojoSlug)}`
         await createSession(user.id, user.role)
 
         const response = NextResponse.json({ success: true, redirectTo })

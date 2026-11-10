@@ -1,12 +1,7 @@
 import { requireRole } from '@/lib/auth/require-role'
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ExportEntries } from '@/components/events/export-entries'
-import { EntriesTable } from '@/components/events/entries-table'
-import { EntryFilters } from '@/components/events/entry-filters'
-import { PaginationControls } from '@/components/ui/pagination-controls'
 import { CoachDashboard } from '@/components/coach/coach-dashboard'
 import { isRegistrationClosed, toIsoDate } from '@/lib/events/registration'
-import { notFound } from 'next/navigation'
+import { redirect, notFound } from 'next/navigation'
 import sql from '@/lib/db'
 import type { Event, EventDay, Dojo } from '@/types/database'
 
@@ -97,6 +92,7 @@ export default async function EventEntriesPage({
                         'rank', CASE WHEN e.status = 'draft' THEN s.rank ELSE COALESCE(e.snap_rank, s.rank) END, 
                         'weight', CASE WHEN e.status = 'draft' THEN s.weight ELSE COALESCE(e.declared_weight_kg, s.weight) END, 
                         'date_of_birth', CASE WHEN e.status = 'draft' THEN s.date_of_birth ELSE COALESCE(e.snap_dob, s.date_of_birth) END, 
+                        'school_or_city', CASE WHEN e.status = 'draft' THEN s.school_or_city ELSE COALESCE(e.snap_school_or_city, s.school_or_city) END,
                         'dojo_id', s.dojo_id, 
                         'dojo_name', d.name,
                         'registration_no', s.registration_no,
@@ -191,154 +187,7 @@ export default async function EventEntriesPage({
         notFound()
     }
 
-    const page = Math.max(1, Number(p.page) || 1)
-    const limit = 50
-    const offset = (page - 1) * limit
-
-    const q = p.q?.trim()
-    const status = p.status
-    const coach = p.coach
-    const day = p.day
-
-    // Parallel fetch: entries, count, coaches filter, days filter
-    const [rawEntries, countResult, coaches, formattedDays] = await Promise.all([
-        sql<
-            {
-                id: string
-                event_id: string
-                status: string
-                participation_type: string | null
-                chest_no: number | null
-                student_name: string
-                student_rank: string | null
-                student_weight: number | null
-                student_gender: string | null
-                student_dob: string | null
-                student_school_or_city: string | null
-                student_registration_no: string | null
-                student_photo: string | null
-                dojo_name: string | null
-                category_name: string | null
-                event_day_name: string | null
-                coach_name: string | null
-                coach_email: string
-                coach_avatar: string | null
-            }[]
-        >`
-            SELECT 
-                e.id,
-                e.event_id,
-                e.status,
-                e.participation_type,
-                e.chest_no,
-                COALESCE(e.snap_name, s.name) AS student_name,
-                COALESCE(e.snap_rank, s.rank) AS student_rank,
-                COALESCE(e.declared_weight_kg, s.weight) AS student_weight,
-                COALESCE(e.snap_gender, s.gender) AS student_gender,
-                COALESCE(e.snap_dob, s.date_of_birth)::text AS student_dob,
-                COALESCE(e.snap_school_or_city, s.school_or_city) AS student_school_or_city,
-                s.registration_no AS student_registration_no,
-                s.photo_url AS student_photo,
-                d.name AS dojo_name,
-                COALESCE(c.name, e.category_snapshot->>'displayName') AS category_name,
-                ed.name AS event_day_name,
-                p.full_name AS coach_name,
-                p.email AS coach_email,
-                p.avatar_url AS coach_avatar
-            FROM entries e
-            JOIN events ev ON e.event_id = ev.id
-            JOIN students s ON e.student_id = s.id
-            LEFT JOIN dojos d ON s.dojo_id = d.id
-            LEFT JOIN categories c ON e.category_id = c.id
-            LEFT JOIN event_days ed ON e.event_day_id = ed.id
-            JOIN users p ON e.coach_id = p.id
-            WHERE e.event_id = ${id}
-              AND e.status != 'draft'
-              ${q ? sql`AND COALESCE(e.snap_name, s.name) ILIKE ${'%' + q + '%'}` : sql``}
-              ${status && status !== 'all' ? sql`AND e.status = ${status}` : sql``}
-              ${coach && coach !== 'all' ? sql`AND e.coach_id = ${coach}` : sql``}
-              ${day && day !== 'all' ? sql`AND e.event_day_id = ${day}` : sql``}
-            ORDER BY e.created_at DESC
-            LIMIT ${limit} OFFSET ${offset}
-        `,
-        sql<{ count: number }[]>`
-            SELECT count(*)::int AS count
-            FROM entries e
-            JOIN students s ON e.student_id = s.id
-            WHERE e.event_id = ${id}
-              AND e.status != 'draft'
-              ${q ? sql`AND COALESCE(e.snap_name, s.name) ILIKE ${'%' + q + '%'}` : sql``}
-              ${status && status !== 'all' ? sql`AND e.status = ${status}` : sql``}
-              ${coach && coach !== 'all' ? sql`AND e.coach_id = ${coach}` : sql``}
-              ${day && day !== 'all' ? sql`AND e.event_day_id = ${day}` : sql``}
-        `,
-        sql<{ id: string; name: string }[]>`
-            SELECT DISTINCT e.coach_id AS id, COALESCE(p.full_name, p.email) AS name
-            FROM entries e
-            JOIN users p ON e.coach_id = p.id
-            WHERE e.event_id = ${id} AND e.status != 'draft'
-            ORDER BY name ASC
-        `,
-        sql<{ id: string; name: string }[]>`
-            SELECT id, name
-            FROM event_days
-            WHERE event_id = ${id}
-            ORDER BY date ASC
-        `,
-    ])
-
-    const totalCount = countResult[0]?.count ?? 0
-    const totalPages = Math.ceil(totalCount / limit)
-
-    // Map to nested structure expected by EntriesTable component
-    const entries = rawEntries.map((e) => ({
-        id: e.id,
-        event_id: e.event_id,
-        status: e.status,
-        participation_type: e.participation_type,
-        chest_no: e.chest_no,
-        students: {
-            name: e.student_name,
-            rank: e.student_rank,
-            weight: e.student_weight,
-            gender: e.student_gender,
-            date_of_birth: e.student_dob,
-            school_or_city: e.student_school_or_city,
-            registration_no: e.student_registration_no,
-            photo_url: e.student_photo,
-            dojos: e.dojo_name ? { name: e.dojo_name } : null,
-        },
-        categories: e.category_name ? { name: e.category_name } : null,
-        event_days: e.event_day_name ? { name: e.event_day_name } : null,
-        profiles: {
-            full_name: e.coach_name,
-            email: e.coach_email,
-            avatar_url: e.coach_avatar,
-        },
-    }))
-
-    return (
-        <div className="space-y-6">
-            <Card>
-                <CardHeader className="gap-3">
-                    <div className="flex items-start justify-between gap-3">
-                        <div>
-                            <CardTitle>Entries</CardTitle>
-                            <p className="text-sm text-muted-foreground">{totalCount} records</p>
-                        </div>
-                        <ExportEntries eventId={id} searchParams={p} />
-                    </div>
-                    <EntryFilters 
-                        coaches={coaches} 
-                        eventDays={formattedDays.map((d) => ({ id: d.id, name: d.name || 'Day' }))} 
-                    />
-                </CardHeader>
-                <CardContent className="p-0">
-                    <EntriesTable entries={entries} />
-                </CardContent>
-            </Card>
-
-            <PaginationControls page={page} totalPages={totalPages} totalCount={totalCount} />
-        </div>
-    )
+    // Since 09/11/2026 the organiser works from ONE page: the event page has the count boxes, labelled
+    // Accept / Don't accept buttons and phone cards. Keep this URL working (emails, bookmarks).
+    redirect(`/dashboard/events/${id}${p.status ? `?status=${encodeURIComponent(p.status)}` : ''}`)
 }

@@ -51,6 +51,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- PART B (run on its own, outside a transaction) -------------------------------
+-- entrydesk: standalone
 CREATE UNIQUE INDEX CONCURRENTLY IF NOT EXISTS idx_entries_event_chest
     ON entries (event_id, chest_no)
     WHERE chest_no IS NOT NULL;

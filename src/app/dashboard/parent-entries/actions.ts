@@ -11,6 +11,7 @@ import { requireRole } from '@/lib/auth/require-role'
 import sql from '@/lib/db'
 import { audit, AUDIT_ACTIONS } from '@/lib/audit'
 import { isRegistrationClosed } from '@/lib/events/registration'
+import { ALLOWED_TRANSITIONS } from '@/lib/status'
 
 async function getClientIp(): Promise<string> {
     const h = await headers()
@@ -50,13 +51,25 @@ export async function coachForwardEntry(
 
     const entry = rows[0]
 
-    await sql`
+    if (!(ALLOWED_TRANSITIONS[entry.status] ?? []).includes('submitted')) {
+        return { error: 'This entry has already moved on and cannot be sent again.' }
+    }
+
+    const updated = await sql`
         UPDATE entries
         SET status = 'submitted',
             coach_notes = NULL,
             updated_at = NOW()
         WHERE id = ${entryId}
+          AND status = ${entry.status}
+          AND (coach_id = ${user.id} OR EXISTS (
+              SELECT 1 FROM students s JOIN dojos d ON d.id = s.dojo_id
+              WHERE s.id = entries.student_id AND d.coach_id = ${user.id}
+          ))
+          AND generic_checked IS TRUE
+        RETURNING id
     `
+    if (!updated.length) return { error: 'Mark this entry as paid before sending it. Refresh if its status changed.' }
 
     audit({
         actorType: 'coach',
@@ -86,7 +99,7 @@ export async function coachForwardEntry(
  */
 export async function coachBulkForwardEntries(
     entryIds: string[]
-): Promise<{ success?: boolean; count?: number; error?: string }> {
+): Promise<{ success?: boolean; count?: number; forwardedIds?: string[]; error?: string }> {
     const { user } = await requireRole('coach', { redirectTo: '/login' })
     const ip = await getClientIp()
 
@@ -106,7 +119,8 @@ export async function coachBulkForwardEntries(
           AND s.dojo_id = d.id
           AND e.id = ANY(${validIds})
           AND (e.coach_id = ${user.id} OR d.coach_id = ${user.id})
-          AND e.status IN ('pending_coach', 'correction_needed')
+          AND e.status IN ('draft', 'pending_coach', 'correction_needed')
+          AND e.generic_checked IS TRUE
         RETURNING e.id, e.student_id, e.event_id
     `
 
@@ -130,7 +144,8 @@ export async function coachBulkForwardEntries(
     revalidatePath('/dashboard/entries')
     revalidatePath('/athlete')
 
-    return { success: true, count: updated.length }
+    if (!updated.length) return { error: 'Mark eligible entries as paid before sending them.' }
+    return { success: true, count: updated.length, forwardedIds: updated.map((entry) => entry.id) }
 }
 
 /**

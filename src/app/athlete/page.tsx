@@ -1,168 +1,218 @@
 // ============================================================================
-// EntryDesk — Parent Portal Home: Kid Picker
+// EntryDesk — Parent home: "My children"
 // src/app/athlete/page.tsx
-// Shows all children linked to this parent. Entry point for all parent actions.
-// Design: mobile-first, one primary CTA, plain-English status, no jargon.
+// One card per child: photo, name, belt, age → each tournament entry with ONE status word and
+// ONE big button for the next step (Download ID card / Fix and send again / Enter a tournament).
+// Layout: "EntryDesk UX Fixes" design canvas (09/11/2026).
 // ============================================================================
 
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import Image from 'next/image'
 import { cookies } from 'next/headers'
+import { ChevronRight, Download, Pencil, Plus, Trophy } from 'lucide-react'
 import { requireRole } from '@/lib/auth/require-role'
-import { redirect } from 'next/navigation'
 import sql from '@/lib/db'
-import { getStatusLabel, getStatusBgClass } from '@/lib/status'
-import { Button } from '@/components/ui/button'
-import { Plus, UserRound } from 'lucide-react'
+import { calculateAge, formatDateRangeStable } from '@/lib/date'
 import { JoinDojoHandler } from '@/components/parent/join-dojo-handler'
-import { ChildCardItem } from '@/components/parent/child-card-item'
-import { AthleteIcon } from '@/components/ui/athlete-icon'
+import { SafeAvatar } from '@/components/ui/safe-avatar'
+import { StatusBadge } from '@/components/ui/status-badge'
 
 export const metadata: Metadata = {
-    title: 'My Profile(s) — EntryDesk',
+    title: 'My children — EntryDesk',
 }
 
-interface ParentHomeProps {
-    searchParams: Promise<{ joinedDojo?: string }>
+type Child = {
+    id: string
+    name: string
+    rank: string | null
+    date_of_birth: string | null
+    photo_url: string | null
+    dojo_name: string | null
+    coach_name: string | null
 }
 
-export default async function ParentHome({ searchParams }: ParentHomeProps) {
+type ChildEntry = {
+    id: string
+    student_id: string
+    status: string
+    chest_no: number | null
+    coach_notes: string | null
+    rejection_reason: string | null
+    event_title: string
+    start_date: string
+    end_date: string
+    location: string | null
+}
+
+function beltText(rank: string | null) {
+    if (!rank) return null
+    const r = rank.replace(/\bbelts?\b/gi, '').trim()
+    return r ? `${r.charAt(0).toUpperCase()}${r.slice(1)} belt` : null
+}
+
+export default async function ParentHome({ searchParams }: { searchParams: Promise<{ joinedDojo?: string }> }) {
     const { user } = await requireRole('parent', { redirectTo: '/login' })
     const { joinedDojo } = await searchParams
     const cookieStore = await cookies()
     const activeDojoSlug = joinedDojo || cookieStore.get('parent_dojo_slug')?.value || ''
     const addAthleteHref = activeDojoSlug ? `/athlete/new?dojo=${encodeURIComponent(activeDojoSlug)}` : '/athlete/new'
 
-    // Fetch all registered athletes for this user with their latest entry status per event
-    const children = await sql<{
-        id: string
-        name: string
-        gender: string
-        date_of_birth: string | null
-        rank: string | null
-        photo_url: string | null
-        dojo_name: string | null
-        dojo_id: string | null
-        entry_count: number
-        pending_count: number
-        approved_count: number
-    }[]>`
-        SELECT
-            s.id,
-            s.name,
-            s.gender,
-            s.date_of_birth,
-            s.rank,
-            s.photo_url,
-            d.name AS dojo_name,
-            d.id AS dojo_id,
-            COUNT(DISTINCT e.id)::int AS entry_count,
-            COUNT(DISTINCT CASE WHEN e.status IN ('pending_coach','submitted','correction_needed') THEN e.id END)::int AS pending_count,
-            COUNT(DISTINCT CASE WHEN e.status = 'approved' THEN e.id END)::int AS approved_count
+    const children = await sql<Child[]>`
+        SELECT s.id, s.name, s.rank, s.date_of_birth::text, s.photo_url, d.name AS dojo_name, cu.full_name AS coach_name
         FROM students s
         LEFT JOIN dojos d ON s.dojo_id = d.id
-        LEFT JOIN entries e ON e.student_id = s.id
-        WHERE s.parent_id = ${user.id}
-          AND s.membership_status = 'active'
-        GROUP BY s.id, s.name, s.gender, s.date_of_birth, s.rank, s.photo_url, d.name, d.id
+        LEFT JOIN users cu ON cu.id = d.coach_id
+        WHERE s.parent_id = ${user.id} AND s.membership_status = 'active'
         ORDER BY s.created_at ASC
     `
 
-    // Fetch latest entry status per child (for status pill on athlete card)
-    const latestEntries = children.length > 0
-        ? await sql<{ student_id: string; status: string; event_title: string }[]>`
-            SELECT DISTINCT ON (e.student_id)
-                e.student_id,
-                e.status,
-                ev.title AS event_title
+    // Entries for upcoming events (plus anything accepted recently), newest event first per child.
+    const entries = children.length
+        ? await sql<ChildEntry[]>`
+            SELECT e.id, e.student_id, e.status, e.chest_no, e.coach_notes, e.rejection_reason,
+                   ev.title AS event_title, ev.start_date::text, ev.end_date::text, ev.location
             FROM entries e
             JOIN events ev ON e.event_id = ev.id
             WHERE e.student_id = ANY(${children.map((c) => c.id)})
-            ORDER BY e.student_id, e.created_at DESC
+              AND e.status <> 'draft'
+              AND ev.end_date >= (CURRENT_DATE - INTERVAL '7 days')
+            ORDER BY ev.start_date ASC
         `
         : []
 
-    const latestEntryByChild: Record<string, { status: string; event_title: string }> = {}
-    for (const entry of latestEntries) {
-        latestEntryByChild[entry.student_id] = entry
+    const entriesByChild = new Map<string, ChildEntry[]>()
+    for (const e of entries) {
+        const list = entriesByChild.get(e.student_id) ?? []
+        list.push(e)
+        entriesByChild.set(e.student_id, list)
     }
 
+    const coachLine = children.find((c) => c.dojo_name)
+    const firstName = (n: string) => n.split(' ')[0]
+
     return (
-        <div className="space-y-5">
-            {/* Dojo join handler — client component that processes ?joinedDojo= param */}
+        <div className="space-y-4">
             {joinedDojo && <JoinDojoHandler dojoSlug={joinedDojo} />}
 
-            {/* Header */}
-            <div className="flex items-center justify-between pt-1">
-                <div>
-                    <h1 className="text-2xl font-bold text-foreground">My Profile(s)</h1>
-                    <p className="text-sm text-muted-foreground mt-0.5">
-                        {children.length === 0
-                            ? 'Add yourself or your child to get started'
-                            : `${children.length} ${children.length === 1 ? 'profile' : 'profiles'} registered`}
+            <div>
+                <h1 className="text-2xl font-bold text-foreground sm:text-3xl">My children</h1>
+                {coachLine && (
+                    <p className="mt-0.5 text-[15px] text-muted-foreground">
+                        {coachLine.coach_name ? `Coach: ${coachLine.coach_name} · ` : ''}
+                        {coachLine.dojo_name}
                     </p>
-                </div>
-                <Link href={addAthleteHref}>
-                    <Button size="sm" className="gap-2 h-9 rounded-xl bg-primary text-white hover:bg-primary/90 dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90 font-bold shadow-xs">
-                        <AthleteIcon size={16} />
-                        Add profile
-                    </Button>
-                </Link>
+                )}
             </div>
 
-            {/* Empty state */}
-            {children.length === 0 && (
-                <div className="mx-auto max-w-md rounded-[20px] border border-dashed border-border bg-white dark:border-border dark:bg-card py-14 px-6 text-center shadow-sm">
-                    <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-2xl bg-muted border border-border dark:bg-muted dark:border-border p-3 shadow-xs">
-                        <AthleteIcon size={64} />
-                    </div>
-                    <h2 className="text-lg font-bold text-foreground mb-1.5">No profiles added yet</h2>
-                    <p className="text-sm text-muted-foreground mb-6 max-w-sm mx-auto">
-                        Add your or your child&apos;s details to register for tournaments and view live entry progress.
+            {children.length === 0 ? (
+                <section className="mx-auto max-w-md rounded-2xl border border-border bg-card px-5 py-10 text-center">
+                    <h2 className="text-xl font-bold">Add your child</h2>
+                    <p className="mx-auto mt-2 max-w-sm text-base text-muted-foreground">
+                        Add your child&apos;s name, photo, belt and weight. Then you can enter them in tournaments.
                     </p>
-                    <Link href={addAthleteHref}>
-                        <Button className="gap-2 rounded-xl bg-primary text-white hover:bg-primary/90 dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90 font-bold px-6 h-11 shadow-sm">
-                            <AthleteIcon size={20} />
-                            Add profile
-                        </Button>
+                    <Link
+                        href={addAthleteHref}
+                        className="mt-5 inline-flex min-h-[52px] items-center justify-center gap-2 rounded-xl bg-primary px-6 text-base font-semibold text-primary-foreground hover:bg-primary/90"
+                    >
+                        <Plus className="h-5 w-5" aria-hidden="true" />
+                        Add a child
                     </Link>
-                </div>
-            )}
-
-            {/* Child cards responsive grid */}
-            {children.length > 0 && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-5 2xl:gap-6">
+                </section>
+            ) : (
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                     {children.map((child) => {
-                        const latest = latestEntryByChild[child.id]
-                        const statusLabel = latest ? getStatusLabel(latest.status, 'parent') : null
-                        const statusBg = latest ? getStatusBgClass(latest.status) : null
-
+                        const list = entriesByChild.get(child.id) ?? []
+                        const age = calculateAge(child.date_of_birth)
                         return (
-                            <ChildCardItem
-                                key={child.id}
-                                child={child}
-                                latestStatus={
-                                    latest && statusLabel && statusBg
-                                        ? {
-                                              label: statusLabel,
-                                              bgClass: statusBg,
-                                              eventTitle: latest.event_title,
-                                              status: latest.status,
-                                          }
-                                        : null
-                                }
-                            />
+                            <article key={child.id} className="overflow-hidden rounded-2xl border border-border bg-card">
+                                <Link href={`/athlete/${child.id}`} className="flex items-center gap-3.5 px-4 py-3.5 hover:bg-muted/50">
+                                    <SafeAvatar src={child.photo_url} name={child.name} size={60} rounded="lg" />
+                                    <span className="min-w-0 flex-1">
+                                        <span className="block text-lg font-bold leading-tight">{child.name}</span>
+                                        <span className="block text-[15px] text-muted-foreground">
+                                            {[beltText(child.rank), age].filter(Boolean).join(' · ')}
+                                        </span>
+                                    </span>
+                                    <ChevronRight className="h-6 w-6 shrink-0 text-muted-foreground" aria-label="Open profile" />
+                                </Link>
+
+                                {list.length === 0 ? (
+                                    <div className="border-t border-border px-4 py-3.5">
+                                        <Link
+                                            href={`/athlete/${child.id}/register`}
+                                            className="inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 text-base font-semibold text-primary-foreground hover:bg-primary/90"
+                                        >
+                                            <Trophy className="h-5 w-5" aria-hidden="true" />
+                                            Enter a tournament
+                                        </Link>
+                                    </div>
+                                ) : (
+                                    list.map((e) => (
+                                        <div key={e.id} className="flex flex-col gap-2.5 border-t border-border px-4 py-3.5">
+                                            <div>
+                                                <p className="font-bold leading-snug">{e.event_title}</p>
+                                                <p className="text-sm text-muted-foreground">
+                                                    {formatDateRangeStable(e.start_date, e.end_date)}
+                                                    {e.location ? ` · ${e.location}` : ''}
+                                                </p>
+                                            </div>
+                                            <div className="flex flex-wrap items-center gap-2.5">
+                                                <StatusBadge status={e.status} />
+                                                {e.status === 'approved' && e.chest_no ? (
+                                                    <span className="text-[15px] font-semibold">Chest number {e.chest_no}</span>
+                                                ) : null}
+                                            </div>
+                                            {e.status === 'correction_needed' && e.coach_notes && (
+                                                <p className="rounded-lg bg-background px-3 py-2 text-[15px]">
+                                                    <b>Coach says:</b> “{e.coach_notes}”
+                                                </p>
+                                            )}
+                                            {(e.status === 'rejected' || e.status === 'coach_declined') && e.rejection_reason && (
+                                                <p className="rounded-lg bg-background px-3 py-2 text-[15px]">
+                                                    <b>Reason:</b> “{e.rejection_reason}”
+                                                </p>
+                                            )}
+                                            {e.status === 'approved' ? (
+                                                <Link
+                                                    href={`/athlete/entries/${e.id}/id-card`}
+                                                    className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-xl bg-primary px-4 text-base font-semibold text-primary-foreground hover:bg-primary/90"
+                                                >
+                                                    <Download className="h-5 w-5" aria-hidden="true" />
+                                                    Download ID card
+                                                </Link>
+                                            ) : e.status === 'correction_needed' ? (
+                                                <Link
+                                                    href={`/athlete/entries/${e.id}`}
+                                                    className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-xl bg-primary px-4 text-base font-semibold text-primary-foreground hover:bg-primary/90"
+                                                >
+                                                    <Pencil className="h-5 w-5" aria-hidden="true" />
+                                                    Fix and send again
+                                                </Link>
+                                            ) : (
+                                                <Link
+                                                    href={`/athlete/entries/${e.id}`}
+                                                    className="inline-flex min-h-12 items-center justify-center rounded-xl border-[1.5px] border-border bg-card px-4 text-base font-semibold hover:bg-muted"
+                                                >
+                                                    See {firstName(child.name)}&apos;s entry
+                                                </Link>
+                                            )}
+                                        </div>
+                                    ))
+                                )}
+                            </article>
                         )
                     })}
                 </div>
             )}
 
-            {/* Bottom hint */}
             {children.length > 0 && (
-                <p className="text-center text-xs text-muted-foreground pt-2 pb-4">
-                    Click any athlete profile to manage tournament entries and access official ID cards.
-                </p>
+                <Link
+                    href={addAthleteHref}
+                    className="flex min-h-[52px] items-center justify-center gap-2 rounded-xl border-[1.5px] border-dashed border-border bg-card text-base font-semibold hover:bg-muted"
+                >
+                    <Plus className="h-5 w-5" aria-hidden="true" />
+                    Add another child
+                </Link>
             )}
         </div>
     )
