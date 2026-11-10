@@ -43,6 +43,8 @@ export default async function CoachParentEntriesPage({ searchParams }: ParentEnt
         student_weight: number | null
         student_photo: string | null
         student_gender: string
+        student_dob: string | null
+        student_school_or_city: string | null
         category_name: string | null
         participation_type: string | null
         declared_weight_kg: number | null
@@ -59,12 +61,14 @@ export default async function CoachParentEntriesPage({ searchParams }: ParentEnt
             e.event_id,
             ev.title AS event_title,
             e.student_id,
-            s.name AS student_name,
-            s.rank AS student_rank,
-            s.weight AS student_weight,
+            COALESCE(e.snap_name, s.name) AS student_name,
+            COALESCE(e.snap_rank, s.rank) AS student_rank,
+            COALESCE(e.declared_weight_kg, s.weight) AS student_weight,
             s.photo_url AS student_photo,
-            s.gender AS student_gender,
-            c.name AS category_name,
+            COALESCE(e.snap_gender, s.gender) AS student_gender,
+            COALESCE(e.snap_dob, s.date_of_birth)::text AS student_dob,
+            COALESCE(e.snap_school_or_city, s.school_or_city) AS student_school_or_city,
+            COALESCE(c.name, e.category_snapshot->>'displayName') AS category_name,
             e.participation_type,
             e.declared_weight_kg,
             e.status,
@@ -82,7 +86,7 @@ export default async function CoachParentEntriesPage({ searchParams }: ParentEnt
         LEFT JOIN users pu ON s.parent_id = pu.id
         WHERE (e.coach_id = ${user.id} OR d.coach_id = ${user.id})
           AND (e.submitted_by IS NOT NULL OR s.parent_id IS NOT NULL)
-          ${q ? sql`AND (s.name ILIKE ${'%' + q + '%'} OR pu.full_name ILIKE ${'%' + q + '%'})` : sql``}
+          ${q ? sql`AND (COALESCE(e.snap_name, s.name) ILIKE ${'%' + q + '%'} OR pu.full_name ILIKE ${'%' + q + '%'})` : sql``}
           ${status && status !== 'all' ? sql`AND e.status = ${status}` : sql``}
           ${eventId && eventId !== 'all' ? sql`AND e.event_id = ${eventId}` : sql``}
         ORDER BY 

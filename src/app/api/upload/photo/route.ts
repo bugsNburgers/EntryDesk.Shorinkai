@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
 import { put, del } from '@vercel/blob'
+import { devDataUriFallback } from '@/lib/storage/photo-fallback'
 import { getCurrentSession } from '@/lib/auth/session'
 import sql from '@/lib/db'
 import { audit, AUDIT_ACTIONS } from '@/lib/audit'
@@ -136,11 +137,8 @@ export async function POST(req: NextRequest) {
                 del(existingPhotoUrl, { token: blobToken }).catch(() => {})
             }
         } else {
-            // Fallback for local testing without Vercel Blob credentials:
-            // Store as base64 data URI so local dev never breaks
-            const arrayBuffer = await file.arrayBuffer()
-            const base64 = Buffer.from(arrayBuffer).toString('base64')
-            photoUrl = `data:${file.type};base64,${base64}`
+            // Local dev only; throws in production (never store data: URIs there)
+            photoUrl = await devDataUriFallback(file)
         }
 
         // Update student record in PostgreSQL
@@ -165,9 +163,7 @@ export async function POST(req: NextRequest) {
 
         // Revalidate relevant pages
         revalidatePath('/athlete')
-        revalidatePath('/parent')
         revalidatePath(`/athlete/${studentId}`)
-        revalidatePath(`/parent/children/${studentId}`)
         revalidatePath('/dashboard/students')
         revalidatePath('/dashboard/entries')
 
@@ -229,9 +225,7 @@ export async function DELETE(req: NextRequest) {
         }).catch(console.error)
 
         revalidatePath('/athlete')
-        revalidatePath('/parent')
         revalidatePath(`/athlete/${studentId}`)
-        revalidatePath(`/parent/children/${studentId}`)
         revalidatePath('/dashboard/students')
         revalidatePath('/dashboard/entries')
 

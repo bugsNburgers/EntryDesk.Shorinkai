@@ -2,7 +2,7 @@
 
 import React, { useState, useTransition } from 'react'
 import { Calendar, Check, ChevronDown, Loader2 } from 'lucide-react'
-import { updateParentEntryDay } from '@/app/parent/entry-actions'
+import { updateParentEntryDay } from '@/app/athlete/entry-actions'
 import { toast } from 'sonner'
 import {
     Dialog,
@@ -49,7 +49,8 @@ export function EntryDaySelector({
         if (!d) return ''
         const dateObj = new Date(d)
         if (isNaN(dateObj.getTime())) return d
-        return dateObj.toLocaleDateString(undefined, {
+        return dateObj.toLocaleDateString('en-IN', {
+            timeZone: 'UTC',
             weekday: 'short',
             month: 'short',
             day: 'numeric',
@@ -73,16 +74,16 @@ export function EntryDaySelector({
     return (
         <>
             <div className="flex justify-between items-baseline gap-3.5 py-3">
-                <span className="text-[14px] text-[#57534e] dark:text-[#8a99ab] shrink-0 flex items-center gap-1.5">
-                    <Calendar className="h-3.5 w-3.5 text-[#0d9488] dark:text-[#2dd4b4]" />
+                <span className="text-[14px] text-muted-foreground shrink-0 flex items-center gap-1.5">
+                    <Calendar className="h-3.5 w-3.5 text-primary" />
                     <span>Participation Day</span>
                 </span>
 
                 <div className="flex items-center gap-2">
-                    <b className="text-[15.5px] font-semibold text-right break-words text-[#1c1917] dark:text-[#e8eef5]">
+                    <b className="text-[15.5px] font-semibold text-right break-words text-foreground">
                         {displayName}
                         {displayDate && (
-                            <span className="text-xs font-normal text-[#57534e] dark:text-[#8a99ab] ml-1.5">
+                            <span className="text-xs font-normal text-muted-foreground ml-1.5">
                                 ({formatDayDate(displayDate)})
                             </span>
                         )}
@@ -92,7 +93,7 @@ export function EntryDaySelector({
                         <button
                             type="button"
                             onClick={() => setOpen(true)}
-                            className="text-xs font-semibold text-[#0d9488] dark:text-[#2dd4b4] hover:underline cursor-pointer ml-1"
+                            className="text-xs font-semibold text-primary hover:underline cursor-pointer ml-1"
                         >
                             Change
                         </button>
@@ -103,13 +104,13 @@ export function EntryDaySelector({
             {/* Change Day Dialog */}
             {isEditable && eventDays.length > 1 && (
                 <Dialog open={open} onOpenChange={setOpen}>
-                    <DialogContent className="max-w-md rounded-2xl bg-white dark:bg-[#111a2b] border-[#ded8cb] dark:border-[#1f2b40]">
+                    <DialogContent className="max-w-md rounded-2xl bg-card border-border">
                         <DialogHeader>
-                            <DialogTitle className="text-lg font-bold text-[#1c1917] dark:text-[#e8eef5] flex items-center gap-2">
-                                <Calendar className="h-5 w-5 text-[#0d9488] dark:text-[#2dd4b4]" />
+                            <DialogTitle className="text-lg font-bold text-foreground flex items-center gap-2">
+                                <Calendar className="h-5 w-5 text-primary" />
                                 <span>Choose Participation Day</span>
                             </DialogTitle>
-                            <DialogDescription className="text-xs text-[#57534e] dark:text-[#8a99ab]">
+                            <DialogDescription className="text-xs text-muted-foreground">
                                 Select which tournament day the athlete will participate in.
                             </DialogDescription>
                         </DialogHeader>
@@ -124,15 +125,15 @@ export function EntryDaySelector({
                                         onClick={() => setSelectedDayId(day.id)}
                                         className={`rounded-xl border p-3.5 flex items-center justify-between cursor-pointer transition select-none ${
                                             isSelected
-                                                ? 'border-[#0d9488] dark:border-[#2dd4b4] ring-2 ring-[#0d9488]/20 bg-[#0d9488]/5 dark:bg-[#2dd4b4]/10'
-                                                : 'border-[#ded8cb] dark:border-[#1f2b40] bg-white dark:bg-[#111a2b] hover:border-[#0d9488]/40'
+                                                ? 'border-primary ring-2 ring-primary/20 bg-primary/5 dark:bg-primary/10'
+                                                : 'border-border bg-card hover:border-primary/40'
                                         }`}
                                     >
                                         <div>
-                                            <p className="text-sm font-bold text-[#1c1917] dark:text-[#e8eef5]">
+                                            <p className="text-sm font-bold text-foreground">
                                                 {day.name}
                                             </p>
-                                            <p className="text-xs text-[#57534e] dark:text-[#8a99ab] mt-0.5">
+                                            <p className="text-xs text-muted-foreground mt-0.5">
                                                 {formatDayDate(day.date)}
                                             </p>
                                         </div>
@@ -140,7 +141,7 @@ export function EntryDaySelector({
                                         <div
                                             className={`h-5 w-5 rounded-full border flex items-center justify-center shrink-0 ${
                                                 isSelected
-                                                    ? 'border-[#0d9488] bg-[#0d9488] dark:border-[#2dd4b4] dark:bg-[#2dd4b4] text-white dark:text-[#04231e]'
+                                                    ? 'border-primary bg-primary dark:border-primary dark:bg-primary text-white dark:text-primary-foreground'
                                                     : 'border-muted-foreground/30'
                                             }`}
                                         >
@@ -151,13 +152,13 @@ export function EntryDaySelector({
                             })}
                         </div>
 
-                        <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#ded8cb] dark:border-[#1f2b40]">
+                        <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
                             <Button
                                 variant="outline"
                                 size="sm"
                                 onClick={() => setOpen(false)}
                                 disabled={isPending}
-                                className="rounded-xl border-[#ded8cb] dark:border-[#1f2b40]"
+                                className="rounded-xl border-border"
                             >
                                 Cancel
                             </Button>
@@ -165,7 +166,7 @@ export function EntryDaySelector({
                                 size="sm"
                                 onClick={handleSave}
                                 disabled={isPending || !selectedDayId}
-                                className="rounded-xl bg-[#0d9488] hover:bg-[#0f766e] text-white dark:bg-[#2dd4b4] dark:hover:bg-[#25c4a5] dark:text-[#04231e] font-semibold"
+                                className="rounded-xl bg-primary hover:bg-primary/90 text-white dark:bg-primary dark:hover:bg-primary/90 dark:text-primary-foreground font-semibold"
                             >
                                 {isPending ? (
                                     <>

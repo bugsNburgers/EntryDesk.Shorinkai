@@ -59,7 +59,7 @@ export function EnlargedPfpModal({
                 <DialogPrimitive.Content
                     className={cn(
                         'fixed left-1/2 top-1/2 z-50 w-[92vw] max-w-lg -translate-x-1/2 -translate-y-1/2',
-                        'rounded-3xl border border-[#ded8cb] bg-white p-0 shadow-2xl dark:border-[#1f2b40] dark:bg-[#111a2b]',
+                        'rounded-3xl border border-border bg-white p-0 shadow-2xl dark:border-border dark:bg-card',
                         'transition-all duration-200 outline-none overflow-hidden',
                         'data-[state=open]:animate-in data-[state=closed]:animate-out',
                         'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
@@ -69,10 +69,10 @@ export function EnlargedPfpModal({
                     )}
                 >
                     {/* Header */}
-                    <div className="flex items-start justify-between border-b border-[#ded8cb] dark:border-[#1f2b40] px-5 py-4 bg-[#faf8f3] dark:bg-[#0d1624]">
+                    <div className="flex items-start justify-between border-b border-border px-5 py-4 bg-background dark:bg-[#0d1624]">
                         <div className="min-w-0 pr-4">
                             <div className="flex items-center gap-2">
-                                <DialogPrimitive.Title className="text-lg font-bold text-[#1c1917] dark:text-[#f8fafc] truncate">
+                                <DialogPrimitive.Title className="text-lg font-bold text-foreground truncate">
                                     {name}
                                 </DialogPrimitive.Title>
                                 {extraDetails?.chestNo && (
@@ -81,14 +81,14 @@ export function EnlargedPfpModal({
                                     </span>
                                 )}
                             </div>
-                            <DialogPrimitive.Description className="text-xs text-[#57534e] dark:text-[#8a99ab] truncate mt-0.5">
+                            <DialogPrimitive.Description className="text-xs text-muted-foreground truncate mt-0.5">
                                 {subtitle || extraDetails?.dojo || 'Athlete Profile Picture'}
                             </DialogPrimitive.Description>
                         </div>
 
                         {/* Close button */}
                         <DialogPrimitive.Close
-                            className="flex h-8 w-8 items-center justify-center rounded-full bg-black/5 dark:bg-white/10 text-[#57534e] dark:text-[#8a99ab] hover:text-[#1c1917] dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/20 transition-all outline-none"
+                            className="flex h-8 w-8 items-center justify-center rounded-full bg-black/5 dark:bg-white/10 text-muted-foreground hover:text-foreground dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/20 transition-all outline-none"
                             aria-label="Close"
                         >
                             <X className="h-4 w-4" />
@@ -96,12 +96,12 @@ export function EnlargedPfpModal({
                     </div>
 
                     {/* Main Image View Area */}
-                    <div className="p-4 sm:p-6 flex flex-col items-center justify-center bg-[#f7f4ec]/40 dark:bg-[#0a1220]/60 min-h-[300px]">
+                    <div className="p-4 sm:p-6 flex flex-col items-center justify-center bg-background/40 dark:bg-background/60 min-h-[300px]">
                         {hasPhoto ? (
-                            <div className="relative w-full max-h-[60vh] sm:max-h-[65vh] flex items-center justify-center rounded-2xl overflow-hidden bg-black/5 dark:bg-black/40 border border-[#ded8cb] dark:border-[#1f2b40] shadow-inner p-1">
+                            <div className="relative w-full max-h-[60vh] sm:max-h-[65vh] flex items-center justify-center rounded-2xl overflow-hidden bg-black/5 dark:bg-black/40 border border-border shadow-inner p-1">
                                 {!imgLoaded && !imgError && (
                                     <div className="absolute inset-0 flex items-center justify-center">
-                                        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#2dd4b4] border-t-transparent" />
+                                        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                                     </div>
                                 )}
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -118,13 +118,13 @@ export function EnlargedPfpModal({
                             </div>
                         ) : (
                             <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
-                                <div className="h-28 w-28 rounded-full bg-[#16233a] border-4 border-[#243349] flex items-center justify-center text-3xl font-bold text-[#2dd4b4] shadow-lg mb-4">
-                                    {name ? name.charAt(0).toUpperCase() : <User className="h-12 w-12 text-[#8a99ab]" />}
+                                <div className="h-28 w-28 rounded-full bg-muted border-4 border-border flex items-center justify-center text-3xl font-bold text-primary shadow-lg mb-4">
+                                    {name ? name.charAt(0).toUpperCase() : <User className="h-12 w-12 text-muted-foreground" />}
                                 </div>
-                                <p className="text-sm font-semibold text-[#1c1917] dark:text-[#f8fafc]">
+                                <p className="text-sm font-semibold text-foreground">
                                     No profile photo uploaded
                                 </p>
-                                <p className="text-xs text-[#57534e] dark:text-[#8a99ab] mt-1 max-w-xs">
+                                <p className="text-xs text-muted-foreground mt-1 max-w-xs">
                                     The athlete does not have a high-resolution photo associated with their account yet.
                                 </p>
                             </div>
@@ -134,29 +134,29 @@ export function EnlargedPfpModal({
                         {extraDetails && (
                             <div className="flex flex-wrap items-center justify-center gap-2 mt-4 w-full">
                                 {extraDetails.dojo && (
-                                    <span className="inline-flex items-center gap-1 rounded-lg bg-black/5 dark:bg-white/5 px-2.5 py-1 text-xs font-medium text-[#1c1917] dark:text-[#e8eef5] border border-[#ded8cb] dark:border-[#1f2b40]">
+                                    <span className="inline-flex items-center gap-1 rounded-lg bg-black/5 dark:bg-white/5 px-2.5 py-1 text-xs font-medium text-foreground border border-border">
                                         <Shield className="h-3 w-3 text-muted-foreground" />
                                         {extraDetails.dojo}
                                     </span>
                                 )}
                                 {extraDetails.rank && (
-                                    <span className="inline-flex items-center gap-1 rounded-lg bg-black/5 dark:bg-white/5 px-2.5 py-1 text-xs font-medium text-[#1c1917] dark:text-[#e8eef5] border border-[#ded8cb] dark:border-[#1f2b40]">
+                                    <span className="inline-flex items-center gap-1 rounded-lg bg-black/5 dark:bg-white/5 px-2.5 py-1 text-xs font-medium text-foreground border border-border">
                                         <Trophy className="h-3 w-3 text-amber-500" />
                                         {extraDetails.rank}
                                     </span>
                                 )}
                                 {extraDetails.category && (
-                                    <span className="inline-flex items-center gap-1 rounded-lg bg-black/5 dark:bg-white/5 px-2.5 py-1 text-xs font-medium text-[#1c1917] dark:text-[#e8eef5] border border-[#ded8cb] dark:border-[#1f2b40]">
+                                    <span className="inline-flex items-center gap-1 rounded-lg bg-black/5 dark:bg-white/5 px-2.5 py-1 text-xs font-medium text-foreground border border-border">
                                         {extraDetails.category}
                                     </span>
                                 )}
                                 {extraDetails.age !== undefined && extraDetails.age !== null && (
-                                    <span className="inline-flex items-center gap-1 rounded-lg bg-black/5 dark:bg-white/5 px-2.5 py-1 text-xs font-medium text-[#1c1917] dark:text-[#e8eef5] border border-[#ded8cb] dark:border-[#1f2b40]">
+                                    <span className="inline-flex items-center gap-1 rounded-lg bg-black/5 dark:bg-white/5 px-2.5 py-1 text-xs font-medium text-foreground border border-border">
                                         {extraDetails.age} yrs
                                     </span>
                                 )}
                                 {extraDetails.gender && (
-                                    <span className="inline-flex items-center gap-1 rounded-lg bg-black/5 dark:bg-white/5 px-2.5 py-1 text-xs font-medium text-[#1c1917] dark:text-[#e8eef5] border border-[#ded8cb] dark:border-[#1f2b40]">
+                                    <span className="inline-flex items-center gap-1 rounded-lg bg-black/5 dark:bg-white/5 px-2.5 py-1 text-xs font-medium text-foreground border border-border">
                                         {extraDetails.gender}
                                     </span>
                                 )}
@@ -165,13 +165,13 @@ export function EnlargedPfpModal({
                     </div>
 
                     {/* Footer Actions */}
-                    <div className="flex items-center justify-between border-t border-[#ded8cb] dark:border-[#1f2b40] px-5 py-3 bg-[#faf8f3] dark:bg-[#0d1624]">
+                    <div className="flex items-center justify-between border-t border-border px-5 py-3 bg-background dark:bg-[#0d1624]">
                         {hasPhoto ? (
                             <a
                                 href={photoUrl!}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0d9488] dark:text-[#2dd4b4] hover:underline"
+                                className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
                             >
                                 <ExternalLink className="h-3.5 w-3.5" />
                                 View Full Size
@@ -180,7 +180,7 @@ export function EnlargedPfpModal({
                             <span />
                         )}
 
-                        <DialogPrimitive.Close className="rounded-xl px-4 py-1.5 text-xs font-bold text-[#1c1917] dark:text-white bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 transition-colors">
+                        <DialogPrimitive.Close className="rounded-xl px-4 py-1.5 text-xs font-bold text-foreground dark:text-white bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 transition-colors">
                             Close
                         </DialogPrimitive.Close>
                     </div>
@@ -273,6 +273,8 @@ export function AthletePfp({
     extraDetails,
 }: AthletePfpProps) {
     const [open, setOpen] = useState(false)
+    const [failedSrc, setFailedSrc] = useState<string | null>(null)
+    const showPhoto = Boolean(photoUrl) && failedSrc !== photoUrl
 
     const handleClick = (e: React.MouseEvent) => {
         // Prevent row selection or parent card navigation from firing
@@ -299,18 +301,19 @@ export function AthletePfp({
                 onKeyDown={handleKeyDown}
                 style={{ width: size, height: size }}
                 className={cn(
-                    'group relative rounded-full bg-[#16233a] border-2 border-[#243349] flex items-center justify-center shrink-0 cursor-pointer',
-                    'transition-all duration-200 hover:scale-105 active:scale-95 hover:border-[#2dd4b4] hover:shadow-[0_0_12px_rgba(45,212,180,0.35)]',
-                    'focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2dd4b4] focus-visible:ring-offset-2',
+                    'group relative rounded-full bg-muted border-2 border-border flex items-center justify-center shrink-0 cursor-pointer',
+                    'transition-all duration-200 hover:scale-105 active:scale-95 hover:border-primary hover:shadow-[0_0_12px_rgba(45,212,180,0.35)]',
+                    'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
                     className
                 )}
             >
-                {photoUrl ? (
+                {showPhoto ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
-                        src={photoUrl}
+                        src={photoUrl as string}
                         alt={name || 'Athlete'}
                         className="w-full h-full object-cover rounded-full pointer-events-none"
+                        onError={() => setFailedSrc(photoUrl ?? null)}
                     />
                 ) : (
                     <AvatarPlaceholderSilhouette size={Math.round(size * 0.5)} />

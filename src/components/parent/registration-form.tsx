@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useTransition } from 'react'
+import React, { useEffect, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -18,7 +18,7 @@ import {
     ArrowRight,
     Scale,
 } from 'lucide-react'
-import { submitParentEntry } from '@/app/parent/entry-actions'
+import { submitParentEntry } from '@/app/athlete/entry-actions'
 import { PhotoUploadDialog } from '@/components/ui/photo-upload-dialog'
 import { formatDateRangeStable, formatDateStable } from '@/lib/date'
 
@@ -69,6 +69,11 @@ export function RegistrationForm({
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
     const [error, setError] = useState<string | null>(null)
+    // The error banner sits at the top of a long form; bring it into view so a failed submit is never silent.
+    const errorRef = useRef<HTMLDivElement>(null)
+    useEffect(() => {
+        if (error) errorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, [error])
     const [successMessage, setSuccessMessage] = useState<string | null>(null)
     const [photoUrl, setPhotoUrl] = useState<string | null>(child.photo_url)
     const [photoDialogOpen, setPhotoDialogOpen] = useState(false)
@@ -178,7 +183,7 @@ export function RegistrationForm({
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
-                <div className="rounded-xl bg-destructive/10 border border-destructive/20 p-4 text-sm text-destructive flex items-start gap-2.5">
+                <div ref={errorRef} role="alert" className="rounded-xl bg-destructive/10 border border-destructive/20 p-4 text-sm text-destructive flex items-start gap-2.5">
                     <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
                     <div>
                         <p className="font-semibold">Registration Issue</p>
@@ -223,7 +228,8 @@ export function RegistrationForm({
                             const isAlreadyRegistered =
                                 t.existing_entry_id &&
                                 t.existing_entry_status !== 'withdrawn' &&
-                                t.existing_entry_status !== 'coach_declined'
+                                t.existing_entry_status !== 'coach_declined' &&
+                                t.existing_entry_status !== 'correction_needed'
 
                             return (
                                 <div
@@ -337,7 +343,8 @@ export function RegistrationForm({
                             const dateObj = new Date(day.date)
                             const dateFormatted = isNaN(dateObj.getTime())
                                 ? String(day.date)
-                                : dateObj.toLocaleDateString(undefined, {
+                                : dateObj.toLocaleDateString('en-IN', {
+                                      timeZone: 'UTC',
                                       weekday: 'short',
                                       month: 'short',
                                       day: 'numeric',
@@ -349,26 +356,26 @@ export function RegistrationForm({
                                     onClick={() => setSelectedDayId(day.id)}
                                     className={`rounded-xl border p-3.5 text-left transition-all cursor-pointer flex flex-col justify-between select-none ${
                                         isSelected
-                                            ? 'border-[#0d9488] dark:border-[#2dd4b4] ring-2 ring-[#0d9488]/20 bg-[#0d9488]/5 dark:bg-[#2dd4b4]/10 shadow-xs'
-                                            : 'border-border bg-card hover:border-[#0d9488]/40 dark:hover:border-[#2dd4b4]/40 hover:bg-muted/30'
+                                            ? 'border-primary ring-2 ring-primary/20 bg-primary/5 dark:bg-primary/10 shadow-xs'
+                                            : 'border-border bg-card hover:border-primary/40 hover:bg-muted/30'
                                     }`}
                                 >
                                     <div className="flex items-center justify-between w-full">
                                         <div className="flex items-center gap-2">
-                                            <Calendar className={`h-4 w-4 ${isSelected ? 'text-[#0d9488] dark:text-[#2dd4b4]' : 'text-muted-foreground'}`} />
-                                            <span className="text-sm font-bold text-[#1c1917] dark:text-[#e8eef5]">
+                                            <Calendar className={`h-4 w-4 ${isSelected ? 'text-primary' : 'text-muted-foreground'}`} />
+                                            <span className="text-sm font-bold text-foreground">
                                                 {day.name}
                                             </span>
                                         </div>
                                         <div
                                             className={`h-4 w-4 rounded-full border flex items-center justify-center shrink-0 ${
                                                 isSelected
-                                                    ? 'border-[#0d9488] bg-[#0d9488] dark:border-[#2dd4b4] dark:bg-[#2dd4b4]'
+                                                    ? 'border-primary bg-primary dark:border-primary dark:bg-primary'
                                                     : 'border-muted-foreground/40'
                                             }`}
                                         >
                                             {isSelected && (
-                                                <div className="h-1.5 w-1.5 rounded-full bg-white dark:bg-[#04231e]" />
+                                                <div className="h-1.5 w-1.5 rounded-full bg-white dark:bg-primary-foreground" />
                                             )}
                                         </div>
                                     </div>

@@ -5,6 +5,7 @@
 // ============================================================================
 
 import type { Metadata } from 'next'
+import { SafeAvatar } from '@/components/ui/safe-avatar'
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import sql from '@/lib/db'
@@ -125,20 +126,7 @@ export default async function JoinPage({ params }: JoinPageProps) {
 
                     {/* Coach info */}
                     <div className="flex items-center gap-2.5 rounded-xl bg-muted/40 px-3 py-2.5 dark:bg-white/[0.04]">
-                        {dojo.coach_avatar ? (
-                            <Image
-                                src={dojo.coach_avatar}
-                                alt={dojo.coach_name ?? 'Coach'}
-                                width={28}
-                                height={28}
-                                className="rounded-full object-cover"
-                                unoptimized
-                            />
-                        ) : (
-                            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/20 text-xs font-semibold text-primary">
-                                {(dojo.coach_name ?? 'C').charAt(0).toUpperCase()}
-                            </div>
-                        )}
+                        <SafeAvatar src={dojo.coach_avatar} name={dojo.coach_name ?? 'Coach'} size={28} />
                         <span className="text-sm text-muted-foreground">
                             Coached by <span className="font-medium text-foreground">{dojo.coach_name ?? 'Your coach'}</span>
                         </span>

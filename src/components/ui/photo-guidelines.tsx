@@ -7,7 +7,6 @@
 // ============================================================================
 
 import React from 'react'
-import Image from 'next/image'
 import {
     CheckCircle2,
     XCircle,
@@ -152,12 +151,17 @@ export function PhotoGuidelinesVisual({
 
                             {/* Image Thumbnail Container */}
                             <div className="relative aspect-square w-full bg-muted/40 overflow-hidden">
-                                <Image
+                                {/* Static 480x480 JPEGs (<100 KB each). Plain <img> with explicit size so they
+                                    render immediately on phones without the image optimiser. */}
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
                                     src={example.image}
                                     alt={example.alt}
-                                    fill
-                                    className="object-cover"
-                                    sizes="(max-width: 640px) 100vw, 33vw"
+                                    width={480}
+                                    height={480}
+                                    loading={idx === 0 ? 'eager' : 'lazy'}
+                                    decoding="async"
+                                    className="absolute inset-0 h-full w-full object-cover"
                                 />
                                 <div
                                     className={`absolute bottom-1.5 left-1.5 right-1.5 px-1.5 py-0.5 rounded text-[10px] font-semibold text-center backdrop-blur-md shadow-sm truncate ${

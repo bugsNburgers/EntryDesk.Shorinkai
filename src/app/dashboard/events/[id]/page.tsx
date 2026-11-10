@@ -37,6 +37,7 @@ export default async function EventOverviewPage({ params }: { params: Promise<{ 
                 coach_name: string | null
                 coach_email: string
                 student_id: string
+                coach_avatar: string | null
                 student_name: string
                 student_gender: string
                 student_rank: string | null
@@ -64,17 +65,18 @@ export default async function EventOverviewPage({ params }: { params: Promise<{ 
                 e.coach_id,
                 p.full_name AS coach_name,
                 p.email AS coach_email,
+                p.avatar_url AS coach_avatar,
                 s.id AS student_id,
-                s.name AS student_name,
-                s.gender AS student_gender,
-                s.rank AS student_rank,
-                s.weight AS student_weight,
-                s.date_of_birth::text AS student_dob,
+                COALESCE(e.snap_name, s.name) AS student_name,
+                COALESCE(e.snap_gender, s.gender) AS student_gender,
+                COALESCE(e.snap_rank, s.rank) AS student_rank,
+                COALESCE(e.declared_weight_kg, s.weight) AS student_weight,
+                COALESCE(e.snap_dob, s.date_of_birth)::text AS student_dob,
                 s.photo_url AS student_photo,
                 s.registration_no AS student_registration_no,
                 d.id AS dojo_id,
                 d.name AS dojo_name,
-                c.name AS category_name,
+                COALESCE(c.name, e.category_snapshot->>'displayName') AS category_name,
                 ed.name AS event_day_name
             FROM entries e
             JOIN students s ON e.student_id = s.id
@@ -210,7 +212,7 @@ export default async function EventOverviewPage({ params }: { params: Promise<{ 
             {/* Top-level Key Metrics */}
             <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
                 <Link href={`/dashboard/events/${id}/entries`} className="group block h-full focus:outline-none">
-                    <Card className="h-full cursor-pointer border border-[#ded8cb] bg-white shadow-xs transition-all group-hover:-translate-y-1 group-hover:bg-[#faf8f3] group-hover:shadow-md group-hover:border-[#0d9488]/40 dark:border-[#1f2b40] dark:bg-[#111a2b] dark:shadow-black/40 dark:group-hover:border-[#2dd4b4]/40 dark:group-hover:bg-[#15233c]">
+                    <Card className="h-full cursor-pointer border border-border bg-white shadow-xs transition-all group-hover:-translate-y-1 group-hover:bg-background group-hover:shadow-md group-hover:border-primary/40 dark:border-border dark:bg-card dark:shadow-black/40 dark:group-hover:border-primary/40 dark:group-hover:bg-muted">
                         <CardHeader className="flex min-h-[52px] flex-row items-start justify-between gap-2 space-y-0 pb-2">
                             <CardTitle className="min-w-0 whitespace-normal text-sm font-medium leading-snug">Total Entries</CardTitle>
                             <Users className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -223,7 +225,7 @@ export default async function EventOverviewPage({ params }: { params: Promise<{ 
                 </Link>
 
                 <Link href={`/dashboard/events/${id}/approvals?status=pending`} className="group block h-full focus:outline-none">
-                    <Card className="h-full cursor-pointer border border-[#ded8cb] bg-white shadow-xs transition-all group-hover:-translate-y-1 group-hover:bg-[#faf8f3] group-hover:shadow-md group-hover:border-[#0d9488]/40 dark:border-[#1f2b40] dark:bg-[#111a2b] dark:shadow-black/40 dark:group-hover:border-[#2dd4b4]/40 dark:group-hover:bg-[#15233c]">
+                    <Card className="h-full cursor-pointer border border-border bg-white shadow-xs transition-all group-hover:-translate-y-1 group-hover:bg-background group-hover:shadow-md group-hover:border-primary/40 dark:border-border dark:bg-card dark:shadow-black/40 dark:group-hover:border-primary/40 dark:group-hover:bg-muted">
                         <CardHeader className="flex min-h-[52px] flex-row items-start justify-between gap-2 space-y-0 pb-2">
                             <CardTitle className="min-w-0 whitespace-normal text-sm font-medium leading-snug">Pending Approvals</CardTitle>
                             <UserCheck className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -236,7 +238,7 @@ export default async function EventOverviewPage({ params }: { params: Promise<{ 
                 </Link>
 
                 <Link href={`/dashboard/events/${id}/approvals?status=approved`} className="group block h-full focus:outline-none">
-                    <Card className="h-full cursor-pointer border border-[#ded8cb] bg-white shadow-xs transition-all group-hover:-translate-y-1 group-hover:bg-[#faf8f3] group-hover:shadow-md group-hover:border-[#0d9488]/40 dark:border-[#1f2b40] dark:bg-[#111a2b] dark:shadow-black/40 dark:group-hover:border-[#2dd4b4]/40 dark:group-hover:bg-[#15233c]">
+                    <Card className="h-full cursor-pointer border border-border bg-white shadow-xs transition-all group-hover:-translate-y-1 group-hover:bg-background group-hover:shadow-md group-hover:border-primary/40 dark:border-border dark:bg-card dark:shadow-black/40 dark:group-hover:border-primary/40 dark:group-hover:bg-muted">
                         <CardHeader className="flex min-h-[52px] flex-row items-start justify-between gap-2 space-y-0 pb-2">
                             <CardTitle className="min-w-0 whitespace-normal text-sm font-medium leading-snug">Approved Coaches</CardTitle>
                             <Shield className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -249,7 +251,7 @@ export default async function EventOverviewPage({ params }: { params: Promise<{ 
                 </Link>
 
                 <Link href={`/dashboard/events/${id}/entries?status=approved`} className="group block h-full focus:outline-none">
-                    <Card className="h-full cursor-pointer border border-[#ded8cb] bg-white shadow-xs transition-all group-hover:-translate-y-1 group-hover:bg-[#faf8f3] group-hover:shadow-md group-hover:border-[#0d9488]/40 dark:border-[#1f2b40] dark:bg-[#111a2b] dark:shadow-black/40 dark:group-hover:border-[#2dd4b4]/40 dark:group-hover:bg-[#15233c]">
+                    <Card className="h-full cursor-pointer border border-border bg-white shadow-xs transition-all group-hover:-translate-y-1 group-hover:bg-background group-hover:shadow-md group-hover:border-primary/40 dark:border-border dark:bg-card dark:shadow-black/40 dark:group-hover:border-primary/40 dark:group-hover:bg-muted">
                         <CardHeader className="flex min-h-[52px] flex-row items-start justify-between gap-2 space-y-0 pb-2">
                             <CardTitle className="min-w-0 whitespace-normal text-sm font-medium leading-snug">Approved Entries</CardTitle>
                             <Medal className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -262,7 +264,7 @@ export default async function EventOverviewPage({ params }: { params: Promise<{ 
                 </Link>
 
                 <Link href={`/dashboard/events/${id}/entries?status=rejected`} className="group block h-full focus:outline-none">
-                    <Card className="h-full cursor-pointer border border-[#ded8cb] bg-white shadow-xs transition-all group-hover:-translate-y-1 group-hover:bg-[#faf8f3] group-hover:shadow-md group-hover:border-[#0d9488]/40 dark:border-[#1f2b40] dark:bg-[#111a2b] dark:shadow-black/40 dark:group-hover:border-[#2dd4b4]/40 dark:group-hover:bg-[#15233c]">
+                    <Card className="h-full cursor-pointer border border-border bg-white shadow-xs transition-all group-hover:-translate-y-1 group-hover:bg-background group-hover:shadow-md group-hover:border-primary/40 dark:border-border dark:bg-card dark:shadow-black/40 dark:group-hover:border-primary/40 dark:group-hover:bg-muted">
                         <CardHeader className="flex min-h-[52px] flex-row items-start justify-between gap-2 space-y-0 pb-2">
                             <CardTitle className="min-w-0 whitespace-normal text-sm font-medium leading-snug">Rejected Entries</CardTitle>
                             <XCircle className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -277,8 +279,8 @@ export default async function EventOverviewPage({ params }: { params: Promise<{ 
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
                 {/* Main Stats Area - Clean & Minimalist */}
-                <Card className="col-span-4 border border-[#ded8cb] bg-white shadow-xs dark:border-[#1f2b40] dark:bg-[#111a2b]">
-                    <CardHeader className="pb-3 border-b border-[#ded8cb]/80 dark:border-[#1f2b40]">
+                <Card className="col-span-4 border border-border bg-white shadow-xs dark:border-border dark:bg-card">
+                    <CardHeader className="pb-3 border-b border-border/80 dark:border-border">
                         <CardTitle className="text-base font-bold text-foreground">Overview</CardTitle>
                         <p className="text-xs text-muted-foreground">
                             {totalEntries} {totalEntries === 1 ? 'athlete' : 'athletes'} registered across {distinctDojosCount} {distinctDojosCount === 1 ? 'dojo' : 'dojos'}
@@ -286,7 +288,7 @@ export default async function EventOverviewPage({ params }: { params: Promise<{ 
                     </CardHeader>
                     <CardContent className="pt-3 space-y-4">
                         {/* Disciplines Minimalist Strip */}
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pb-3 border-b border-[#ded8cb]/80 dark:border-[#1f2b40]">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pb-3 border-b border-border/80 dark:border-border">
                             <div>
                                 <div className="text-xs text-muted-foreground font-medium">Total Kata</div>
                                 <div className="text-2xl font-bold tracking-tight text-foreground mt-0.5">{totalKata}</div>
@@ -313,19 +315,19 @@ export default async function EventOverviewPage({ params }: { params: Promise<{ 
                                     Participation Mix
                                 </div>
                                 <div className="space-y-1.5 text-xs">
-                                    <div className="flex items-center justify-between py-1 border-b border-[#ded8cb]/40 dark:border-[#1f2b40]/40">
+                                    <div className="flex items-center justify-between py-1 border-b border-border/40">
                                         <span className="text-foreground">Both (Kata &amp; Kumite)</span>
                                         <span className="font-semibold text-foreground">
                                             {optedBoth} <span className="text-muted-foreground font-normal">({bothPct.toFixed(0)}%)</span>
                                         </span>
                                     </div>
-                                    <div className="flex items-center justify-between py-1 border-b border-[#ded8cb]/40 dark:border-[#1f2b40]/40">
+                                    <div className="flex items-center justify-between py-1 border-b border-border/40">
                                         <span className="text-foreground">Only Kata</span>
                                         <span className="font-semibold text-foreground">
                                             {optedOnlyKata} <span className="text-muted-foreground font-normal">({onlyKataPct.toFixed(0)}%)</span>
                                         </span>
                                     </div>
-                                    <div className="flex items-center justify-between py-1 border-b border-[#ded8cb]/40 dark:border-[#1f2b40]/40">
+                                    <div className="flex items-center justify-between py-1 border-b border-border/40">
                                         <span className="text-foreground">Only Kumite</span>
                                         <span className="font-semibold text-foreground">
                                             {optedOnlyKumite} <span className="text-muted-foreground font-normal">({onlyKumitePct.toFixed(0)}%)</span>
@@ -340,13 +342,13 @@ export default async function EventOverviewPage({ params }: { params: Promise<{ 
                                     Demographics
                                 </div>
                                 <div className="space-y-1.5 text-xs">
-                                    <div className="flex items-center justify-between py-1 border-b border-[#ded8cb]/40 dark:border-[#1f2b40]/40">
+                                    <div className="flex items-center justify-between py-1 border-b border-border/40">
                                         <span className="text-foreground">Male</span>
                                         <span className="font-semibold text-foreground">
                                             {genderStats.male} <span className="text-muted-foreground font-normal">({malePct.toFixed(0)}%)</span>
                                         </span>
                                     </div>
-                                    <div className="flex items-center justify-between py-1 border-b border-[#ded8cb]/40 dark:border-[#1f2b40]/40">
+                                    <div className="flex items-center justify-between py-1 border-b border-border/40">
                                         <span className="text-foreground">Female</span>
                                         <span className="font-semibold text-foreground">
                                             {genderStats.female} <span className="text-muted-foreground font-normal">({femalePct.toFixed(0)}%)</span>
@@ -357,7 +359,7 @@ export default async function EventOverviewPage({ params }: { params: Promise<{ 
                                 {/* Clean single subtle proportion bar */}
                                 {totalEntries > 0 && (
                                     <div className="pt-2">
-                                        <div className="h-1.5 w-full rounded-full bg-[#ded8cb]/60 dark:bg-[#1f2b40] overflow-hidden flex">
+                                        <div className="h-1.5 w-full rounded-full bg-border/60 dark:bg-border overflow-hidden flex">
                                             <div
                                                 className="h-full bg-blue-500/80 transition-all"
                                                 style={{ width: `${malePct}%` }}
@@ -377,8 +379,8 @@ export default async function EventOverviewPage({ params }: { params: Promise<{ 
                 </Card>
 
                 {/* Top Dojos - Clean & Minimalist */}
-                <Card className="col-span-3 border border-[#ded8cb] bg-white shadow-xs dark:border-[#1f2b40] dark:bg-[#111a2b]">
-                    <CardHeader className="pb-3 border-b border-[#ded8cb]/80 dark:border-[#1f2b40]">
+                <Card className="col-span-3 border border-border bg-white shadow-xs dark:border-border dark:bg-card">
+                    <CardHeader className="pb-3 border-b border-border/80 dark:border-border">
                         <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
                             <Building2 className="h-4 w-4 text-muted-foreground" /> Top Dojos
                         </CardTitle>
@@ -389,7 +391,7 @@ export default async function EventOverviewPage({ params }: { params: Promise<{ 
                     <CardContent className="pt-3">
                         <div className="space-y-2">
                             {topDojos.length > 0 ? topDojos.map(([name, count], i) => (
-                                <div key={name} className="flex items-center justify-between text-xs py-1 border-b border-[#ded8cb]/40 dark:border-[#1f2b40]/40 last:border-0">
+                                <div key={name} className="flex items-center justify-between text-xs py-1 border-b border-border/40 last:border-0">
                                     <div className="flex items-center gap-2 min-w-0">
                                         <span className="text-muted-foreground font-mono text-[11px] w-4">{i + 1}.</span>
                                         <span className="font-medium text-foreground truncate">{name}</span>

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { SafeAvatar } from '@/components/ui/safe-avatar'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -16,6 +17,7 @@ type Collaborator = {
   profiles: {
     email: string
     full_name: string | null
+    avatar_url?: string | null
   }
 }
 
@@ -127,6 +129,7 @@ export function EventSharingSection({ event, collaborators = [] }: EventSharingS
             ) : (
               collaborators.map((c) => (
                 <div key={c.user_id} className="flex items-center justify-between gap-2 rounded-md border p-3 bg-background">
+                  <SafeAvatar src={c.profiles?.avatar_url} name={c.profiles?.full_name || c.profiles?.email} size={36} enlargeable subtitle={c.profiles?.email} />
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium truncate">{c.profiles?.full_name || 'Unknown User'}</p>
                     <p className="text-xs text-muted-foreground truncate">{c.profiles?.email}</p>

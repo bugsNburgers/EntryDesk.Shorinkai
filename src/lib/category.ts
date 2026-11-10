@@ -9,7 +9,7 @@ export interface StudentProfile {
     date_of_birth: string | null
     gender: string
     rank: string | null
-    weight: number | null
+    weight: number | string | null
 }
 
 export interface CalculatedCategory {
@@ -41,20 +41,44 @@ function getBeltLevel(rank: string | null): number {
     return -1
 }
 
-/**
- * Calculates age on tournament day (today).
- * Indian national championships typically use Jan 1 of tournament year,
- * but we default to "today" as a reasonable estimate.
- */
-function calcAge(dob: string): number {
-    const birth = new Date(dob)
-    const today = new Date()
-    let age = today.getFullYear() - birth.getFullYear()
-    const m = today.getMonth() - birth.getMonth()
-    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
-        age--
+export type AgeCutoffRule = 'tournament_day' | 'jan_1'
+
+function parseIsoDate(value: string | Date): { y: number; m: number; d: number } | null {
+    if (value instanceof Date) {
+        if (Number.isNaN(value.getTime())) return null
+        return { y: value.getUTCFullYear(), m: value.getUTCMonth() + 1, d: value.getUTCDate() }
     }
+    const match = String(value).trim().match(/^(\d{4})-(\d{2})-(\d{2})/)
+    if (!match) return null
+    return { y: Number(match[1]), m: Number(match[2]), d: Number(match[3]) }
+}
+
+/**
+ * The date an athlete's age is measured on for an event.
+ * `tournament_day` → the event start date; `jan_1` → 1 January of the start year.
+ * Returns an ISO date (YYYY-MM-DD) or null when the start date is unusable.
+ */
+export function ageReferenceDate(startDate: string | Date | null | undefined, rule: string | null | undefined): string | null {
+    if (!startDate) return null
+    const p = parseIsoDate(startDate)
+    if (!p) return null
+    const pad = (n: number) => String(n).padStart(2, '0')
+    if (rule === 'jan_1') return `${p.y}-01-01`
+    return `${p.y}-${pad(p.m)}-${pad(p.d)}`
+}
+
+/** Whole years between `dob` and `on` (both ISO dates or Dates, compared as UTC calendar dates). */
+export function ageOn(dob: string | Date, on: string | Date): number | null {
+    const b = parseIsoDate(dob)
+    const r = parseIsoDate(on)
+    if (!b || !r) return null
+    let age = r.y - b.y
+    if (r.m < b.m || (r.m === b.m && r.d < b.d)) age--
     return age
+}
+
+function todayIso(): string {
+    return new Date().toISOString().slice(0, 10)
 }
 
 /** Maps age to standard WKF/national karate age groups */
@@ -110,24 +134,31 @@ function getWeightClass(weight: number, age: number, gender: string): string {
     }
 }
 
-export function calculateCategory(student: StudentProfile): CalculatedCategory {
-    const genderLabel = student.gender.toLowerCase() === 'male' ? 'Boys' : 'Girls'
+export interface CategoryOptions {
+    /** ISO date the age is measured on (see `ageReferenceDate`). Defaults to today. */
+    referenceDate?: string | null
+}
+
+export function calculateCategory(student: StudentProfile, options: CategoryOptions = {}): CalculatedCategory {
+    const g = (student.gender || '').toLowerCase()
+    const genderLabel = g === 'male' ? 'Boys' : g === 'female' ? 'Girls' : 'Open'
 
     let ageYears: number | null = null
     let ageGroup: string | null = null
 
     if (student.date_of_birth) {
-        try {
-            ageYears = calcAge(student.date_of_birth)
+        ageYears = ageOn(student.date_of_birth, options.referenceDate || todayIso())
+        if (ageYears !== null && ageYears >= 0) {
             ageGroup = getAgeGroup(ageYears)
-        } catch {
-            // malformed DOB
+        } else {
+            ageYears = null // malformed or future DOB
         }
     }
 
     let weightClass: string | null = null
-    if (student.weight && ageYears !== null) {
-        weightClass = getWeightClass(student.weight, ageYears, student.gender)
+    const weight = student.weight == null ? NaN : Number(student.weight)
+    if (Number.isFinite(weight) && weight > 0 && ageYears !== null) {
+        weightClass = getWeightClass(weight, ageYears, student.gender || '')
     }
 
     const parts = [ageGroup, genderLabel, weightClass].filter(Boolean)

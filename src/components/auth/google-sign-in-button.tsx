@@ -143,7 +143,7 @@ export function GoogleSignInButton({ clientId, onError }: GoogleSignInButtonProp
                 <button
                     type="button"
                     onClick={handleFallbackClick}
-                    className="w-full max-w-[380px] h-[44px] rounded-md border border-[#ded8cb] dark:border-white/[0.15] bg-white dark:bg-[#111a2b] hover:bg-[#f8f6f0] dark:hover:bg-[#16233a] flex items-center justify-center gap-3 px-4 text-[14px] font-medium text-[#3c4043] dark:text-[#e8eef5] shadow-2xs transition-colors"
+                    className="w-full max-w-[380px] h-[44px] rounded-md border border-border dark:border-white/[0.15] bg-card hover:bg-[#f8f6f0] dark:hover:bg-muted flex items-center justify-center gap-3 px-4 text-[14px] font-medium text-[#3c4043] dark:text-foreground shadow-2xs transition-colors"
                 >
                     <svg width="18" height="18" viewBox="0 0 18 18">
                         <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.616z"/>

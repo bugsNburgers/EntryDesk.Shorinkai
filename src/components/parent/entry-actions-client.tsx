@@ -16,7 +16,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { AlertCircle, Ban, Edit3, Loader2, ArrowRight } from 'lucide-react'
-import { withdrawParentEntry } from '@/app/parent/entry-actions'
+import { withdrawParentEntry } from '@/app/athlete/entry-actions'
 
 interface EntryActionsClientProps {
     entryId: string

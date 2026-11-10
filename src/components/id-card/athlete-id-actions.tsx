@@ -25,7 +25,7 @@ export function AthleteIdActions({
     return (
         <div className="flex items-center gap-2 flex-wrap">
             {/* View Pass Button opens full page directly — No Modal */}
-            <Link href={`/parent/entries/${entryId}/id-card`}>
+            <Link href={`/athlete/entries/${entryId}/id-card`}>
                 <Button
                     size={size}
                     className="gap-2 rounded-xl font-bold bg-[#3fd8c3] hover:bg-[#25c4a5] text-[#04231e] shadow-sm transition-all"

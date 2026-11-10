@@ -16,7 +16,8 @@ const PROTECTED_PREFIXES = ['/dashboard', '/parent', '/athlete']
 export function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl
 
-    // 1. Immediately redirect any legacy /parent routes to clean /athlete routes
+    // 1. Legacy bookmarks: the parent portal used to live at /parent/* (and /athlete/children/*).
+    //    The code now lives in src/app/athlete, so these are plain redirects (no rewrites).
     if (pathname === '/parent' || pathname.startsWith('/parent/')) {
         let newPath = pathname.replace(/^\/parent\/children\/new/, '/athlete/new')
         newPath = newPath.replace(/^\/parent\/children\//, '/athlete/')

@@ -63,9 +63,9 @@ export default async function EventPrintPage({ params }: PrintPageProps) {
             COALESCE(c.name, e.category_snapshot->>'displayName') AS category_name,
             e.qr_token,
             s.id AS student_id,
-            s.name AS student_name,
-            s.gender AS student_gender,
-            s.rank AS student_rank,
+            COALESCE(e.snap_name, s.name) AS student_name,
+            COALESCE(e.snap_gender, s.gender) AS student_gender,
+            COALESCE(e.snap_rank, s.rank) AS student_rank,
             s.photo_url AS student_photo,
             d.name AS dojo_name,
             u.full_name AS coach_name
@@ -81,7 +81,7 @@ export default async function EventPrintPage({ params }: PrintPageProps) {
                   ? sql`AND (e.coach_id = ${user.id} OR d.coach_id = ${user.id})`
                   : sql``
           }
-        ORDER BY e.chest_no ASC NULLS LAST, s.name ASC
+        ORDER BY e.chest_no ASC NULLS LAST, COALESCE(e.snap_name, s.name) ASC
     `
 
     // Generate missing tokens & prepare QR data URLs

@@ -115,6 +115,9 @@ export function CompulsoryProfilePhotoUpload({
                         Welcome, <span className="font-semibold text-foreground">{fullName}</span> ({roleLabel}). 
                         Before continuing to your dashboard, please upload a clear, official profile photo.
                     </p>
+                    <p className="text-sm font-medium text-foreground max-w-lg mx-auto">
+                        Organisers see this photo when approving you, so they know who they are letting in.
+                    </p>
                 </div>
 
                 {error && (

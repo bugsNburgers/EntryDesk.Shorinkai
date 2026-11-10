@@ -6,7 +6,7 @@
 // ============================================================================
 
 import { useState, useRef, useEffect } from 'react'
-import Image from 'next/image'
+import { SafeAvatar } from '@/components/ui/safe-avatar'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { LogOut, User, ChevronDown } from 'lucide-react'
@@ -45,42 +45,36 @@ export function ParentPortalNav({ userEmail, userName, userAvatar }: ParentPorta
         <div ref={ref} className="relative">
             <button
                 onClick={() => setOpen((o) => !o)}
-                className="flex items-center gap-1.5 rounded-xl px-2 py-1.5 text-sm hover:bg-[#ded8cb]/40 text-[#1c1917] dark:text-[#e8eef5] dark:hover:bg-[#16233a] transition-colors"
+                className="flex items-center gap-1.5 rounded-xl px-2 py-1.5 text-sm hover:bg-border/40 text-foreground dark:hover:bg-muted transition-colors"
                 aria-expanded={open}
                 aria-haspopup="true"
             >
                 {userAvatar ? (
-                    <Image
-                        src={userAvatar}
-                        alt={displayName}
-                        width={26}
-                        height={26}
-                        className="rounded-full object-cover"
-                    />
+                    <SafeAvatar src={userAvatar} name={displayName} size={26} />
                 ) : (
-                    <div className="flex h-[26px] w-[26px] items-center justify-center rounded-full bg-emerald-500/15 border border-emerald-500/20 text-xs font-bold text-emerald-700 dark:bg-[#2dd4b4]/20 dark:border-transparent dark:text-[#2dd4b4]">
+                    <div className="flex h-[26px] w-[26px] items-center justify-center rounded-full bg-emerald-500/15 border border-emerald-500/20 text-xs font-bold text-emerald-700 dark:bg-primary/20 dark:border-transparent dark:text-primary">
                         {initials}
                     </div>
                 )}
-                <span className="hidden sm:inline-block text-xs font-semibold text-[#1c1917] dark:text-[#e8eef5] max-w-[140px] truncate">
+                <span className="hidden sm:inline-block text-xs font-semibold text-foreground max-w-[140px] truncate">
                     {displayName}
                 </span>
-                <ChevronDown className="h-3.5 w-3.5 text-[#57534e] dark:text-[#8a99ab]" />
+                <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
             </button>
 
             {open && (
-                <div className="absolute right-0 top-full mt-1.5 w-52 rounded-xl border border-[#ded8cb] bg-white text-[#1c1917] dark:border-[#1f2b40] dark:bg-[#111a2b] dark:text-[#e8eef5] shadow-xl overflow-hidden z-50">
-                    <div className="px-3 py-2.5 border-b border-[#ded8cb] dark:border-[#1f2b40]">
-                        <p className="text-xs font-semibold truncate text-[#1c1917] dark:text-[#e8eef5]">{displayName}</p>
-                        <p className="text-[11px] text-[#57534e] dark:text-[#8a99ab] truncate">{userEmail}</p>
+                <div className="absolute right-0 top-full mt-1.5 w-52 rounded-xl border border-border bg-white text-foreground dark:border-border dark:bg-card dark:text-foreground shadow-xl overflow-hidden z-50">
+                    <div className="px-3 py-2.5 border-b border-border">
+                        <p className="text-xs font-semibold truncate text-foreground">{displayName}</p>
+                        <p className="text-[11px] text-muted-foreground truncate">{userEmail}</p>
                     </div>
 
                     <Link
                         href="/athlete"
                         onClick={() => setOpen(false)}
-                        className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#1c1917] hover:bg-[#f7f4ec] dark:text-[#e8eef5] dark:hover:bg-[#16233a] transition-colors"
+                        className="flex items-center gap-2.5 px-3 py-2 text-sm text-foreground hover:bg-background dark:text-foreground dark:hover:bg-muted transition-colors"
                     >
-                        <User className="h-4 w-4 text-[#57534e] dark:text-[#8a99ab]" />
+                        <User className="h-4 w-4 text-muted-foreground" />
                         My Profile(s)
                     </Link>
 

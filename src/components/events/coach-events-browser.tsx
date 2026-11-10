@@ -112,7 +112,7 @@ export async function CoachEventsBrowser({ user, searchParams }: CoachEventsBrow
                                             </div>
                                             <div className="min-w-0">
                                                 <div className="flex items-center gap-2 flex-wrap">
-                                                    <span className="text-sm font-semibold text-[#1c1917] dark:text-[#f8fafc] group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors truncate">
+                                                    <span className="text-sm font-semibold text-foreground group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors truncate">
                                                         {event.title}
                                                     </span>
                                                     <Badge className="capitalize text-[10px] px-1.5 py-0" variant="secondary">
@@ -125,7 +125,7 @@ export async function CoachEventsBrowser({ user, searchParams }: CoachEventsBrow
                                                 </div>
                                                 <div className="flex items-center gap-2 text-[11px] text-muted-foreground mt-0.5">
                                                     <span>
-                                                        {new Date(event.start_date).toLocaleDateString()} – {new Date(event.end_date).toLocaleDateString()}
+                                                        {new Date(event.start_date).toLocaleDateString('en-IN', { timeZone: 'UTC' })} – {new Date(event.end_date).toLocaleDateString('en-IN', { timeZone: 'UTC' })}
                                                     </span>
                                                     {event.location && (
                                                         <>
@@ -140,7 +140,7 @@ export async function CoachEventsBrowser({ user, searchParams }: CoachEventsBrow
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-2 shrink-0">
-                                            <span className="h-8 px-3.5 rounded-xl text-xs font-semibold bg-[#0d9488] group-hover:bg-[#0f766e] text-white dark:bg-[#2dd4b4] dark:hover:bg-[#25c4a5] dark:text-[#04231e] inline-flex items-center gap-1.5 shadow-2xs transition">
+                                            <span className="h-8 px-3.5 rounded-xl text-xs font-semibold bg-primary group-hover:bg-primary/90 text-white dark:bg-primary dark:hover:bg-primary/90 dark:text-primary-foreground inline-flex items-center gap-1.5 shadow-2xs transition">
                                                 <span>Entries</span>
                                                 <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
                                             </span>
@@ -185,7 +185,7 @@ export async function CoachEventsBrowser({ user, searchParams }: CoachEventsBrow
                                             </div>
                                             <div className="min-w-0">
                                                 <div className="flex items-center gap-2 flex-wrap">
-                                                    <span className="text-sm font-semibold text-[#1c1917] dark:text-[#f8fafc] truncate">
+                                                    <span className="text-sm font-semibold text-foreground truncate">
                                                         {event.title}
                                                     </span>
                                                     <Badge className="capitalize text-[10px] px-1.5 py-0" variant="secondary">
@@ -208,7 +208,7 @@ export async function CoachEventsBrowser({ user, searchParams }: CoachEventsBrow
                                                 </div>
                                                 <div className="flex items-center gap-2 text-[11px] text-muted-foreground mt-0.5">
                                                     <span>
-                                                        {new Date(event.start_date).toLocaleDateString()} – {new Date(event.end_date).toLocaleDateString()}
+                                                        {new Date(event.start_date).toLocaleDateString('en-IN', { timeZone: 'UTC' })} – {new Date(event.end_date).toLocaleDateString('en-IN', { timeZone: 'UTC' })}
                                                     </span>
                                                     {event.location && (
                                                         <>
@@ -264,7 +264,7 @@ export async function CoachEventsBrowser({ user, searchParams }: CoachEventsBrow
                                                     </div>
                                                     <div className="min-w-0">
                                                         <div className="flex items-center gap-2 flex-wrap">
-                                                            <span className="text-sm font-semibold text-[#1c1917] dark:text-[#f8fafc] group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors truncate">
+                                                            <span className="text-sm font-semibold text-foreground group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors truncate">
                                                                 {event.title}
                                                             </span>
                                                             <Badge className="capitalize text-[10px] px-1.5 py-0" variant="secondary">
@@ -277,7 +277,7 @@ export async function CoachEventsBrowser({ user, searchParams }: CoachEventsBrow
                                                         </div>
                                                         <div className="flex items-center gap-2 text-[11px] text-muted-foreground mt-0.5">
                                                             <span>
-                                                                {new Date(event.start_date).toLocaleDateString()} – {new Date(event.end_date).toLocaleDateString()}
+                                                                {new Date(event.start_date).toLocaleDateString('en-IN', { timeZone: 'UTC' })} – {new Date(event.end_date).toLocaleDateString('en-IN', { timeZone: 'UTC' })}
                                                             </span>
                                                             {event.location && (
                                                                 <>
@@ -292,7 +292,7 @@ export async function CoachEventsBrowser({ user, searchParams }: CoachEventsBrow
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-2 shrink-0">
-                                                    <span className="h-8 px-3 rounded-xl text-xs font-semibold border border-[#ded8cb] dark:border-[#2a3b57] text-[#57534e] dark:text-[#8a99ab] group-hover:border-[#0d9488] group-hover:text-[#0d9488] dark:group-hover:border-[#2dd4b4] dark:group-hover:text-[#2dd4b4] inline-flex items-center gap-1 shadow-2xs transition">
+                                                    <span className="h-8 px-3 rounded-xl text-xs font-semibold border border-border text-muted-foreground group-hover:border-primary group-hover:text-primary dark:group-hover:border-primary dark:group-hover:text-primary inline-flex items-center gap-1 shadow-2xs transition">
                                                         <span>Entries</span>
                                                         <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
                                                     </span>
@@ -312,7 +312,7 @@ export async function CoachEventsBrowser({ user, searchParams }: CoachEventsBrow
                                                 </div>
                                                 <div className="min-w-0">
                                                     <div className="flex items-center gap-2 flex-wrap">
-                                                        <span className="text-sm font-semibold text-[#1c1917] dark:text-[#f8fafc] truncate">
+                                                        <span className="text-sm font-semibold text-foreground truncate">
                                                             {event.title}
                                                         </span>
                                                         <Badge className="capitalize text-[10px] px-1.5 py-0" variant="secondary">
@@ -321,7 +321,7 @@ export async function CoachEventsBrowser({ user, searchParams }: CoachEventsBrow
                                                     </div>
                                                     <div className="flex items-center gap-2 text-[11px] text-muted-foreground mt-0.5">
                                                         <span>
-                                                            {new Date(event.start_date).toLocaleDateString()} – {new Date(event.end_date).toLocaleDateString()}
+                                                            {new Date(event.start_date).toLocaleDateString('en-IN', { timeZone: 'UTC' })} – {new Date(event.end_date).toLocaleDateString('en-IN', { timeZone: 'UTC' })}
                                                         </span>
                                                         {event.location && (
                                                             <>

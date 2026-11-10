@@ -33,7 +33,7 @@ export async function audit(event: AuditEvent): Promise<void> {
             ${event.action},
             ${event.entityType},
             ${event.entityId ?? null},
-            ${event.details ? JSON.stringify(event.details) : null},
+            ${event.details ? sql.json(event.details as Parameters<typeof sql.json>[0]) : null},
             ${event.ipAddress ?? null}
         )
     `
@@ -82,6 +82,8 @@ export const AUDIT_ACTIONS = {
     ENTRY_APPROVED: 'entry.approved',
     ENTRY_REJECTED: 'entry.rejected',
     ENTRY_WITHDRAWN: 'entry.withdrawn',
+    ENTRY_SNAPSHOT_CORRECTED: 'entry.snapshot_corrected',
+    ENTRY_CHEST_NO_CHANGED: 'entry.chest_no_changed',
     ENTRY_QR_TOKEN_GENERATED: 'entry.qr_token_generated',
     ENTRY_QR_TOKEN_REVOKED: 'entry.qr_token_revoked',
 

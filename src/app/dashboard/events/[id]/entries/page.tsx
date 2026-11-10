@@ -92,11 +92,11 @@ export default async function EventEntriesPage({
                     s.phone AS parent_phone,
                     json_build_object(
                         'id', s.id, 
-                        'name', s.name, 
-                        'gender', s.gender, 
-                        'rank', s.rank, 
-                        'weight', s.weight, 
-                        'date_of_birth', s.date_of_birth, 
+                        'name', CASE WHEN e.status = 'draft' THEN s.name ELSE COALESCE(e.snap_name, s.name) END, 
+                        'gender', CASE WHEN e.status = 'draft' THEN s.gender ELSE COALESCE(e.snap_gender, s.gender) END, 
+                        'rank', CASE WHEN e.status = 'draft' THEN s.rank ELSE COALESCE(e.snap_rank, s.rank) END, 
+                        'weight', CASE WHEN e.status = 'draft' THEN s.weight ELSE COALESCE(e.declared_weight_kg, s.weight) END, 
+                        'date_of_birth', CASE WHEN e.status = 'draft' THEN s.date_of_birth ELSE COALESCE(e.snap_dob, s.date_of_birth) END, 
                         'dojo_id', s.dojo_id, 
                         'dojo_name', d.name,
                         'registration_no', s.registration_no,
@@ -212,6 +212,9 @@ export default async function EventEntriesPage({
                 student_name: string
                 student_rank: string | null
                 student_weight: number | null
+                student_gender: string | null
+                student_dob: string | null
+                student_school_or_city: string | null
                 student_registration_no: string | null
                 student_photo: string | null
                 dojo_name: string | null
@@ -219,6 +222,7 @@ export default async function EventEntriesPage({
                 event_day_name: string | null
                 coach_name: string | null
                 coach_email: string
+                coach_avatar: string | null
             }[]
         >`
             SELECT 
@@ -227,16 +231,20 @@ export default async function EventEntriesPage({
                 e.status,
                 e.participation_type,
                 e.chest_no,
-                s.name AS student_name,
-                s.rank AS student_rank,
-                s.weight AS student_weight,
+                COALESCE(e.snap_name, s.name) AS student_name,
+                COALESCE(e.snap_rank, s.rank) AS student_rank,
+                COALESCE(e.declared_weight_kg, s.weight) AS student_weight,
+                COALESCE(e.snap_gender, s.gender) AS student_gender,
+                COALESCE(e.snap_dob, s.date_of_birth)::text AS student_dob,
+                COALESCE(e.snap_school_or_city, s.school_or_city) AS student_school_or_city,
                 s.registration_no AS student_registration_no,
                 s.photo_url AS student_photo,
                 d.name AS dojo_name,
-                c.name AS category_name,
+                COALESCE(c.name, e.category_snapshot->>'displayName') AS category_name,
                 ed.name AS event_day_name,
                 p.full_name AS coach_name,
-                p.email AS coach_email
+                p.email AS coach_email,
+                p.avatar_url AS coach_avatar
             FROM entries e
             JOIN events ev ON e.event_id = ev.id
             JOIN students s ON e.student_id = s.id
@@ -246,7 +254,7 @@ export default async function EventEntriesPage({
             JOIN users p ON e.coach_id = p.id
             WHERE e.event_id = ${id}
               AND e.status != 'draft'
-              ${q ? sql`AND s.name ILIKE ${'%' + q + '%'}` : sql``}
+              ${q ? sql`AND COALESCE(e.snap_name, s.name) ILIKE ${'%' + q + '%'}` : sql``}
               ${status && status !== 'all' ? sql`AND e.status = ${status}` : sql``}
               ${coach && coach !== 'all' ? sql`AND e.coach_id = ${coach}` : sql``}
               ${day && day !== 'all' ? sql`AND e.event_day_id = ${day}` : sql``}
@@ -259,7 +267,7 @@ export default async function EventEntriesPage({
             JOIN students s ON e.student_id = s.id
             WHERE e.event_id = ${id}
               AND e.status != 'draft'
-              ${q ? sql`AND s.name ILIKE ${'%' + q + '%'}` : sql``}
+              ${q ? sql`AND COALESCE(e.snap_name, s.name) ILIKE ${'%' + q + '%'}` : sql``}
               ${status && status !== 'all' ? sql`AND e.status = ${status}` : sql``}
               ${coach && coach !== 'all' ? sql`AND e.coach_id = ${coach}` : sql``}
               ${day && day !== 'all' ? sql`AND e.event_day_id = ${day}` : sql``}
@@ -293,6 +301,9 @@ export default async function EventEntriesPage({
             name: e.student_name,
             rank: e.student_rank,
             weight: e.student_weight,
+            gender: e.student_gender,
+            date_of_birth: e.student_dob,
+            school_or_city: e.student_school_or_city,
             registration_no: e.student_registration_no,
             photo_url: e.student_photo,
             dojos: e.dojo_name ? { name: e.dojo_name } : null,
@@ -302,6 +313,7 @@ export default async function EventEntriesPage({
         profiles: {
             full_name: e.coach_name,
             email: e.coach_email,
+            avatar_url: e.coach_avatar,
         },
     }))
 

@@ -5,6 +5,9 @@ import { fileURLToPath } from "url";
 const appRoot = dirname(fileURLToPath(import.meta.url));
 
 const nextConfig: NextConfig = {
+  // E2E runs its own dev server with a separate build dir so it never fights a normal
+  // `next dev` over the .next lock (see playwright.config.ts).
+  ...(process.env.NEXT_DIST_DIR ? { distDir: process.env.NEXT_DIST_DIR } : {}),
   turbopack: {
     root: appRoot,
   },
@@ -32,64 +35,8 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  async redirects() {
-    return [
-      {
-        source: '/parent/children/new',
-        destination: '/athlete/new',
-        permanent: false,
-      },
-      {
-        source: '/parent/children/:id/register',
-        destination: '/athlete/:id/register',
-        permanent: false,
-      },
-      {
-        source: '/parent/children/:id',
-        destination: '/athlete/:id',
-        permanent: false,
-      },
-      {
-        source: '/parent/entries/:path*',
-        destination: '/athlete/entries/:path*',
-        permanent: false,
-      },
-      {
-        source: '/parent',
-        destination: '/athlete',
-        permanent: false,
-      },
-      {
-        source: '/parent/:path*',
-        destination: '/athlete/:path*',
-        permanent: false,
-      },
-    ]
-  },
-  async rewrites() {
-    return [
-      {
-        source: '/athlete',
-        destination: '/parent',
-      },
-      {
-        source: '/athlete/new',
-        destination: '/parent/children/new',
-      },
-      {
-        source: '/athlete/:id/register',
-        destination: '/parent/children/:id/register',
-      },
-      {
-        source: '/athlete/entries/:path*',
-        destination: '/parent/entries/:path*',
-      },
-      {
-        source: '/athlete/:id',
-        destination: '/parent/children/:id',
-      },
-    ]
-  },
+  // Parent portal lives in src/app/athlete (URL = folder). Legacy /parent/* and
+  // /athlete/children/* bookmarks are redirected in src/proxy.ts.
 };
 
 export default nextConfig;

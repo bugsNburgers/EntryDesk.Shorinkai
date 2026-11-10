@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { requireRole } from '@/lib/auth/require-role'
 import sql from '@/lib/db'
-import { calculateCategory } from '@/lib/category'
+import { categoryForEvent, jsonb, refreshCategorySnapshots } from '@/lib/entries/snapshot'
 import { auditAsync, AUDIT_ACTIONS } from '@/lib/audit'
 import { randomUUID } from 'crypto'
 import { normalizeDobToIso } from '@/lib/date'
@@ -139,13 +139,16 @@ export async function submitEntries(eventId: string) {
     // Strict Security: Registration must be open
     await assertRegistrationOpen(eventId)
 
-    await sql`
+    // Draft -> submitted: the snapshot trigger (migration 003) re-takes the athlete snapshot.
+    const sent = await sql<{ id: string }[]>`
         UPDATE entries
         SET status = 'submitted', updated_at = NOW()
         WHERE event_id = ${eventId}
           AND coach_id = ${user.id}
           AND status = 'draft'
+        RETURNING id
     `
+    await refreshCategorySnapshots(sent.map((r) => r.id))
 
     revalidatePath('/dashboard/entries')
     revalidatePath(`/dashboard/entries/${eventId}`)
@@ -265,6 +268,7 @@ export async function bulkSubmitEntries(entryIds: string[]) {
         }
     }
 
+    // Draft -> submitted: the snapshot trigger (migration 003) re-takes the athlete snapshot.
     await sql`
         UPDATE entries
         SET status = 'submitted', updated_at = NOW()
@@ -272,6 +276,7 @@ export async function bulkSubmitEntries(entryIds: string[]) {
           AND coach_id = ${user.id}
           AND status = 'draft'
     `
+    await refreshCategorySnapshots(validEntryIds)
 
     revalidatePath('/dashboard/entries')
     return { success: true, submitted: validEntryIds.length, ignored: invalidEntries.length }
@@ -541,13 +546,14 @@ export async function coachAddManualStudentAndEntry(input: CoachAddManualStudent
         throw new Error(`This student already has an active entry (${existingEntry[0].status}) for this event.`)
     }
 
-    // 4. Calculate category
-    const category = calculateCategory({
-        date_of_birth: finalDob,
-        gender: finalGender,
-        rank: finalRank,
-        weight: finalWeight,
-    })
+    // 4. Calculate category (age measured on the event's reference date)
+    const [eventForAge] = await sql<{ start_date: string | Date; age_cutoff_rule: string | null }[]>`
+        SELECT start_date, age_cutoff_rule FROM events WHERE id = ${input.eventId} LIMIT 1
+    `
+    const category = categoryForEvent(
+        { name: finalName, gender: finalGender, date_of_birth: finalDob, rank: finalRank, weight: finalWeight },
+        eventForAge ?? { start_date: null, age_cutoff_rule: null }
+    )
 
     // Try finding matching category record in categories table if it exists
     const matchingCategories = await sql<{ id: string }[]>`
@@ -571,7 +577,7 @@ export async function coachAddManualStudentAndEntry(input: CoachAddManualStudent
                 event_day_id = ${input.eventDayId || null},
                 participation_type = ${input.participationType || null},
                 declared_weight_kg = ${finalWeight},
-                category_snapshot = ${JSON.stringify(category)},
+                category_snapshot = ${jsonb(category)},
                 status = ${targetStatus},
                 qr_token = COALESCE(qr_token, ${qrToken}),
                 updated_at = NOW()
@@ -601,7 +607,7 @@ export async function coachAddManualStudentAndEntry(input: CoachAddManualStudent
                 ${input.eventDayId || null},
                 ${input.participationType || null},
                 ${finalWeight},
-                ${JSON.stringify(category)},
+                ${jsonb(category)},
                 ${targetStatus},
                 ${user.id},
                 ${qrToken}

@@ -1,5 +1,6 @@
 'use client'
 
+import { EntrySnapshotDialog } from '@/components/events/entry-snapshot-dialog'
 import React, { useState, useTransition } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -47,6 +48,8 @@ export interface ParentEntryRow {
     student_weight: number | null
     student_photo: string | null
     student_gender: string
+    student_dob?: string | null
+    student_school_or_city?: string | null
     category_name: string | null
     participation_type: string | null
     declared_weight_kg: number | null
@@ -451,6 +454,21 @@ export function ParentEntriesTable({ entries }: ParentEntriesTableProps) {
 
                                         {/* Action buttons */}
                                         <td className="p-3 sm:p-4 align-middle text-right">
+                                            {['pending_coach', 'correction_needed', 'submitted'].includes(entry.status) && (
+                                                <span className="mr-1 inline-flex align-middle">
+                                                    <EntrySnapshotDialog
+                                                        entryId={entry.id}
+                                                        initial={{
+                                                            name: entry.student_name,
+                                                            gender: entry.student_gender,
+                                                            date_of_birth: entry.student_dob ?? null,
+                                                            rank: entry.student_rank,
+                                                            weight: entry.declared_weight_kg ?? entry.student_weight,
+                                                            school_or_city: entry.student_school_or_city ?? null,
+                                                        }}
+                                                    />
+                                                </span>
+                                            )}
                                             {isPendingCoach ? (
                                                 <div className="inline-flex items-center gap-1.5">
                                                     <Button

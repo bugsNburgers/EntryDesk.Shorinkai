@@ -10,6 +10,8 @@ import { Loader2 } from "lucide-react"
 import { toast } from "sonner" // Assuming we have sonner or use alert for now
 import { getStatusLabel, getStatusBgClass } from "@/lib/status"
 import { AthletePfp } from "@/components/ui/enlarged-pfp-dialog"
+import { EntrySnapshotDialog } from "@/components/events/entry-snapshot-dialog"
+import { SafeAvatar } from "@/components/ui/safe-avatar"
 
 interface EntriesTableProps {
     entries: any[]
@@ -140,7 +142,10 @@ export function EntriesTable({ entries }: EntriesTableProps) {
                                                 <span className="truncate">{entry.students?.name}</span>
                                                 <span className="text-[10px] font-mono text-muted-foreground">{entry.students?.registration_no}</span>
                                             </div>
-                                            <div className="text-[10px] text-muted-foreground">{entry.profiles?.full_name} (Coach)</div>
+                                            <div className="mt-0.5 flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                                                <SafeAvatar src={entry.profiles?.avatar_url} name={entry.profiles?.full_name || entry.profiles?.email} size={20} enlargeable subtitle={entry.profiles?.email} />
+                                                <span>{entry.profiles?.full_name} (Coach)</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </td>
@@ -162,7 +167,20 @@ export function EntriesTable({ entries }: EntriesTableProps) {
                                     </span>
                                 </td>
                                 <td className="p-4 align-middle text-right">
-                                    <EntryApprovalButtons entryId={entry.id} currentStatus={entry.status} />
+                                    <div className="flex items-center justify-end gap-1">
+                                        <EntrySnapshotDialog
+                                            entryId={entry.id}
+                                            initial={{
+                                                name: entry.students?.name ?? '',
+                                                gender: entry.students?.gender ?? null,
+                                                date_of_birth: entry.students?.date_of_birth ?? null,
+                                                rank: entry.students?.rank ?? null,
+                                                weight: entry.students?.weight ?? null,
+                                                school_or_city: entry.students?.school_or_city ?? null,
+                                            }}
+                                        />
+                                        <EntryApprovalButtons entryId={entry.id} currentStatus={entry.status} />
+                                    </div>
                                 </td>
                             </tr>
                         ))}

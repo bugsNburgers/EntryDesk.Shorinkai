@@ -75,11 +75,8 @@ export async function coachForwardEntry(
     revalidatePath('/dashboard/parent-entries')
     revalidatePath(`/dashboard/entries/${entry.event_id}`)
     revalidatePath('/athlete')
-    revalidatePath('/parent')
     revalidatePath(`/athlete/${entry.student_id}`)
-    revalidatePath(`/parent/children/${entry.student_id}`)
     revalidatePath(`/athlete/entries/${entryId}`)
-    revalidatePath(`/parent/entries/${entryId}`)
 
     return { success: true }
 }
@@ -132,7 +129,6 @@ export async function coachBulkForwardEntries(
     revalidatePath('/dashboard/parent-entries')
     revalidatePath('/dashboard/entries')
     revalidatePath('/athlete')
-    revalidatePath('/parent')
 
     return { success: true, count: updated.length }
 }
@@ -198,11 +194,8 @@ export async function coachRequestCorrection(
     revalidatePath('/dashboard/parent-entries')
     revalidatePath(`/dashboard/entries/${entry.event_id}`)
     revalidatePath('/athlete')
-    revalidatePath('/parent')
     revalidatePath(`/athlete/${entry.student_id}`)
-    revalidatePath(`/parent/children/${entry.student_id}`)
     revalidatePath(`/athlete/entries/${entryId}`)
-    revalidatePath(`/parent/entries/${entryId}`)
 
     return { success: true }
 }
@@ -269,11 +262,8 @@ export async function coachDeclineEntry(
     revalidatePath('/dashboard/parent-entries')
     revalidatePath(`/dashboard/entries/${entry.event_id}`)
     revalidatePath('/athlete')
-    revalidatePath('/parent')
     revalidatePath(`/athlete/${entry.student_id}`)
-    revalidatePath(`/parent/children/${entry.student_id}`)
     revalidatePath(`/athlete/entries/${entryId}`)
-    revalidatePath(`/parent/entries/${entryId}`)
 
     return { success: true }
 }
@@ -357,11 +347,8 @@ export async function coachWithdrawEntry(
     revalidatePath('/dashboard/parent-entries')
     revalidatePath(`/dashboard/entries/${entry.event_id}`)
     revalidatePath('/athlete')
-    revalidatePath('/parent')
     revalidatePath(`/athlete/${entry.student_id}`)
-    revalidatePath(`/parent/children/${entry.student_id}`)
     revalidatePath(`/athlete/entries/${entryId}`)
-    revalidatePath(`/parent/entries/${entryId}`)
 
     return { success: true }
 }

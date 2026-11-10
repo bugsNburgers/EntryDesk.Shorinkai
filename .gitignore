@@ -40,3 +40,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+# test artifacts
+/test-results/
+/playwright-report/
+/tests/e2e/.seed.json
+/.next-e2e/

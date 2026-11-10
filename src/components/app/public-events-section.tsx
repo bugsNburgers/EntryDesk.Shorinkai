@@ -202,7 +202,7 @@ function EventSection({
                             return (
                                 <article
                                     key={event.id}
-                                    className="group flex flex-col justify-between rounded-2xl border border-border/70 bg-card p-6 shadow-xs hover:shadow-md transition-all hover:border-emerald-600/40 dark:border-white/[0.10] dark:hover:border-[#2dd4b4]/40"
+                                    className="group flex flex-col justify-between rounded-2xl border border-border/70 bg-card p-6 shadow-xs hover:shadow-md transition-all hover:border-emerald-600/40 dark:border-white/[0.10] dark:hover:border-primary/40"
                                 >
                                     <div>
                                         <div className="mb-4 flex items-center justify-between gap-2">
@@ -234,7 +234,7 @@ function EventSection({
                                 </div>
 
                                     <Button
-                                        className="mt-6 h-11 w-full gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white dark:bg-[#2dd4b4] dark:hover:bg-[#25c4a5] dark:text-[#04231e] font-bold text-sm tracking-wide shadow-sm hover:shadow transition-all duration-150 active:scale-[0.99] group/btn"
+                                        className="mt-6 h-11 w-full gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white dark:bg-primary dark:hover:bg-primary/90 dark:text-primary-foreground font-bold text-sm tracking-wide shadow-sm hover:shadow transition-all duration-150 active:scale-[0.99] group/btn"
                                         onClick={() => onViewEvent(event)}
                                     >
                                         <span>View event</span>
