@@ -91,8 +91,36 @@ export function PhotoGuidelinesVisual({
         ? 'official Tournament ID Cards & category verification'
         : 'EntryDesk organizer credentials & coach rosters'
 
+    // Compact (parent "Add a child" on phones): three small pictures side by side, one short line each.
+    if (compact) {
+        return (
+            <div className="grid grid-cols-3 gap-2">
+                {PHOTO_EXAMPLES.map((example, idx) => {
+                    const isDo = example.type === 'do'
+                    return (
+                        <figure key={idx} className="m-0 flex flex-col items-center gap-1 text-center">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                                src={example.image}
+                                alt={example.alt}
+                                width={160}
+                                height={160}
+                                loading="lazy"
+                                decoding="async"
+                                className={`aspect-square w-full rounded-lg border-2 object-cover ${isDo ? 'border-[var(--status-approved)]' : 'border-destructive/60'}`}
+                            />
+                            <figcaption className={`text-sm font-semibold leading-tight ${isDo ? 'text-[var(--status-approved-fg)]' : 'text-destructive'}`}>
+                                {isDo ? '✓ Face clear' : idx === 1 ? '✗ No cap or glasses' : '✗ Not blurry or dark'}
+                            </figcaption>
+                        </figure>
+                    )
+                })}
+            </div>
+        )
+    }
+
     return (
-        <div className={`space-y-3 ${compact ? 'text-xs' : ''}`}>
+        <div className="space-y-3">
             {/* Informative Purpose Banner */}
             <div className="rounded-xl bg-primary/5 border border-primary/15 p-3 flex items-start gap-2.5">
                 <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />

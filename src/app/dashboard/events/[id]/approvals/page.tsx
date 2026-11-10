@@ -1,3 +1,4 @@
+import { formatStepDate } from '@/lib/date'
 import { requireRole } from '@/lib/auth/require-role'
 import { SafeAvatar } from '@/components/ui/safe-avatar'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -103,7 +104,7 @@ export default async function EventApprovalsPage({
                                                 </div>
                                             </td>
                                             <td className="p-4 align-middle">{app.coach_email}</td>
-                                            <td className="p-4 align-middle">{new Date(app.created_at).toLocaleDateString('en-IN', { timeZone: 'UTC' })}</td>
+                                            <td className="p-4 align-middle">{formatStepDate(app.created_at)}</td>
                                             <td className="p-4 align-middle text-right">
                                                 {status === 'pending' ? (
                                                     <ApprovalButtons applicationId={app.id} />

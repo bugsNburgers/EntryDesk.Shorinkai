@@ -1,3 +1,4 @@
+import { formatStepDate } from '@/lib/date'
 import { requireRole } from '@/lib/auth/require-role'
 import { ApprovalButtons } from '@/components/approvals/approval-buttons'
 import { DashboardPageHeader } from '@/components/dashboard/page-header'
@@ -120,7 +121,7 @@ export default async function ApprovalsPage({
                                     <div className="min-w-0">
                                         <p className="text-sm font-medium truncate">{app.event_title}</p>
                                         <p className="text-xs text-muted-foreground">
-                                            Requested {new Date(app.created_at).toLocaleDateString('en-IN', { timeZone: 'UTC' })}
+                                            Requested {formatStepDate(app.created_at)}
                                         </p>
                                     </div>
 
@@ -168,7 +169,7 @@ export default async function ApprovalsPage({
                                     <p className="text-xs text-muted-foreground mb-0.5">Requesting to join</p>
                                     <p className="text-sm font-medium">{app.event_title}</p>
                                     <p className="text-xs text-muted-foreground mt-0.5">
-                                        {new Date(app.created_at).toLocaleDateString('en-IN', { timeZone: 'UTC' })}
+                                        {formatStepDate(app.created_at)}
                                     </p>
                                 </div>
 

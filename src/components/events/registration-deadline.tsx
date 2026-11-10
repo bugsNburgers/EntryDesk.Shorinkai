@@ -1,7 +1,7 @@
-import { Circle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 import { isRegistrationClosed, toIsoDate } from '@/lib/events/registration'
+import { daysLeftText } from '@/lib/date'
 
 type RegistrationDeadlineProps = {
     event: {
@@ -51,33 +51,28 @@ export function RegistrationDeadline({
         return null
     }
 
+    const closeIso = event.registration_close_date ? toIsoDate(event.registration_close_date) : null
+    const left = closeIso ? daysLeftText(closeIso) : null
+
     return (
-        <div className={cn('flex min-w-0 items-center gap-1.5 text-[11px] text-muted-foreground', className)}>
-            <Circle
-                className={cn(
-                    'h-2.5 w-2.5 shrink-0',
-                    isOpen ? 'fill-emerald-500 text-emerald-500' : 'fill-red-500 text-red-500'
-                )}
-            />
-            <span className="truncate whitespace-nowrap">
-                {isOpen ? (
-                    <>
-                        <span className="font-medium">
-                            {event.temporary_registration_closes_at ? 'Registration Closes Temporarily:' : 'Reg. Deadline:'}
-                        </span>{' '}
-                        {event.temporary_registration_closes_at 
-                            ? new Date(event.temporary_registration_closes_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                            : event.registration_close_date ? formatDate(event.registration_close_date) : ''}
-                    </>
+        <div className={cn('flex min-w-0 flex-wrap items-center gap-x-1.5 text-[15px]', className)}>
+            {isOpen ? (
+                event.temporary_registration_closes_at ? (
+                    <span className="font-semibold text-[var(--status-pending-fg)]">
+                        Entries close today at{' '}
+                        {new Date(event.temporary_registration_closes_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata' })}
+                    </span>
                 ) : (
-                    <>
-                        <span className="font-medium text-red-500">Reg. Deadline passed:</span>{' '}
-                        <span className="text-red-500">
-                             {event.registration_close_date ? formatDate(event.registration_close_date) : '(date unknown)'}
-                        </span>
-                    </>
-                )}
-            </span>
+                    <span className="font-semibold text-[var(--status-pending-fg)]">
+                        Last day to enter: {formatDate(event.registration_close_date)}
+                        {left ? ` · ${left}` : ''}
+                    </span>
+                )
+            ) : (
+                <span className="font-semibold text-[var(--status-closed-fg)]">
+                    Entries closed{event.registration_close_date ? ` on ${formatDate(event.registration_close_date)}` : ''}
+                </span>
+            )}
         </div>
     )
 }

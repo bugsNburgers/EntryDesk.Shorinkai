@@ -1,5 +1,6 @@
 'use client'
 
+import { formatStepDate } from '@/lib/date'
 import { useState } from 'react'
 import { updateEventSettings } from '@/app/dashboard/events/[id]/actions'
 import { DeleteEventForm } from '@/components/events/delete-event-form'
@@ -126,7 +127,7 @@ export function EventSettingsForm({ event, entryCount }: EventSettingsFormProps)
                                         Temporarily Open
                                     </p>
                                     <p className="text-sm text-muted-foreground">
-                                        Closes at {new Date(tempClosesAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} ({new Date(tempClosesAt).toLocaleDateString()})
+                                        Closes at {new Date(tempClosesAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} ({formatStepDate(tempClosesAt)})
                                     </p>
                                 </div>
                                 <Button variant="outline" onClick={() => handleTemporaryOpen(0)} disabled={isSaving}>

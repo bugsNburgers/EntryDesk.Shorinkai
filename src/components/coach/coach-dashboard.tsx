@@ -6,9 +6,7 @@ import { CoachAddStudentDialog } from "./coach-add-student-dialog"
 import { useCallback, useMemo, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { RegistrationDeadline } from "@/components/events/registration-deadline"
-import Link from "next/link"
-import { Printer, UserPlus } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { formatDateRangeStable } from "@/lib/date"
 
 interface CoachDashboardProps {
     event: any
@@ -37,7 +35,12 @@ export function CoachDashboard({
 }: CoachDashboardProps) {
     const existingStudentIds = useMemo(() => new Set(entries.map(e => e.student_id)), [entries])
 
-    const [currentStatus, setCurrentStatus] = useState<string>(() => normalizeCoachStatus(initialStatus))
+    // No ?status= and nothing waiting for the coach → open on "All" instead of an empty list.
+    const [currentStatus, setCurrentStatus] = useState<string>(() =>
+        !initialStatus && !entries.some((e) => e.status === 'draft' || e.status === 'pending_coach')
+            ? 'all'
+            : normalizeCoachStatus(initialStatus)
+    )
     const [addStudentOpen, setAddStudentOpen] = useState(false)
     const entriesRef = useRef<HTMLDivElement | null>(null)
 
@@ -51,34 +54,29 @@ export function CoachDashboard({
 
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-5">
             <div className="space-y-3">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                     <div>
                         <div className="flex flex-wrap items-center gap-2">
-                            <h1 className="text-3xl font-bold tracking-tight">{event.title}</h1>
+                            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{event.title}</h1>
                             {isPastEvent && (
                                 <span className="rounded-full border border-black/10 bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground dark:border-white/10">
                                     Event Ended
                                 </span>
                             )}
                         </div>
-                        <p className="text-muted-foreground">
-                            {isPastEvent
-                                ? "This event has ended. You can view entries and details."
-                                : isRegistrationClosed
-                                    ? "Registration for this event has ended. You can still view entries and details."
-                                    : "Manage your team's participation."}
+                        <p className="mt-1 text-base text-muted-foreground">
+                            {formatDateRangeStable(event.start_date, event.end_date)}
+                            {event.location ? ` · ${event.location}` : ''}
+                            {isPastEvent ? ' · This event has ended' : ''}
                         </p>
-                        <RegistrationDeadline event={event} className="animate-pulse-gentle mt-1.5 text-sm sm:hidden" />
-                    </div>
-                    <div className="flex flex-col items-end gap-2">
-                        <RegistrationDeadline event={event} className="animate-pulse-gentle text-sm hidden sm:flex" />
+                        <RegistrationDeadline event={event} className="mt-1" />
                     </div>
                 </div>
             </div>
 
-            <CoachOverview stats={stats} entries={entries} onSelectStatus={selectStatus} />
+            <CoachOverview stats={stats} entries={entries} activeStatus={currentStatus} onSelectStatus={selectStatus} />
 
             <div ref={entriesRef}>
                 <CoachEntriesList

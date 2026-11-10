@@ -1,5 +1,6 @@
 'use client'
 
+import { formatSubmittedTimestamp } from '@/lib/date'
 import { useEffect, useState } from 'react'
 import { getContactSubmissions } from '@/app/contact/actions'
 import {
@@ -61,7 +62,7 @@ export function ContactSubmissionsTable() {
               <TableCell>{contact.email}</TableCell>
               <TableCell className="max-w-md truncate">{contact.message}</TableCell>
               <TableCell className="text-sm text-muted-foreground">
-                {new Date(contact.created_at).toLocaleDateString()}
+                {formatSubmittedTimestamp(contact.created_at)}
               </TableCell>
             </TableRow>
           ))}

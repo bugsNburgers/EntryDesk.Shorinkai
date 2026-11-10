@@ -86,7 +86,6 @@ export async function submitParentEntry(
         start_date: string | Date
         age_cutoff_rule: string | null
         photo_required: boolean
-        coach_checks_each_entry: boolean
         max_events_per_athlete: number | null
     }[]>`
         SELECT DISTINCT
@@ -98,7 +97,6 @@ export async function submitParentEntry(
             ev.start_date,
             ev.age_cutoff_rule,
             COALESCE(ev.photo_required, FALSE) AS photo_required,
-            COALESCE(ev.coach_checks_each_entry, TRUE) AS coach_checks_each_entry,
             ev.max_events_per_athlete
         FROM events ev
         JOIN dojos d ON d.id = ${student.dojo_id}
@@ -163,8 +161,7 @@ export async function submitParentEntry(
         return { error: 'Could not find the coach for this dojo.' }
     }
 
-    // ── 6. Determine initial status based on coach_checks_each_entry ──────────
-    const initialStatus = event.coach_checks_each_entry ? 'pending_coach' : 'submitted'
+    const initialStatus = 'pending_coach'
 
     // ── 7. Snapshot of the athlete as submitted (owner decision: the entry keeps these
     //       details even if the profile is edited later) + informational category ─────

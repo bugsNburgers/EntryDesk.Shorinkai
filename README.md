@@ -56,9 +56,12 @@ Fill in the required values:
 ### 4. Database Schema Setup
 This repository includes the complete schema and views in `src/lib/db/schema.sql`.
 
-To apply the schema:
+To initialize a fresh database:
 1. Open your PostgreSQL SQL Editor (e.g. Neon Console SQL Editor or `psql`)
 2. Run the entire contents of [`src/lib/db/schema.sql`](src/lib/db/schema.sql).
+3. Run `npm run db:migrate` to apply the numbered migrations.
+
+For an existing database, run `npm run db:migrate` from the project folder. The command uses `DATABASE_URL` from the terminal or `.env` and replays the numbered files in `src/lib/db/migrations` in order.
 
 *This creates the `users`, `profiles`, `sessions`, `dojos`, `students`, `events`, `event_days`, `event_categories`, `entries`, `coach_event_applications`, and `organizer_entries_view`.*
 

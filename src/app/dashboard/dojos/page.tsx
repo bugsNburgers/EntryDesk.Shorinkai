@@ -20,7 +20,7 @@ export default async function DojosPage({
     const offset = (page - 1) * limit
 
     // Fetch coach's owned and shared dojos with student count and collaborator data
-    const [dojos, countResult, allCollaborators] = await Promise.all([
+    const [dojos, countResult] = await Promise.all([
         sql<
             {
                 id: string
@@ -63,7 +63,8 @@ export default async function DojosPage({
             LEFT JOIN dojo_collaborators dc ON d.id = dc.dojo_id AND dc.user_id = ${user.id}
             WHERE d.coach_id = ${user.id} OR dc.user_id = ${user.id}
         `,
-        sql<
+    ])
+    const allCollaborators = await sql<
             {
                 dojo_id: string
                 user_id: string
@@ -82,8 +83,8 @@ export default async function DojosPage({
                 u.avatar_url
             FROM dojo_collaborators dc
             JOIN users u ON dc.user_id = u.id
-        `,
-    ])
+            WHERE dc.dojo_id = ANY(${dojos.map((dojo) => dojo.id)}::uuid[])
+        `
 
     const totalCount = countResult[0]?.count ?? 0
     const totalPages = Math.ceil(totalCount / limit)

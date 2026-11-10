@@ -10,7 +10,7 @@ export function seed(): Seed {
 }
 
 const ADMIN_URL = process.env.TEST_DATABASE_ADMIN_URL || "postgresql://postgres:test@127.0.0.1:55432/postgres";
-export const db = () => postgres(ADMIN_URL.replace(/\/[^/]*$/, "/entrydesk_e2e"), { max: 1, onnotice: () => {} });
+export const db = () => postgres(ADMIN_URL.replace(/\/[^/]*$/, `/${process.env.ENTRYDESK_E2E_DATABASE}`), { max: 1, onnotice: () => {} });
 
 export async function signInAs(context: BrowserContext, baseURL: string, token: string) {
   await context.clearCookies();

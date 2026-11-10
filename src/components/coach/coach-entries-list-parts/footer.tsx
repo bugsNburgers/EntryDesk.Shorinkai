@@ -19,7 +19,7 @@ export function CoachEntriesFooter({ vm }: { vm: CoachEntriesListVM }) {
                     {selectedCount > 0 ? (
                         <>
                             <div className="text-[15px] text-foreground">
-                                <b className="font-bold">{selectedCount} selected</b> &nbsp;·&nbsp;
+                                <b className="font-bold">{selectedCount} ticked</b> &nbsp;·&nbsp;
                                 <button
                                     onClick={handleClearSelection}
                                     className="text-primary font-semibold cursor-pointer hover:underline ml-1"
@@ -33,7 +33,7 @@ export function CoachEntriesFooter({ vm }: { vm: CoachEntriesListVM }) {
                                     disabled={isSubmitting || countPaid === 0}
                                     className="h-[46px] px-5 rounded-xl font-bold text-[15px] border-[1.5px] border-primary text-primary hover:bg-primary/10 transition disabled:opacity-40 cursor-pointer"
                                 >
-                                    Forward all paid &amp; verified ({countPaid})
+                                    {countPaid === 0 ? 'Mark entries as paid to send them' : `Send all ${countPaid} paid to organiser`}
                                 </button>
                                 <button
                                     onClick={handleForwardSelected}
@@ -41,14 +41,14 @@ export function CoachEntriesFooter({ vm }: { vm: CoachEntriesListVM }) {
                                     className="h-[46px] px-5 rounded-xl font-bold text-[15px] bg-primary hover:bg-primary/90 dark:bg-primary dark:hover:bg-primary/90 text-white dark:text-primary-foreground inline-flex items-center gap-2 transition disabled:opacity-40 cursor-pointer shadow-md"
                                 >
                                     {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <ButtonCheckmarkSvg />}
-                                    Forward selected ({selectedCount})
+                                    Send {selectedCount} ticked to organiser
                                 </button>
                             </div>
                         </>
                     ) : (
                         <>
                             <div className="text-[14.5px] text-muted-foreground">
-                                <b className="text-foreground font-bold">{countPaid}</b> paid &amp; verified, ready to forward &nbsp;·&nbsp; {countNotPaid} not paid yet
+                                <b className="text-foreground font-bold">{countPaid} paid</b> and ready &nbsp;·&nbsp; {countNotPaid} not paid yet
                             </div>
                             <button
                                 onClick={handleForwardAllPaid}
@@ -56,7 +56,7 @@ export function CoachEntriesFooter({ vm }: { vm: CoachEntriesListVM }) {
                                 className="h-[46px] px-5 rounded-xl font-bold text-[15px] bg-primary hover:bg-primary/90 dark:bg-primary dark:hover:bg-primary/90 text-white dark:text-primary-foreground inline-flex items-center gap-2 transition disabled:opacity-40 cursor-pointer shadow-md"
                             >
                                 {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <ButtonCheckmarkSvg />}
-                                Forward all paid &amp; verified ({countPaid})
+                                {countPaid === 0 ? 'Mark entries as paid to send them' : `Send all ${countPaid} paid to organiser`}
                             </button>
                         </>
                     )}
@@ -67,7 +67,7 @@ export function CoachEntriesFooter({ vm }: { vm: CoachEntriesListVM }) {
                     {selectedCount > 0 ? (
                         <>
                             <div className="flex justify-between items-center text-[14px] text-foreground">
-                                <b className="font-bold">{selectedCount} selected</b>
+                                <b className="font-bold">{selectedCount} ticked</b>
                                 <button
                                     onClick={handleClearSelection}
                                     className="text-primary font-semibold cursor-pointer hover:underline"
@@ -81,28 +81,28 @@ export function CoachEntriesFooter({ vm }: { vm: CoachEntriesListVM }) {
                                 className="h-[48px] w-full text-[15px] font-bold bg-primary hover:bg-primary/90 dark:bg-primary dark:hover:bg-primary/90 text-white dark:text-primary-foreground rounded-xl inline-flex items-center justify-center gap-2 transition disabled:opacity-40 cursor-pointer shadow-md"
                             >
                                 {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <ButtonCheckmarkSvg />}
-                                Forward selected ({selectedCount})
+                                Send {selectedCount} ticked to organiser
                             </button>
                             <button
                                 onClick={handleForwardAllPaid}
                                 disabled={isSubmitting || countPaid === 0}
-                                className="h-[42px] w-full text-[14px] font-bold border-[1.5px] border-primary text-primary rounded-xl hover:bg-primary/10 transition disabled:opacity-40 cursor-pointer"
+                                className="h-[48px] w-full text-[15px] font-bold border-[1.5px] border-primary text-primary rounded-xl hover:bg-primary/10 transition disabled:opacity-40 cursor-pointer"
                             >
-                                Forward all paid &amp; verified ({countPaid})
+                                {countPaid === 0 ? 'Mark entries as paid to send them' : `Send all ${countPaid} paid to organiser`}
                             </button>
                         </>
                     ) : (
                         <>
-                            <div className="text-[13.5px] text-muted-foreground">
-                                <b className="text-foreground font-bold">{countPaid}</b> paid &amp; verified · {countNotPaid} not paid yet
+                            <div className="text-[15px] text-muted-foreground text-center">
+                                <b className="text-foreground font-bold">{countPaid} paid</b> and ready · {countNotPaid} not paid yet
                             </div>
                             <button
                                 onClick={handleForwardAllPaid}
                                 disabled={isSubmitting || countPaid === 0}
-                                className="h-[48px] w-full text-[15.5px] font-bold bg-primary hover:bg-primary/90 dark:bg-primary dark:hover:bg-primary/90 text-white dark:text-primary-foreground rounded-xl inline-flex items-center justify-center gap-2 transition disabled:opacity-40 cursor-pointer shadow-md"
+                                className="h-[52px] w-full text-base font-bold bg-primary hover:bg-primary/90 dark:bg-primary dark:hover:bg-primary/90 text-white dark:text-primary-foreground rounded-xl inline-flex items-center justify-center gap-2 transition disabled:opacity-40 cursor-pointer shadow-md"
                             >
                                 {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <ButtonCheckmarkSvg />}
-                                Forward all paid &amp; verified ({countPaid})
+                                {countPaid === 0 ? 'Mark entries as paid to send them' : `Send all ${countPaid} paid to organiser`}
                             </button>
                         </>
                     )}

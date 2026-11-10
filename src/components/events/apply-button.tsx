@@ -37,19 +37,19 @@ export function ApplyButton({ eventId, status, registrationClosed = false, class
     }
 
     if (status === 'approved') {
-        return <Button variant="secondary" disabled className={`bg-emerald-100 text-emerald-800 ${className || ''}`}>Approved</Button>
+        return <Button variant="secondary" disabled className={`bg-[var(--status-approved-bg)] text-[var(--status-approved-fg)] ${className || ''}`}>You can enter</Button>
     }
 
     if (status === 'pending') {
-        return <Button variant="outline" disabled className={className}>Pending Approval</Button>
+        return <Button variant="outline" disabled className={className}>Request sent</Button>
     }
 
     if (status === 'rejected') {
-        return <Button variant="destructive" disabled className={className}>Rejected</Button>
+        return <Button variant="outline" disabled className={className}>Not accepted</Button>
     }
 
     if (registrationClosed) {
-        return <Button variant="outline" disabled className={className}>Registration Closed</Button>
+        return <Button variant="outline" disabled className={className}>Entries closed</Button>
     }
 
     return (

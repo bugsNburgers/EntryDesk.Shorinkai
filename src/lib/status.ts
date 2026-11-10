@@ -4,71 +4,93 @@
 // NEVER render raw DB values (draft, pending_coach, etc.) in the UI.
 // ============================================================================
 
+// ONE word per stage, the same for parent, coach and organiser (owner decision 09/11/2026).
+// Every stage also has its own icon (see components/ui/status-badge.tsx) so colour is never the only signal.
+//   With coach → With organiser → Accepted   (or Needs a fix / Not accepted / Withdrawn)
+// `coachLabel` is kept for API compatibility and is deliberately identical to `label`.
+
+export type StatusIcon = 'draft' | 'clock' | 'send' | 'check' | 'pencil' | 'x' | 'minus'
+
 export const ENTRY_STATUS_MAP = {
     draft: {
-        label: 'Draft',
-        coachLabel: 'Draft (not sent)',
+        label: 'Not sent',
+        coachLabel: 'Not sent',
         parentVisible: false,
         color: 'gray',
+        icon: 'draft' as StatusIcon,
         bgClass: 'bg-[var(--status-draft-bg)] text-[var(--status-draft-fg)]',
     },
     pending_coach: {
-        label: 'Waiting for coach',
-        coachLabel: 'Waiting for your review',
+        label: 'With coach',
+        coachLabel: 'With coach',
         parentVisible: true,
         color: 'yellow',
+        icon: 'clock' as StatusIcon,
         bgClass: 'bg-[var(--status-pending-bg)] text-[var(--status-pending-fg)]',
     },
     submitted: {
-        label: 'Waiting for organiser',
-        coachLabel: 'Sent to organiser',
+        label: 'With organiser',
+        coachLabel: 'With organiser',
         parentVisible: true,
-        color: 'yellow',
-        bgClass: 'bg-[var(--status-pending-bg)] text-[var(--status-pending-fg)]',
+        color: 'blue',
+        icon: 'send' as StatusIcon,
+        bgClass: 'bg-[var(--status-org-bg)] text-[var(--status-org-fg)]',
     },
     correction_needed: {
-        label: 'Please correct and send again',
-        coachLabel: 'Sent back for correction',
+        label: 'Needs a fix',
+        coachLabel: 'Needs a fix',
         parentVisible: true,
         color: 'orange',
-        bgClass: 'bg-[var(--status-pending-bg)] text-[var(--status-pending-fg)]',
+        icon: 'pencil' as StatusIcon,
+        bgClass: 'bg-[var(--status-rejected-bg)] text-[var(--status-rejected-fg)]',
     },
     coach_declined: {
-        label: 'Coach did not send it',
-        coachLabel: 'You declined this entry',
+        label: 'Not accepted',
+        coachLabel: 'Not accepted',
         parentVisible: true,
-        color: 'red',
-        bgClass: 'bg-[var(--status-rejected-bg)] text-[var(--status-rejected-fg)]',
+        color: 'gray',
+        icon: 'x' as StatusIcon,
+        bgClass: 'bg-[var(--status-closed-bg)] text-[var(--status-closed-fg)]',
     },
     approved: {
         label: 'Accepted',
-        coachLabel: 'Accepted ✓',
+        coachLabel: 'Accepted',
         parentVisible: true,
         color: 'green',
+        icon: 'check' as StatusIcon,
         bgClass: 'bg-[var(--status-approved-bg)] text-[var(--status-approved-fg)]',
     },
     rejected: {
         label: 'Not accepted',
-        coachLabel: 'Rejected by organiser',
+        coachLabel: 'Not accepted',
         parentVisible: true,
-        color: 'red',
-        bgClass: 'bg-[var(--status-rejected-bg)] text-[var(--status-rejected-fg)]',
+        color: 'gray',
+        icon: 'x' as StatusIcon,
+        bgClass: 'bg-[var(--status-closed-bg)] text-[var(--status-closed-fg)]',
     },
     withdrawn: {
         label: 'Withdrawn',
         coachLabel: 'Withdrawn',
         parentVisible: true,
         color: 'gray',
+        icon: 'minus' as StatusIcon,
         bgClass: 'bg-[var(--status-draft-bg)] text-[var(--status-draft-fg)]',
     },
 } as const
 
 export type EntryStatusKey = keyof typeof ENTRY_STATUS_MAP
 
+/** The four stages shown as filter boxes everywhere, in this order. */
+export const STAGE_FILTERS = [
+    { key: 'pending_coach', label: 'With coach' },
+    { key: 'submitted', label: 'With organiser' },
+    { key: 'approved', label: 'Accepted' },
+    { key: 'correction_needed', label: 'Needs a fix' },
+] as const
+
 /**
  * Returns the human-readable label for a given status.
- * @param status - the raw DB status value
- * @param perspective - 'parent' returns parent-friendly labels; 'coach' returns coach labels
+ * The perspective argument is kept for compatibility; every role sees the same word.
  */
 export function getStatusLabel(status: string, perspective: 'parent' | 'coach' = 'parent'): string {
     const entry = ENTRY_STATUS_MAP[status as EntryStatusKey]
@@ -76,29 +98,34 @@ export function getStatusLabel(status: string, perspective: 'parent' | 'coach' =
     return perspective === 'coach' ? entry.coachLabel : entry.label
 }
 
+/** Returns the icon name for a status (used by StatusBadge). */
+export function getStatusIcon(status: string): StatusIcon {
+    return ENTRY_STATUS_MAP[status as EntryStatusKey]?.icon ?? 'minus'
+}
+
 /**
  * Returns the Tailwind CSS class string for a status badge.
  */
 export function getStatusBgClass(status: string): string {
     const entry = ENTRY_STATUS_MAP[status as EntryStatusKey]
-    return entry?.bgClass ?? 'bg-gray-100 text-gray-700'
+    return entry?.bgClass ?? 'bg-muted text-muted-foreground'
 }
 
 /**
- * Returns a user-friendly explanation of what the status means.
+ * Returns a short, plain explanation of what the status means (parent-facing).
  */
 export function getStatusDescription(status: string): string {
     const descriptions: Record<string, string> = {
-        draft: 'Draft — not yet submitted.',
-        pending_coach: 'Waiting for coach — your coach is checking the registration details.',
-        submitted: 'Waiting for organiser — your coach has verified and forwarded this entry to the tournament organiser.',
-        correction_needed: 'Please correct and send again — something needs fixing.',
-        coach_declined: 'Coach did not send this entry to the organiser.',
-        approved: 'Accepted! Registration is confirmed for the tournament.',
-        rejected: 'This entry was not accepted by the organiser.',
-        withdrawn: 'This entry was withdrawn.',
+        draft: 'Not sent yet.',
+        pending_coach: 'Your coach is checking the details.',
+        submitted: 'Your coach sent it to the organiser. The organiser will accept it.',
+        correction_needed: 'Something needs to be fixed. Change it and send again.',
+        coach_declined: 'Your coach did not send this entry.',
+        approved: 'Accepted. The chest number and ID card are ready.',
+        rejected: 'The organiser did not accept this entry.',
+        withdrawn: 'This entry was cancelled.',
     }
-    return descriptions[status] ?? 'Status updated.'
+    return descriptions[status] ?? 'Updated.'
 }
 
 /**

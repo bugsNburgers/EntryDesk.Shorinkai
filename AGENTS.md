@@ -38,7 +38,7 @@ src/app/
 src/components/     ui/ (shadcn primitives) + one folder per module (coach, events, parent, students, id-card…)
 src/lib/            auth/ db/ email/ events/ entries/snapshot.ts export/ringflow.ts storage/ status.ts validation.ts
                     audit.ts category.ts date.ts qr.ts
-src/lib/db/         schema.sql (base) + migrations/NNN_*.sql (apply in order, by hand, on Neon)
+src/lib/db/         schema.sql (fresh DB setup) + migrations/NNN_*.sql (npm run db:migrate)
 src/types/database.ts   all DB types
 tests/unit (vitest) · tests/db (vitest, local Docker PG) · tests/e2e (Playwright)   → testing.md
 ```
@@ -61,12 +61,11 @@ tests/unit (vitest) · tests/db (vitest, local Docker PG) · tests/e2e (Playwrig
 1. **Never test against the Neon database in `.env`.** Use the local Docker DB (`testing.md`).
 2. SQL only via the `` sql`...` `` tagged template; **never put `${}` inside a quoted SQL string**
    (`INTERVAL '${n} seconds'` is broken — use `(${n}::int * INTERVAL '1 second')`).
-3. Schema changes = a new `src/lib/db/migrations/NNN_*.sql` (additive, idempotent) **and** mirror in `schema.sql`
-   and `src/types/database.ts`. The DB is live: never drop/rename in one step.
+3. Put each database change in the next numbered `src/lib/db/migrations/NNN_*.sql` file and update `src/types/database.ts` as applicable. Keep `schema.sql` as the baseline for fresh setup, followed by `npm run db:migrate`. For existing databases, run `npm run db:migrate` to replay the numbered migrations in order. Use guarded DDL and backfill only rows that still need it. Preserve existing data and verify two consecutive runs on local Postgres before applying to Neon. Never drop or rename live tables or columns in one step.
 4. No hard-coded hex colours in components — use design tokens (`design-system.md`).
-5. Never render raw status strings; use `src/lib/status.ts`.
+5. Never render raw status strings; use `src/lib/status.ts` / `<StatusBadge>`. One word per stage for every role: With coach · With organiser · Accepted · Needs a fix · Not accepted.
 6. Email-OTP is for **parents only**; it must never sign in or re-activate a coach/organiser/admin.
-7. Dates from the DB are date-only strings: format with explicit locale + `timeZone: 'UTC'` (hydration safety).
+7. Dates from the DB are date-only strings: format with explicit locale + `timeZone: 'UTC'` (hydration safety). Every user-facing date is **DD/MM/YYYY** — use `lib/date.ts` (`formatDateStable`, `formatDateRangeStable`, `daysLeftText`).
 8. Links/QR use `NEXT_PUBLIC_BASE_URL` (not a hard-coded domain).
 9. **Entries keep a per-event snapshot** of the athlete (`entries.snap_*`, `declared_weight_kg`, `category_snapshot`).
    Anything that shows an athlete *in the context of an event* reads `COALESCE(e.snap_x, s.x)`; profile pages read `students`.

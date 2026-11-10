@@ -60,7 +60,7 @@ export async function verifyGoogleIdToken(
         return { success: false, error: 'INVALID_TOKEN' }
     }
 
-    if (!payload || !payload.email) {
+    if (!payload || !payload.email || !payload.email_verified || !payload.sub) {
         console.warn('[AUTH_SECURITY] Google ID token payload missing email')
         return { success: false, error: 'INVALID_TOKEN' }
     }
@@ -87,9 +87,10 @@ export async function verifyGoogleIdToken(
             full_name: string | null
             avatar_url: string | null
             is_active: boolean
+            google_id: string | null
         }[]
     >`
-        SELECT id, email, role, full_name, avatar_url, is_active
+        SELECT id, email, role, full_name, avatar_url, is_active, google_id
         FROM users
         WHERE lower(email) = ${email}
         LIMIT 1
@@ -101,13 +102,11 @@ export async function verifyGoogleIdToken(
             const newRows = await sql<{ id: string; role: UserRole }[]>`
                 INSERT INTO users (email, full_name, avatar_url, google_id, role, is_active)
                 VALUES (${email}, ${name}, NULL, ${googleId}, 'parent', TRUE)
-                ON CONFLICT (email) DO UPDATE
-                    SET google_id = COALESCE(users.google_id, ${googleId}),
-                        full_name = COALESCE(users.full_name, ${name}),
-                        updated_at = NOW()
+                ON CONFLICT (email) DO NOTHING
                 RETURNING id, role
             `
             const newUser = newRows[0]
+            if (!newUser) return { success: false, error: 'ACCESS_DENIED' }
             return {
                 success: true,
                 user: {
@@ -137,15 +136,21 @@ export async function verifyGoogleIdToken(
         return { success: false, error: 'ACCOUNT_DISABLED' }
     }
 
+    if (existingUser.google_id && existingUser.google_id !== googleId) {
+        return { success: false, error: 'ACCESS_DENIED' }
+    }
+
     // Update google_id and full_name (never overwrite avatar_url with Google picture)
-    await sql`
+    const bound = await sql`
         UPDATE users
         SET 
             google_id = COALESCE(google_id, ${googleId}),
             full_name = COALESCE(full_name, ${name}),
             updated_at = NOW()
-        WHERE id = ${existingUser.id}
+        WHERE id = ${existingUser.id} AND is_active AND (google_id IS NULL OR google_id = ${googleId})
+        RETURNING id
     `
+    if (!bound.length) return { success: false, error: 'ACCESS_DENIED' }
 
     return {
         success: true,

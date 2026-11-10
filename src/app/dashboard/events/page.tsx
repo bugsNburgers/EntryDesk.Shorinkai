@@ -1,3 +1,4 @@
+import { formatDateRangeStable } from '@/lib/date'
 import { requireRole } from '@/lib/auth/require-role'
 import { CreateEventDialog } from '@/components/events/create-event-dialog'
 import { Button } from '@/components/ui/button'
@@ -27,6 +28,10 @@ export default async function EventsPage({
 }) {
     const { user, role } = await requireRole(['coach', 'organizer', 'admin'], { redirectTo: '/dashboard' })
     const sp = await searchParams
+
+    const canCreateEvents = role === 'admin' || (role === 'organizer' && Boolean((await sql`
+        SELECT 1 FROM users WHERE id = ${user.id} AND is_active AND can_create_events
+    `)[0]))
 
     if (role === 'coach') {
         return <CoachEventsBrowser user={user} searchParams={sp} />
@@ -73,8 +78,8 @@ export default async function EventsPage({
         <div className="space-y-6">
             <DashboardPageHeader
                 title="Events"
-                description="Create, publish, and manage your events."
-                actions={<CreateEventDialog />}
+                description={canCreateEvents ? "Create, publish, and manage your events." : "Manage existing events. Contact your admin to enable event creation."}
+                actions={canCreateEvents ? <CreateEventDialog /> : undefined}
             />
 
             {/* ─── Active Events ─── */}
@@ -134,7 +139,7 @@ export default async function EventsPage({
                                             </div>
                                             <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
                                                 <span>
-                                                    {new Date(event.start_date).toLocaleDateString()} – {new Date(event.end_date).toLocaleDateString()}
+                                                    {formatDateRangeStable(event.start_date, event.end_date)}
                                                 </span>
                                                 {event.location && (
                                                     <>
@@ -164,7 +169,7 @@ export default async function EventsPage({
                             icon={<Calendar />}
                             title="No active events"
                             description="Create your first event to get started. Coaches will be able to find and apply to join."
-                            actions={<CreateEventDialog />}
+                            actions={canCreateEvents ? <CreateEventDialog /> : undefined}
                         />
                     )}
                 </div>
@@ -209,7 +214,7 @@ export default async function EventsPage({
                                             </div>
                                             <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
                                                 <span>
-                                                    {new Date(event.start_date).toLocaleDateString()} – {new Date(event.end_date).toLocaleDateString()}
+                                                    {formatDateRangeStable(event.start_date, event.end_date)}
                                                 </span>
                                                 {event.location && (
                                                     <>

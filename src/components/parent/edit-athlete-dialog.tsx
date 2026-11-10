@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button'
 import { updateChildAsParent } from '@/app/athlete/actions'
 import { toast } from 'sonner'
 import { Loader2 } from 'lucide-react'
+import { BeltPicker } from '@/components/ui/belt-picker'
 
 export interface EditableStudent {
     id: string
@@ -80,7 +81,7 @@ export function EditAthleteDialog({
         },
         personal: {
             title: 'Edit Personal Details',
-            description: 'Update belt/rank, weight, date of birth, and city/school.',
+            description: 'Change belt, weight, date of birth or school.',
             submitLabel: 'Save Personal Details',
             successToast: 'Personal details updated successfully',
         },
@@ -208,19 +209,11 @@ export function EditAthleteDialog({
                     {/* SECTION 2: Personal Details (Belt, Weight, DOB, City/School) */}
                     {showPersonal && (
                         <>
+                            <div className="space-y-1.5">
+                                <span className="block text-base font-bold">Belt colour</span>
+                                <BeltPicker name="edit-rank" defaultValue={rank} onChange={setRank} />
+                            </div>
                             <div className="grid grid-cols-2 gap-3">
-                                <div className="space-y-1.5">
-                                    <Label htmlFor="edit-rank" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                                        Belt / Rank
-                                    </Label>
-                                    <Input
-                                        id="edit-rank"
-                                        value={rank}
-                                        onChange={(e) => setRank(e.target.value)}
-                                        placeholder="e.g. Yellow Belt"
-                                        className="bg-white border-border text-foreground focus:border-emerald-600 focus:ring-emerald-500/20 dark:bg-card dark:border-border dark:text-foreground dark:focus:border-primary dark:focus:ring-primary/20 rounded-md h-10 text-xs"
-                                    />
-                                </div>
 
                                 <div className="space-y-1.5">
                                     <Label htmlFor="edit-weight" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">

@@ -146,7 +146,7 @@ export function MobileNav({ role, profile, userEmail }: MobileNavProps) {
                             >
                                 {role}
                             </span>
-                            <ThemeSwitch className="scale-[0.85]" />
+                            <ThemeSwitch />
                         </div>
 
                         {/* Avatar + name */}

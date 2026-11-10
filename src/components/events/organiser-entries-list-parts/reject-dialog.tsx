@@ -20,33 +20,33 @@ export function OrganiserRejectDialog({ vm }: { vm: OrganiserEntriesListVM }) {
                     <DialogHeader>
                         <DialogTitle className="text-lg font-bold text-foreground">
                             {isBulkReject
-                                ? `Reject ${selectedIds.size} selected entries?`
-                                : `Reject entry for ${targetEntryForReject?.student_name}?`}
+                                ? `Don't accept ${selectedIds.size} ticked entries?`
+                                : `Don't accept ${targetEntryForReject?.student_name}?`}
                         </DialogTitle>
-                        <DialogDescription className="text-xs text-muted-foreground">
-                            The coach and parent will be notified. You can specify a reason below (optional).
+                        <DialogDescription className="text-base text-muted-foreground">
+                            The coach and parent will see this. Pick or write a reason.
                         </DialogDescription>
                     </DialogHeader>
 
                     <div className="space-y-3 py-2">
                         {/* Quick Reason Chips */}
                         <div className="space-y-1.5">
-                            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                                Quick Reasons
+                            <span className="text-sm font-semibold text-muted-foreground">
+                                Common reasons
                             </span>
                             <div className="flex flex-wrap gap-1.5">
                                 {[
                                     'Category full',
-                                    'Weight limit exceeded',
-                                    'Rank/belt mismatch',
+                                    'Weight too high',
+                                    'Belt does not match',
                                     'Registration fee pending',
-                                    'Incomplete documentation',
+                                    'Details missing',
                                 ].map((chip) => (
                                     <button
                                         key={chip}
                                         type="button"
                                         onClick={() => setRejectReason(chip)}
-                                        className={`text-xs px-2.5 py-1 rounded-lg border transition cursor-pointer ${
+                                        className={`text-sm min-h-10 px-3 rounded-lg border transition cursor-pointer ${
                                             rejectReason === chip
                                                 ? 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-300 dark:border-rose-500/50'
                                                 : 'bg-background dark:bg-muted text-muted-foreground border-border hover:text-foreground'
@@ -64,7 +64,7 @@ export function OrganiserRejectDialog({ vm }: { vm: OrganiserEntriesListVM }) {
                                 Specific Note / Reason
                             </span>
                             <Input
-                                placeholder="Explain why this entry is rejected..."
+                                placeholder="Why? The coach and parent will see this."
                                 value={rejectReason}
                                 onChange={(e) => setRejectReason(e.target.value)}
                                 className="bg-card border-border text-foreground placeholder:text-muted-foreground text-xs rounded-xl"
@@ -88,7 +88,7 @@ export function OrganiserRejectDialog({ vm }: { vm: OrganiserEntriesListVM }) {
                             {isActionPending ? (
                                 <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
                             ) : null}
-                            Confirm Rejection
+                            Don&apos;t accept
                         </Button>
                     </DialogFooter>
                 </DialogContent>

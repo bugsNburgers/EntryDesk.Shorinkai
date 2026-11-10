@@ -146,6 +146,7 @@ export async function submitEntries(eventId: string) {
         WHERE event_id = ${eventId}
           AND coach_id = ${user.id}
           AND status = 'draft'
+          AND generic_checked IS TRUE
         RETURNING id
     `
     await refreshCategorySnapshots(sent.map((r) => r.id))
@@ -269,17 +270,19 @@ export async function bulkSubmitEntries(entryIds: string[]) {
     }
 
     // Draft -> submitted: the snapshot trigger (migration 003) re-takes the athlete snapshot.
-    await sql`
+    const sent = await sql<{ id: string }[]>`
         UPDATE entries
         SET status = 'submitted', updated_at = NOW()
         WHERE id = ANY(${validEntryIds}::uuid[])
           AND coach_id = ${user.id}
           AND status = 'draft'
+          AND generic_checked IS TRUE
+        RETURNING id
     `
-    await refreshCategorySnapshots(validEntryIds)
+    await refreshCategorySnapshots(sent.map((entry) => entry.id))
 
     revalidatePath('/dashboard/entries')
-    return { success: true, submitted: validEntryIds.length, ignored: invalidEntries.length }
+    return { success: true, submitted: sent.length, ignored: entriesToValidate.length - sent.length }
 }
 
 export async function deleteEntry(entryId: string) {
@@ -344,6 +347,7 @@ export async function updateEntryGenericChecked(entryId: string, checked: boolea
         UPDATE entries
         SET generic_checked = ${checked}
         WHERE id = ${entryId} 
+          AND status IN ('draft', 'pending_coach', 'correction_needed')
           AND (
               coach_id = ${user.id}
               OR EXISTS (
@@ -369,6 +373,7 @@ export async function bulkUpdateEntryGenericChecked(entryIds: string[], checked:
         UPDATE entries
         SET generic_checked = ${checked}
         WHERE id = ANY(${entryIds}::uuid[]) 
+          AND status IN ('draft', 'pending_coach', 'correction_needed')
           AND (
               coach_id = ${user.id}
               OR EXISTS (
@@ -566,7 +571,7 @@ export async function coachAddManualStudentAndEntry(input: CoachAddManualStudent
 
     // 5. Generate secure random qr_token for the public credential link (Plan 10.2)
     const qrToken = randomUUID().replace(/-/g, '')
-    const targetStatus = input.status === 'draft' ? 'draft' : 'submitted'
+    const targetStatus = 'draft'
     let entryId: string
 
     if (existingEntry.length > 0) {

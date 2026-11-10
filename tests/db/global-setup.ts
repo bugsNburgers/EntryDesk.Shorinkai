@@ -33,7 +33,7 @@ export default async function setup(project: TestProject) {
   project.provide("testDatabaseUrl", testUrl);
 
   return async () => {
-    await admin.unsafe(`DROP DATABASE IF EXISTS ${dbName} WITH (FORCE)`);
+    if (process.env.ENTRYDESK_KEEP_TEST_DATA !== "1") await admin.unsafe(`DROP DATABASE IF EXISTS ${dbName} WITH (FORCE)`);
     await admin.end();
   };
 }

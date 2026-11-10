@@ -1,12 +1,8 @@
 'use client'
 
 // ============================================================================
-// EntryDesk — Coach Tournament Entries List (Laptop & Mobile Pixel-Perfect)
-// Implements:
-//  - Coach list · laptop-html (CoachLaptop.dc.html & CoachLaptopSel.dc.html)
-//  - Coach list · mobile-html (CoachMobile.dc.html & CoachMobileSel.dc.html)
-//  - Row menu (⋯) · component-html (CoachMenu.dc.html)
-// Obsidian dark theme (#0a1220, #111a2b), teal accents (#2dd4b4), Google Sans.
+// EntryDesk — Coach entries for one event. Cards below lg, a table from lg up.
+// Layout: "EntryDesk UX Fixes" design canvas (09/11/2026).
 // ============================================================================
 
 import { useCoachEntriesList } from './coach-entries-list-parts/use-coach-entries-list'
@@ -21,7 +17,7 @@ export { normalizeCoachStatus } from './coach-entries-list-parts/shared'
 export function CoachEntriesList(props: CoachEntriesListProps) {
     const vm = useCoachEntriesList(props)
     return (
-        <div className="w-full text-foreground select-text font-['Google_Sans','Product_Sans',system-ui,sans-serif] space-y-4 pb-44 md:pb-28">
+        <div className="w-full text-foreground select-text space-y-4 pb-44 md:pb-28">
             <CoachEntriesToolbar vm={vm} />
 
             <CoachEntriesDesktopTable vm={vm} />

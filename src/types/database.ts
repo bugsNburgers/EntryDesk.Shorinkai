@@ -32,6 +32,7 @@ export interface User {
     avatar_url: string | null
     google_id?: string | null
     is_active: boolean
+    can_create_events: boolean
     created_at: string
     updated_at: string
 }

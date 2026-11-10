@@ -1,5 +1,6 @@
 'use client'
 
+import { formatStepDate } from '@/lib/date'
 import { EntrySnapshotDialog } from '@/components/events/entry-snapshot-dialog'
 import React, { useState, useTransition } from 'react'
 import Image from 'next/image'
@@ -416,10 +417,7 @@ export function ParentEntriesTable({ entries }: ParentEntriesTableProps) {
                                                 {entry.event_title}
                                             </p>
                                             <span className="text-[10px] text-muted-foreground font-mono">
-                                                {new Date(entry.created_at).toLocaleDateString('en-IN', {
-                                                    day: 'numeric',
-                                                    month: 'short',
-                                                })}
+                                                {formatStepDate(entry.created_at)}
                                             </span>
                                         </td>
 

@@ -204,106 +204,29 @@ export default async function RegisterTournamentPage({
     })
 
     return (
-        <div className="w-full max-w-6xl 2xl:max-w-[1600px] mx-auto pb-16 space-y-6">
-            {/* Top Navigation */}
-            <div>
-                <Link
-                    href={`/athlete/${child.id}`}
-                    className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground dark:text-muted-foreground dark:hover:text-foreground transition-colors group"
-                >
-                    <ChevronLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
-                    Back to {child.name}’s profile
-                </Link>
-            </div>
+        <div className="mx-auto w-full max-w-2xl space-y-5 pb-16">
+            <Link
+                href={`/athlete/${child.id}`}
+                className="inline-flex min-h-11 items-center gap-1 text-base font-semibold text-foreground hover:text-primary"
+            >
+                <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+                Back
+            </Link>
 
-            {/* Header */}
-            <div className="space-y-1">
-                <div className="flex items-center gap-2.5">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:bg-primary/15 dark:border-primary/30 dark:text-primary">
-                        <Trophy className="h-5 w-5" />
-                    </span>
-                    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-                        Register for Tournament
+            <div className="flex items-center gap-3.5">
+                <SafeAvatar src={child.photo_url} name={child.name} size={60} rounded="lg" priority />
+                <div className="min-w-0">
+                    <h1 className="text-2xl font-bold leading-tight tracking-tight text-foreground sm:text-3xl">
+                        Enter {child.name.split(' ')[0]} in a tournament
                     </h1>
+                    <p className="text-[15px] text-muted-foreground">
+                        {[child.rank ? `${child.rank.charAt(0).toUpperCase()}${child.rank.slice(1)} belt` : null, child.weight ? `${child.weight} kg` : null, child.dojo_name].filter(Boolean).join(' · ')}
+                    </p>
                 </div>
-                <p className="text-sm text-muted-foreground max-w-2xl">
-                    Register <span className="font-semibold text-foreground">{child.name}</span> ({child.dojo_name}) for championship events.
-                </p>
             </div>
 
-            {/* Responsive 2-column layout on desktop (14", 15.6", 16"), stacked on mobile */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 2xl:gap-10 items-start">
-                {/* Left Column: Athlete Profile Card & Policy Guidelines */}
-                <div className="lg:col-span-4 2xl:col-span-3 space-y-4 lg:sticky lg:top-20">
-                    {/* Athlete Summary Card */}
-                    <div className="bg-white border border-border dark:bg-card dark:border-border rounded-[18px] p-5 shadow-xs space-y-4">
-                        <div className="text-[11.5px] font-bold tracking-[0.14em] uppercase text-emerald-700 dark:text-primary">
-                            Athlete Summary
-                        </div>
-                        <div className="flex items-center gap-3.5">
-                            {child.photo_url ? (
-                                <SafeAvatar src={child.photo_url} name={child.name} size={56} className="border-2 border-primary" priority />
-                            ) : (
-                                <div className="h-14 w-14 rounded-full border-2 border-emerald-500 dark:border-primary bg-emerald-50 dark:bg-muted flex items-center justify-center text-emerald-700 dark:text-primary font-bold text-xl shrink-0">
-                                    {child.name.charAt(0).toUpperCase()}
-                                </div>
-                            )}
-                            <div className="min-w-0 flex-1">
-                                <h3 className="font-bold text-base text-foreground truncate">{child.name}</h3>
-                                <p className="text-xs text-muted-foreground truncate">{child.dojo_name}</p>
-                                <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-                                    {child.rank && (
-                                        <span className="text-[11px] font-semibold bg-muted text-foreground dark:bg-muted dark:text-foreground rounded px-2 py-0.5">
-                                            {child.rank}
-                                        </span>
-                                    )}
-                                    {child.weight && (
-                                        <span className="text-[11px] font-semibold bg-muted text-muted-foreground dark:bg-muted dark:text-muted-foreground rounded px-2 py-0.5">
-                                            {child.weight} kg
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-
-                        {child.coach_name && (
-                            <div className="pt-3 border-t border-border text-xs flex justify-between items-center text-muted-foreground">
-                                <span>Assigned Coach</span>
-                                <span className="font-medium text-foreground">{child.coach_name}</span>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* How It Works Card */}
-                    <div className="bg-white border border-border dark:bg-card dark:border-border rounded-[18px] p-5 shadow-xs space-y-3">
-                        <div className="text-[11.5px] font-bold tracking-[0.14em] uppercase text-muted-foreground">
-                            Registration Flow
-                        </div>
-                        <div className="space-y-3 text-xs text-muted-foreground leading-relaxed">
-                            <div className="flex gap-2.5 items-start">
-                                <span className="flex h-5 w-5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 dark:bg-primary/15 dark:border-primary/30 dark:text-primary text-[11px] font-bold items-center justify-center shrink-0 mt-0.5">1</span>
-                                <p><strong className="text-foreground">Apply:</strong> Choose kata/kumite and confirm weight. The category is worked out from age, belt and weight. Your entry is sent to your coach.</p>
-                            </div>
-                            <div className="flex gap-2.5 items-start">
-                                <span className="flex h-5 w-5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:bg-[#f5c542]/15 dark:border-[#f5c542]/30 dark:text-[#f5c542] text-[11px] font-bold items-center justify-center shrink-0 mt-0.5">2</span>
-                                <p><strong className="text-foreground">Coach Review:</strong> Coach verifies your eligibility and forwards to the organiser.</p>
-                            </div>
-                            <div className="flex gap-2.5 items-start">
-                                <span className="flex h-5 w-5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 dark:bg-primary/15 dark:border-primary/30 dark:text-primary text-[11px] font-bold items-center justify-center shrink-0 mt-0.5">3</span>
-                                <p><strong className="text-foreground">Chest Number:</strong> Once organiser confirms, your official digital pass is issued.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Right Column: Registration Form */}
-                <div className="lg:col-span-8 2xl:col-span-9 bg-white border border-border dark:bg-card dark:border-border rounded-[18px] p-5 sm:p-7 2xl:p-8 shadow-xs">
-                    <RegistrationForm
-                        child={child}
-                        tournaments={tournaments}
-                        preselectedEventId={preselectedEventId}
-                    />
-                </div>
+            <div className="rounded-2xl border border-border bg-card p-5 sm:p-7">
+                <RegistrationForm child={child} tournaments={tournaments} preselectedEventId={preselectedEventId} />
             </div>
         </div>
     )

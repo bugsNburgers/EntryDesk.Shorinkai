@@ -25,6 +25,7 @@ export interface OrganiserEntryItem {
     student_rank: string | null
     student_weight: number | null
     student_dob: string | null
+    student_school_or_city?: string | null
     student_photo: string | null
     student_registration_no: string | null
     dojo_id?: string | null
@@ -33,11 +34,16 @@ export interface OrganiserEntryItem {
     event_day_name?: string | null
 }
 
+import type { OrganiserTab } from './tabs'
+export type { OrganiserTab } from './tabs'
+
 export interface OrganiserEntriesListProps {
     entries: OrganiserEntryItem[]
     eventId: string
     eventTitle?: string
+    initialTab?: OrganiserTab
 }
+
 
 // ----------------------------------------------------------------------------
 // SVG Icons matching Coach view

@@ -168,9 +168,9 @@ function getStatusIcon(status: string | undefined) {
 }
 
 function getStatusText(status: string | undefined) {
-    if (status === 'approved') return 'Approved'
-    if (status === 'pending') return 'Pending'
-    if (status === 'rejected') return 'Rejected'
+    if (status === 'approved') return 'You can enter'
+    if (status === 'pending') return 'Request sent'
+    if (status === 'rejected') return 'Not accepted'
     return null
 }
 

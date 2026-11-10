@@ -7,6 +7,7 @@
 // ============================================================================
 
 import { getStatusLabel } from '../../status'
+import { formatDateStable } from '../../date'
 import { renderBaseEmailLayout, escapeHtml } from './base-layout'
 
 export interface AcceptedEmailData {
@@ -35,17 +36,9 @@ export function renderAcceptedEmail(data: AcceptedEmailData): {
     // Format tournament dates
     let dateStr = ''
     if (data.startDate) {
-        const start = new Date(data.startDate).toLocaleDateString('en-IN', {
-            day: 'numeric',
-            month: 'short',
-            year: 'numeric',
-        })
+        const start = formatDateStable(data.startDate)
         if (data.endDate && data.endDate !== data.startDate) {
-            const end = new Date(data.endDate).toLocaleDateString('en-IN', {
-                day: 'numeric',
-                month: 'short',
-                year: 'numeric',
-            })
+            const end = formatDateStable(data.endDate)
             dateStr = `${start} – ${end}`
         } else {
             dateStr = start

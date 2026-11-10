@@ -18,7 +18,7 @@ export function OrganiserEntriesFooter({ vm }: { vm: OrganiserEntriesListVM }) {
                     {selectedIds.size > 0 ? (
                         <>
                             <div className="text-[15px] text-foreground">
-                                <b className="font-bold">{selectedIds.size} selected</b> &nbsp;·&nbsp;
+                                <b className="font-bold">{selectedIds.size} ticked</b> &nbsp;·&nbsp;
                                 <button
                                     onClick={() => setSelectedIds(new Set())}
                                     className="text-primary font-semibold cursor-pointer hover:underline ml-1"
@@ -33,7 +33,7 @@ export function OrganiserEntriesFooter({ vm }: { vm: OrganiserEntriesListVM }) {
                                     className="h-[46px] px-5 rounded-xl font-bold text-[15px] bg-primary hover:bg-primary/90 dark:bg-primary dark:hover:bg-primary/90 text-white dark:text-primary-foreground inline-flex items-center gap-2 transition disabled:opacity-40 cursor-pointer shadow-md"
                                 >
                                     {isActionPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Check className="h-4 w-4 mr-1" />}
-                                    Approve selected ({selectedIds.size})
+                                    Accept {selectedIds.size} ticked
                                 </button>
                                 <button
                                     onClick={handleOpenRejectBulk}
@@ -41,14 +41,14 @@ export function OrganiserEntriesFooter({ vm }: { vm: OrganiserEntriesListVM }) {
                                     className="h-[46px] px-5 rounded-xl font-bold text-[15px] border-[1.5px] border-rose-400 dark:border-rose-500/50 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition disabled:opacity-40 cursor-pointer"
                                 >
                                     <X className="h-4 w-4 mr-1 inline" />
-                                    Reject selected ({selectedIds.size})
+                                    Don&apos;t accept {selectedIds.size} ticked
                                 </button>
                             </div>
                         </>
                     ) : (
                         <>
                             <div className="text-[14.5px] text-muted-foreground">
-                                <b className="text-foreground font-bold">{counts.pending}</b> pending review &nbsp;·&nbsp; {counts.approved} accepted &nbsp;·&nbsp; {counts.rejected} rejected
+                                <b className="text-foreground font-bold">{counts.pending}</b> to accept &nbsp;·&nbsp; {counts.approved} accepted &nbsp;·&nbsp; {counts.rejected} not accepted
                             </div>
                             <button
                                 onClick={handleApproveAllPending}
@@ -56,7 +56,7 @@ export function OrganiserEntriesFooter({ vm }: { vm: OrganiserEntriesListVM }) {
                                 className="h-[46px] px-5 rounded-xl font-bold text-[15px] bg-primary hover:bg-primary/90 dark:bg-primary dark:hover:bg-primary/90 text-white dark:text-primary-foreground inline-flex items-center gap-2 transition disabled:opacity-40 cursor-pointer shadow-md"
                             >
                                 {isActionPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Check className="h-4 w-4 mr-1" />}
-                                Accept all pending ({counts.pending})
+                                Accept all {counts.pending}
                             </button>
                         </>
                     )}
@@ -67,7 +67,7 @@ export function OrganiserEntriesFooter({ vm }: { vm: OrganiserEntriesListVM }) {
                     {selectedIds.size > 0 ? (
                         <>
                             <div className="flex justify-between items-center text-[14px] text-foreground">
-                                <b className="font-bold">{selectedIds.size} selected</b>
+                                <b className="font-bold">{selectedIds.size} ticked</b>
                                 <button
                                     onClick={() => setSelectedIds(new Set())}
                                     className="text-primary font-semibold cursor-pointer hover:underline"
@@ -81,20 +81,20 @@ export function OrganiserEntriesFooter({ vm }: { vm: OrganiserEntriesListVM }) {
                                 className="h-[48px] w-full text-[15px] font-bold bg-primary hover:bg-primary/90 dark:bg-primary dark:hover:bg-primary/90 text-white dark:text-primary-foreground rounded-xl inline-flex items-center justify-center gap-2 transition disabled:opacity-40 cursor-pointer shadow-md"
                             >
                                 {isActionPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Check className="h-4 w-4 mr-1" />}
-                                Approve selected ({selectedIds.size})
+                                Accept {selectedIds.size} ticked
                             </button>
                             <button
                                 onClick={handleOpenRejectBulk}
                                 disabled={isActionPending}
                                 className="h-[42px] w-full text-[14px] font-bold border-[1.5px] border-rose-400 dark:border-rose-500/50 text-rose-600 dark:text-rose-400 rounded-xl hover:bg-rose-50 dark:hover:bg-rose-500/10 transition disabled:opacity-40 cursor-pointer"
                             >
-                                Reject selected ({selectedIds.size})
+                                Don&apos;t accept {selectedIds.size} ticked
                             </button>
                         </>
                     ) : (
                         <>
                             <div className="text-[13.5px] text-muted-foreground">
-                                <b className="text-foreground font-bold">{counts.pending}</b> pending review · {counts.approved} accepted
+                                <b className="text-foreground font-bold">{counts.pending}</b> to accept · {counts.approved} accepted
                             </div>
                             <button
                                 onClick={handleApproveAllPending}
@@ -102,7 +102,7 @@ export function OrganiserEntriesFooter({ vm }: { vm: OrganiserEntriesListVM }) {
                                 className="h-[48px] w-full text-[15.5px] font-bold bg-primary hover:bg-primary/90 dark:bg-primary dark:hover:bg-primary/90 text-white dark:text-primary-foreground rounded-xl inline-flex items-center justify-center gap-2 transition disabled:opacity-40 cursor-pointer shadow-md"
                             >
                                 {isActionPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Check className="h-4 w-4 mr-1" />}
-                                Accept all pending ({counts.pending})
+                                Accept all {counts.pending}
                             </button>
                         </>
                     )}

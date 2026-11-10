@@ -118,90 +118,90 @@ export function calculateAge(dobValue: string | Date | null | undefined): string
     return `${age} ${age === 1 ? 'year' : 'years'}`
 }
 
+/** Parses a DB date / ISO string / Date to a UTC Date (date-only strings stay on their calendar day). */
+function toUtcDate(value: string | Date): Date | null {
+    if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value
+    const iso = normalizeDobToIso(value) || value
+    const d = new Date(iso)
+    return Number.isNaN(d.getTime()) ? null : d
+}
+
+function ddmmyyyyUtc(date: Date): string {
+    return `${pad2(date.getUTCDate())}/${pad2(date.getUTCMonth() + 1)}/${date.getUTCFullYear()}`
+}
+
+// All user-facing dates are DD/MM/YYYY (owner decision 09/11/2026). The "Long" names are kept for compatibility.
+
 export function formatDobLong(dobValue: string | Date | null | undefined): string | null {
     if (!dobValue) return null
-    let date: Date
-    if (typeof dobValue === 'string') {
-        const iso = normalizeDobToIso(dobValue) || dobValue
-        date = new Date(iso)
-    } else {
-        date = dobValue
-    }
-    if (isNaN(date.getTime())) return null
-
-    const day = String(date.getUTCDate()).padStart(2, '0')
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-    const month = months[date.getUTCMonth()]
-    const year = date.getUTCFullYear()
-    return `${day} ${month} ${year}`
+    const date = toUtcDate(dobValue)
+    return date ? ddmmyyyyUtc(date) : null
 }
 
 export function formatTournamentDateRangeLong(
     startDate: string | Date,
     endDate: string | Date
 ): string {
-    const start = typeof startDate === 'string' ? new Date(startDate) : startDate
-    const end = typeof endDate === 'string' ? new Date(endDate) : endDate
-    if (isNaN(start.getTime()) || isNaN(end.getTime())) return ''
-
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-    const startDay = String(start.getUTCDate()).padStart(2, '0')
-    const endDay = String(end.getUTCDate()).padStart(2, '0')
-    const startMonth = months[start.getUTCMonth()]
-    const endMonth = months[end.getUTCMonth()]
-    const startYear = start.getUTCFullYear()
-    const endYear = end.getUTCFullYear()
-
-    if (startDay === endDay && startMonth === endMonth && startYear === endYear) {
-        return `${startDay} ${startMonth} ${startYear}`
-    }
-
-    if (startMonth === endMonth && startYear === endYear) {
-        return `${startDay} – ${endDay} ${startMonth} ${startYear}`
-    }
-
-    return `${startDay} ${startMonth} – ${endDay} ${endMonth} ${endYear}`
+    const start = toUtcDate(startDate)
+    const end = toUtcDate(endDate)
+    if (!start || !end) return ''
+    const a = ddmmyyyyUtc(start)
+    const b = ddmmyyyyUtc(end)
+    return a === b ? a : `${a} – ${b}`
 }
 
 export function formatCloseDateBadge(closeDate: string | Date | null | undefined): string | null {
     if (!closeDate) return null
-    let date: Date
-    if (typeof closeDate === 'string') {
-        const iso = normalizeDobToIso(closeDate) || closeDate
-        date = new Date(iso)
-    } else {
-        date = closeDate
-    }
-    if (isNaN(date.getTime())) return null
+    const date = toUtcDate(closeDate)
+    return date ? ddmmyyyyUtc(date) : null
+}
 
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-    const day = String(date.getUTCDate()).padStart(2, '0')
-    const month = months[date.getUTCMonth()]
-    return `${day} ${month}`
+/** Whole days from today (UTC calendar) until the given date-only value. Negative when it has passed. */
+export function daysUntil(value: string | Date | null | undefined, today: Date = new Date()): number | null {
+    if (!value) return null
+    const date = toUtcDate(value)
+    if (!date) return null
+    const a = Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())
+    const b = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate())
+    return Math.round((a - b) / 86400000)
+}
+
+/** "57 days left", "Last day today", "1 day left", or "Closed". */
+export function daysLeftText(value: string | Date | null | undefined, today: Date = new Date()): string | null {
+    const n = daysUntil(value, today)
+    if (n === null) return null
+    if (n < 0) return 'Closed'
+    if (n === 0) return 'Last day today'
+    return n === 1 ? '1 day left' : `${n} days left`
+}
+
+/** Weekday name for a date-only value, e.g. "Sunday". */
+export function weekdayName(value: string | Date | null | undefined): string {
+    if (!value) return ''
+    const date = toUtcDate(value)
+    if (!date) return ''
+    return ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][date.getUTCDay()]
 }
 
 export function formatSubmittedTimestamp(val: string | Date | null | undefined): string {
     if (!val) return '—'
     const date = typeof val === 'string' ? new Date(val) : val
     if (isNaN(date.getTime())) return '—'
-
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-    const day = date.getDate()
-    const month = months[date.getMonth()]
-    const year = date.getFullYear()
-    const hours = String(date.getHours()).padStart(2, '0')
-    const mins = String(date.getMinutes()).padStart(2, '0')
-    return `${day} ${month} ${year}, ${hours}:${mins}`
+    // Shown in India time regardless of server timezone, so server and browser render the same text.
+    const parts = new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'Asia/Kolkata', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false,
+    }).formatToParts(date)
+    const get = (t: string) => parts.find((p) => p.type === t)?.value ?? ''
+    return `${get('day')}/${get('month')}/${get('year')}, ${get('hour')}:${get('minute')}`
 }
 
 export function formatStepDate(val: string | Date | null | undefined): string {
     if (!val) return ''
     const date = typeof val === 'string' ? new Date(val) : val
     if (isNaN(date.getTime())) return ''
-
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-    const day = date.getDate()
-    const month = months[date.getMonth()]
-    const year = date.getFullYear()
-    return `${day} ${month} ${year}`
+    const parts = new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'Asia/Kolkata', day: '2-digit', month: '2-digit', year: 'numeric',
+    }).formatToParts(date)
+    const get = (t: string) => parts.find((p) => p.type === t)?.value ?? ''
+    return `${get('day')}/${get('month')}/${get('year')}`
 }

@@ -59,10 +59,14 @@ export async function createSession(
     const durationSeconds = SESSION_DURATION_BY_ROLE[role] ?? DEFAULT_SESSION_DURATION
     const expiresAt = new Date(Date.now() + durationSeconds * 1000)
 
-    await sql`
+    const session = await sql`
         INSERT INTO sessions (user_id, session_token, expires_at, user_agent, ip_address)
-        VALUES (${userId}, ${tokenHash}, ${expiresAt}, ${userAgent ?? null}, ${ipAddress ?? null})
+        SELECT id, ${tokenHash}, ${expiresAt}, ${userAgent ?? null}, ${ipAddress ?? null}
+        FROM users WHERE id = ${userId} AND is_active
+        FOR SHARE
+        RETURNING id
     `
+    if (!session.length) throw new Error('Account is inactive')
 
     // Piggyback cleanup — fire-and-forget, never block session creation
     sql`DELETE FROM sessions WHERE expires_at < NOW()`.catch(() => {})

@@ -106,7 +106,7 @@ export function useCoachAddStudentDialog({
         setSuccessResult(null)
     }
 
-    const handleSubmit = async (submitStatus: 'draft' | 'submitted') => {
+    const handleSubmit = async () => {
         if (mode === 'manual' && !name.trim()) {
             toast.error('Please enter the student’s full name')
             return
@@ -138,15 +138,10 @@ export function useCoachAddStudentDialog({
                 schoolOrCity: schoolOrCity.trim() || null,
                 participationType: isSimple ? null : participationType,
                 eventDayId: eventDays.length > 0 ? eventDayId : null,
-                status: submitStatus,
             })
 
             if (res.success) {
-                toast.success(
-                    submitStatus === 'submitted'
-                        ? `${res.studentName} registered & submitted to organizer!`
-                        : `${res.studentName} saved as draft entry.`
-                )
+                toast.success(`${res.studentName} saved. Mark the entry as paid before sending it.`)
                 setSuccessResult({
                     studentName: res.studentName,
                     categoryName: res.categoryName,

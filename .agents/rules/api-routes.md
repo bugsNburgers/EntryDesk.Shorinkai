@@ -21,8 +21,10 @@ All server actions start with `requireRole(...)` from `@/lib/auth/require-role` 
 - `login/actions.ts`: login (password), verifyGoogleLogin (whitelist only), logout
 - `athlete/actions.ts`: createChildAsParent, updateChildAsParent (profile edits never change existing entries)
 - `athlete/entry-actions.ts`: submitParentEntry (writes snapshot + category; allows re-submit after withdrawn/coach_declined/correction_needed), withdrawParentEntry, updateParentEntryDay
-- `dashboard/parent-entries/actions.ts` (coach review): coachForwardEntry, coachBulkForwardEntries, coachRequestCorrection, coachDeclineEntry, coachWithdrawEntry
-- `dashboard/events/[id]/entries/actions.ts` (organiser): updateEntryStatus, bulkUpdateEntryStatus, updateEntryChestNo (returns `{error}` on duplicate number, audited), exportEventEntries, **exportEventForRingFlow** (RingFlow official-roster rows)
+- `dashboard/parent-entries/page.tsx` is only a **redirect** now (coach digest emails link to it) → the first event with entries `With coach`, else `/dashboard`.
+- `dashboard/events/[id]/entries/page.tsx`: coach view (CoachDashboard). For organisers it **redirects** to `/dashboard/events/<id>?status=…` (the one organiser entries page).
+- `dashboard/parent-entries/actions.ts` (coach review): coachForwardEntry (refuses entries whose status cannot move to `submitted`), coachBulkForwardEntries, coachRequestCorrection, coachDeclineEntry, coachWithdrawEntry
+- `dashboard/events/[id]/entries/actions.ts` (organiser): updateEntryStatus, bulkUpdateEntryStatus, updateEntryChestNo (returns `{error}` on duplicate number, audited), exportEventEntries, exportEventForRingFlow (RingFlow official-roster rows — **not wired to any button** since 09/11/2026; kept for the planned admin portal, `docs/admin-portal-plan.md`)
 - `dashboard/events/actions/index.ts`: createEvent · `events/[id]/actions.ts`: deleteEvent, updateEventSettings
 - `dashboard/events/[id]/categories/actions/index.ts`: createCategory, updateCategory, deleteCategory
 - `dashboard/events/[id]/settings/collaborators.ts`: add/remove/updateEventCollaborator
@@ -38,3 +40,13 @@ All server actions start with `requireRole(...)` from `@/lib/auth/require-role` 
 `lib/category.ts` (calculateCategory, ageReferenceDate(start, age_cutoff_rule), ageOn), `lib/entries/snapshot.ts` (snapshotColumns, categoryForEvent, refreshCategorySnapshots, jsonb),
 `lib/export/ringflow.ts` (toRingFlowRows, RINGFLOW_HEADERS, mapSex/mapBelt/mapParticipation), `lib/audit.ts` (audit log; `AUDIT_ACTIONS`),
 `lib/auth/rate-limit.ts` (DB-backed), `lib/email/notifications.ts`, `lib/qr.ts`, `lib/image-compression.ts`.
+
+## Admin operations
+
+The /admin portal checks the active admin role on the server. Staff login
+provisioning uses verified Gmail identity. Coach access changes revoke sessions.
+The organiser toggle changes only event creation, which defaults to off after
+migration 006. Organiser sign-in, existing sessions and existing event ownership
+are independent of this permission. Event drafts created here are private with registration closed.
+RingFlow workbook data is available only to admins. General roster export
+continues to use the existing event permissions.

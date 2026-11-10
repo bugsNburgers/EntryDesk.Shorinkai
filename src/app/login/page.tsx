@@ -70,12 +70,9 @@ export default async function LoginPage({
                         {/* Session-expired notice — shown when redirected from a protected page */}
                         {callbackUrl && callbackUrl.startsWith('/') && !errorMessage && (
                             <div className="mb-5 flex items-start gap-3 rounded-xl border border-amber-500/25 bg-amber-500/10 p-4 text-sm text-amber-700 dark:text-amber-300">
-                                <span className="text-base leading-none mt-0.5">⏱</span>
                                 <div>
-                                    <p className="font-semibold">Session expired</p>
-                                    <p className="text-xs mt-0.5 opacity-80">
-                                        Please sign in again — you&apos;ll be sent right back to where you were.
-                                    </p>
+                                    <p className="text-base font-semibold">Please sign in again</p>
+                                    <p className="mt-0.5 text-[15px]">We&apos;ll take you back to the page you were on.</p>
                                 </div>
                             </div>
                         )}

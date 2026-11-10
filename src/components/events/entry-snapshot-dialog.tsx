@@ -38,10 +38,15 @@ export function EntrySnapshotDialog({
     entryId,
     initial,
     triggerLabel = 'Edit entry details',
+    labelled = false,
+    triggerClassName,
 }: {
     entryId: string
     initial: EntrySnapshotValues
     triggerLabel?: string
+    /** Show a text button ("Fix details") instead of the small pencil icon. */
+    labelled?: boolean
+    triggerClassName?: string
 }) {
     const router = useRouter()
     const [open, setOpen] = useState(false)
@@ -82,17 +87,31 @@ export function EntrySnapshotDialog({
 
     return (
         <>
-            <Button
-                type="button"
-                size="icon"
-                variant="ghost"
-                className="h-8 w-8"
-                title={triggerLabel}
-                aria-label={triggerLabel}
-                onClick={() => setOpen(true)}
-            >
-                <PencilLine className="h-4 w-4" />
-            </Button>
+            {labelled ? (
+                <button
+                    type="button"
+                    onClick={() => setOpen(true)}
+                    className={
+                        triggerClassName ??
+                        'inline-flex min-h-11 items-center gap-1.5 whitespace-nowrap rounded-lg border-[1.5px] border-border bg-card px-3.5 font-semibold transition-colors hover:bg-muted'
+                    }
+                >
+                    <PencilLine className="h-4 w-4" aria-hidden="true" />
+                    {triggerLabel}
+                </button>
+            ) : (
+                <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    className="h-8 w-8"
+                    title={triggerLabel}
+                    aria-label={triggerLabel}
+                    onClick={() => setOpen(true)}
+                >
+                    <PencilLine className="h-4 w-4" />
+                </Button>
+            )}
             <Dialog open={open} onOpenChange={setOpen}>
                 <DialogContent className="sm:max-w-md">
                     <DialogHeader>
