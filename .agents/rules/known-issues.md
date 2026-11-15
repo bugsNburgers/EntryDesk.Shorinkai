@@ -39,5 +39,9 @@ Legend: ✅ fixed in the working tree (not yet deployed; migrations not yet run 
 
 ## Hosting / cost notes (verify on vendor pricing pages)
 - **Vercel Hobby is non-commercial only.** The owner is paid by organisers → Vercel Pro ($20/mo) is the safe choice.
-- Photos stay on **Vercel Blob** (owner decision). Blob free-tier storage/transfer limits were not verified.
+- New uploads go to Cloudflare R2. Existing Vercel Blob URLs remain readable.
+- Photo domain `photos.cruxstudios.dev` and the `r2.dev` URL serve the **same bucket** (verified 2026-11-10). CORS allows
+  `https://entrydesk.cruxstudios.dev` + `http://localhost:3000` only; ID-card canvas export verified in a browser.
+- R2 photos now go through `next/image` (Vercel image optimisation, billed per transformation on Pro). Photos uploaded
+  before 2026-11-10 still carry `max-age=86400`; a Cloudflare Cache Rule on the photo domain can override Browser TTL.
 - Neon free: 100 CU-hours/month and 1 GB per project; exceeding storage blocks writes. Autosuspend adds a cold start after idle.

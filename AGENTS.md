@@ -5,7 +5,7 @@
 
 ## What it is
 Karate tournament entry platform. **Next.js 16 (App Router, Turbopack) · React 19 · TypeScript · Tailwind v4 ·
-Postgres (Neon) via the `postgres` package · Vercel Blob for photos · Resend for email (not configured yet).**
+Postgres (Neon) via the `postgres` package · Cloudflare R2 for photos · Resend for email (not configured yet).**
 Scale target: ~10,000 athletes, ~1,000 coaches (dojos).
 
 ## The product flow (one paragraph)
@@ -72,3 +72,7 @@ tests/unit (vitest) · tests/db (vitest, local Docker PG) · tests/e2e (Playwrig
 10. JSONB params: bind with `sql.json(x)` (or `jsonb()` from `lib/entries/snapshot.ts`), **never** `JSON.stringify(x)` (double-encodes).
 11. Render user/athlete photos with `components/ui/safe-avatar.tsx` (never raw `next/image` on a DB URL).
 12. Chest numbers are unique per event (index `idx_entries_event_chest`); catch `23505` and show a friendly error.
+
+## GitHub pull requests
+
+PR requests apply only to pull requests whose head and base branches are both in `bugsNburgers/EntryDesk.Shorinkai` (`origin`). Pass `-R bugsNburgers/EntryDesk.Shorinkai` to `gh` and verify both repositories before taking action. Leave the cross-repository pull request from this fork to `ull0sm/EntryDesk` (`upstream`) untouched, including its source branch. Never merge, close, edit, comment on, or push changes that would update that upstream pull request.

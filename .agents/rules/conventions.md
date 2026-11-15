@@ -35,10 +35,16 @@ for DB `DATE` values (they parse as UTC midnight).
 
 ## Images
 `next/image` throws (whole page crashes) for hosts not in `next.config.ts → images.remotePatterns`. Allowed:
-`*.googleusercontent.com`, `*.public.blob.vercel-storage.com`, `avatars.githubusercontent.com`, and local `/…` paths.
+`*.googleusercontent.com`, `*.public.blob.vercel-storage.com`, `avatars.githubusercontent.com`, the R2 photo host
+(hostname of `R2_PUBLIC_BASE_URL`, read at build time and exposed as `NEXT_PUBLIC_R2_PHOTO_HOST`), and local `/…` paths.
 Use **`SafeAvatar`** (`components/ui/safe-avatar.tsx`) for any user/athlete photo: it only hands next/image an allowed
 src, falls back to `<img>` otherwise and to initials on error, and can open the enlarge dialog (`enlargeable`).
 Keep its `ALLOWED_HOSTS` in sync with `remotePatterns`.
+
+Photo caching (`lib/storage/photo-storage.ts → PHOTO_CACHE_CONTROL`): every upload gets a new UUID key, so objects are
+`public, max-age=31536000, s-maxage=86400, immutable` (browser keeps it a year, Cloudflare edge at most a day).
+Never overwrite an existing key with different bytes: browsers would keep the old photo. Deleting from R2 does not clear
+the edge; `removePhoto` purges the URL when `CLOUDFLARE_ZONE_ID` + `CLOUDFLARE_CACHE_PURGE_TOKEN` are set.
 
 ## JSONB
 Bind JSONB values with `sql.json(x)` / `jsonb(x)`. `${JSON.stringify(x)}` is stored as a JSON *string* (postgres.js
@@ -60,5 +66,5 @@ and `types/database.ts`. Run by hand on Neon (SQL editor) — and on the local t
 
 ## Env vars
 `DATABASE_URL` (Neon pooled) · `NEXT_PUBLIC_BASE_URL` · `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET`/`NEXT_PUBLIC_GOOGLE_CLIENT_ID` ·
-`BLOB_READ_WRITE_TOKEN` · `RESEND_API_KEY` + `EMAIL_FROM` (needed for OTP in production) ·
+R2 variables in `.env.example` (+ optional `CLOUDFLARE_ZONE_ID`/`CLOUDFLARE_CACHE_PURGE_TOKEN`) · `RESEND_API_KEY` + `EMAIL_FROM` (needed for OTP in production) ·
 `NEXT_PUBLIC_TURNSTILE_SITE_KEY` + `TURNSTILE_SECRET_KEY`. (`APP_BASE_URL` in old docs does not exist — it is `NEXT_PUBLIC_BASE_URL`.)

@@ -46,7 +46,11 @@ export default defineConfig({
     env: {
       DATABASE_URL: E2E_DB_URL.toString(),
       NEXT_PUBLIC_BASE_URL: `http://localhost:${PORT}`,
-      BLOB_READ_WRITE_TOKEN: "",
+      R2_ACCOUNT_ID: "",
+      R2_ACCESS_KEY_ID: "",
+      R2_SECRET_ACCESS_KEY: "",
+      R2_BUCKET_NAME: "",
+      R2_PUBLIC_BASE_URL: "",
       RESEND_API_KEY: "",
       E2E: "1",
       NEXT_DIST_DIR: ".next-e2e",

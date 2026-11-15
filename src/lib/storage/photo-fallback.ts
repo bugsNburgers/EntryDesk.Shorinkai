@@ -1,10 +1,10 @@
-// Photos live on Vercel Blob (owner decision, 2026-11-09). Without BLOB_READ_WRITE_TOKEN,
+// Photo uploads use R2. The data URI fallback is for local development only.
 // local development stores a base64 data: URI so the flow still works. In production
 // that would bloat the DB with image bytes, so it fails closed instead.
 
 export class PhotoStorageNotConfiguredError extends Error {
     constructor() {
-        super('Photo storage is not configured (BLOB_READ_WRITE_TOKEN missing). Please contact support.')
+        super('Photo storage is not configured (R2 settings missing). Please contact support.')
         this.name = 'PhotoStorageNotConfiguredError'
     }
 }

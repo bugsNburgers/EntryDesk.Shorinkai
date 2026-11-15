@@ -19,6 +19,8 @@ const ALLOWED_HOSTS: Array<string | RegExp> = [
     /\.googleusercontent\.com$/,
     /\.public\.blob\.vercel-storage\.com$/,
     'avatars.githubusercontent.com',
+    // R2 photo host, derived from R2_PUBLIC_BASE_URL in next.config.ts.
+    ...(process.env.NEXT_PUBLIC_R2_PHOTO_HOST ? [process.env.NEXT_PUBLIC_R2_PHOTO_HOST] : []),
 ]
 
 export function isOptimizableImageSrc(src: string | null | undefined): boolean {

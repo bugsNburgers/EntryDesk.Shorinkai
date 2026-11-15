@@ -20,8 +20,8 @@ Legacy `/parent/*` URLs redirect (src/proxy.ts).
 - Parent can edit an athlete any time while `membership_status='active'`. **Existing entries are not affected**: each entry keeps the snapshot it was
   submitted with (`entries.snap_*`); the edit dialog says so. `students.dob_locked` is unused.
 - Withdraw: allowed until organiser approval and before the registration deadline; after approval the coach must do it (`coachWithdrawEntry`).
-- Photos: client-compressed (`lib/image-compression.ts`), ≤200 KB, stored in Vercel Blob; DB keeps only the URL. In production a missing
-  `BLOB_READ_WRITE_TOKEN` makes uploads fail (500) instead of storing a `data:` URI. Render photos with `SafeAvatar`.
+- Photos: client-compressed (`lib/image-compression.ts`), ≤200 KB, stored in Cloudflare R2; DB keeps only the URL. In production a missing
+  R2 configuration makes uploads fail (500) instead of storing a `data:` URI. Render photos with `SafeAvatar`.
 - A parent with several children sees them all under one login; one email = one `users` row.
 
 ## Gotchas

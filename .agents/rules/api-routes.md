@@ -10,7 +10,7 @@ All server actions start with `requireRole(...)` from `@/lib/auth/require-role` 
 | POST | /api/auth/google-join | Google ID token → auto-creates parent, sets `parent_dojo_slug` cookie |
 | POST | /api/auth/logout · GET /api/auth/session | logout · current session |
 | GET | /auth/callback · POST/GET /auth/signout | OAuth callback · sign out |
-| POST/DELETE | /api/upload/photo | athlete photo (≤200 KB jpg/png/webp) → Vercel Blob. Without `BLOB_READ_WRITE_TOKEN`: data-URI fallback in dev, **500 in production** (`lib/storage/photo-fallback.ts`) |
+| POST/DELETE | /api/upload/photo | athlete photo (≤200 KB jpg/png/webp) → Cloudflare R2. Without R2 settings: data-URI fallback in dev, **500 in production** (`lib/storage/photo-fallback.ts`) |
 | POST | /api/upload/profile-photo | coach/organiser profile photo (same Blob/fallback rules) |
 | GET | /api/id-card/[entryId] | ID card PDF |
 | GET | /api/public-events | public event list (landing page) |
