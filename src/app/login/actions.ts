@@ -66,6 +66,9 @@ export async function login(formData: FormData) {
         return redirect(`/login?error=rate_limited&retry=${rateCheck.retryAfterSeconds}`)
     }
 
+    // redirect() works by throwing, so it must never be called inside this try/catch
+    // (the catch would swallow it and show "auth_failed" for every wrong password).
+    let failure: string | null = null
     try {
         const users = await sql<
             {
@@ -82,36 +85,30 @@ export async function login(formData: FormData) {
             LIMIT 1
         `
 
-        if (users.length === 0) {
-            // Note: Keep message generic or informative as per user specification:
-            // Only whitelisted users can access.
-            return redirect('/login?error=invalid_credentials')
-        }
-
         const user = users[0]
 
-        if (!user.is_active) {
-            return redirect('/login?error=account_disabled')
-        }
-
-        if (!user.password_hash) {
+        // Generic message for unknown email and wrong password alike (no account enumeration).
+        if (!user) {
+            failure = 'invalid_credentials'
+        } else if (!user.is_active) {
+            failure = 'account_disabled'
+        } else if (!user.password_hash) {
             // User registered via Google only without a password
-            return redirect('/login?error=use_google')
+            failure = 'use_google'
+        } else if (!(await verifyPassword(password, user.password_hash))) {
+            failure = 'invalid_credentials'
+        } else {
+            // Login successful: reset rate limit & issue session
+            resetRateLimit(rateLimitKey)
+            await createSession(user.id, user.role as import('@/types/database').UserRole)
+            await rememberLastLogin('password', user.email)
         }
-
-        const isValid = await verifyPassword(password, user.password_hash)
-        if (!isValid) {
-            return redirect('/login?error=invalid_credentials')
-        }
-
-        // Login successful: reset rate limit & issue session
-        resetRateLimit(rateLimitKey)
-        await createSession(user.id, user.role as import('@/types/database').UserRole)
-        await rememberLastLogin('password', user.email)
     } catch (err) {
         console.error('[AUTH_ERROR] Login exception:', err)
-        return redirect('/login?error=auth_failed')
+        failure = 'auth_failed'
     }
+
+    if (failure) return redirect(`/login?error=${failure}`)
 
     revalidatePath('/', 'layout')
     redirect(callbackUrl)
