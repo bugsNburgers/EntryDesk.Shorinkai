@@ -10,6 +10,7 @@ import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import sql from '@/lib/db'
 import { getCurrentSession } from '@/lib/auth/session'
+import { readLastLogin } from '@/lib/auth/last-login'
 import { JoinPageClient } from './join-page-client'
 import { redirect } from 'next/navigation'
 
@@ -92,6 +93,7 @@ export default async function JoinPage({ params }: JoinPageProps) {
     }
 
     const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ''
+    const lastLogin = await readLastLogin()
 
     return (
         <div className="min-h-screen bg-background">
@@ -164,6 +166,7 @@ export default async function JoinPage({ params }: JoinPageProps) {
                     dojoSlug={slug}
                     dojoName={dojo.name}
                     googleClientId={googleClientId}
+                    lastLogin={lastLogin}
                 />
 
                 <p className="mt-6 text-center text-xs text-muted-foreground leading-relaxed">

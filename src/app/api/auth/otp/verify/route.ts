@@ -8,6 +8,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { verifyOtp } from '@/lib/auth/otp'
 import { createSession } from '@/lib/auth/session'
+import { rememberLastLogin } from '@/lib/auth/last-login'
 import { checkRateLimit } from '@/lib/auth/rate-limit'
 import sql from '@/lib/db'
 import crypto from 'crypto'
@@ -106,6 +107,7 @@ export async function POST(request: NextRequest) {
         }
 
         await createSession(user.id, 'parent')
+        await rememberLastLogin('email_code', email)
 
         const response = NextResponse.json({
             success: true,

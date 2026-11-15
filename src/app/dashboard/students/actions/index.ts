@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { requireRole } from '@/lib/auth/require-role'
 import { normalizeDobToIso } from '@/lib/date'
 import sql from '@/lib/db'
+import { removePhoto } from '@/lib/storage/photo-storage'
 
 export async function createStudent(formData: FormData) {
     const { user } = await requireRole('coach')
@@ -101,17 +102,18 @@ export async function deleteStudent(studentId: string) {
     const { user } = await requireRole('coach')
 
     // Security check: coach can only delete students in their own dojos
-    const deleted = await sql`
+    const deleted = await sql<{ photo_url: string | null }[]>`
         DELETE FROM students
         WHERE id = ${studentId}
           AND dojo_id IN (SELECT id FROM dojos WHERE coach_id = ${user.id})
-        RETURNING id
+        RETURNING photo_url
     `
 
     if (deleted.length === 0) {
         throw new Error('Unauthorized: Student not found or does not belong to your dojo')
     }
 
+    await removePhoto(deleted[0].photo_url)
     revalidatePath('/dashboard/students')
     revalidatePath('/dashboard/dojos')
     return { success: true }

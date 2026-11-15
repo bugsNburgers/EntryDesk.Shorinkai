@@ -7,8 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
-import { put, del } from '@vercel/blob'
-import { devDataUriFallback } from '@/lib/storage/photo-fallback'
+import { uploadPhoto, removePhoto } from '@/lib/storage/photo-storage'
 import { getCurrentSession } from '@/lib/auth/session'
 import sql from '@/lib/db'
 import { audit, AUDIT_ACTIONS } from '@/lib/audit'
@@ -117,36 +116,19 @@ export async function POST(req: NextRequest) {
             )
         }
 
-        let photoUrl: string
-
-        const blobToken = process.env.BLOB_READ_WRITE_TOKEN
-        if (blobToken) {
-            // Upload to Vercel Blob
-            const ext = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg'
-            const filename = `athletes/${studentId}-${Date.now()}.${ext}`
-
-            const blob = await put(filename, file, {
-                access: 'public',
-                contentType: file.type,
-                token: blobToken,
-            })
-            photoUrl = blob.url
-
-            // Delete old blob if it was stored in Vercel Blob
-            if (existingPhotoUrl && existingPhotoUrl.includes('public.blob.vercel-storage.com')) {
-                del(existingPhotoUrl, { token: blobToken }).catch(() => {})
-            }
-        } else {
-            // Local dev only; throws in production (never store data: URIs there)
-            photoUrl = await devDataUriFallback(file)
-        }
-
-        // Update student record in PostgreSQL
-        await sql`
+        const photoUrl = await uploadPhoto(file, 'athletes')
+        const updated = await sql`
             UPDATE students
             SET photo_url = ${photoUrl}
             WHERE id = ${studentId}
+              AND photo_url IS NOT DISTINCT FROM ${existingPhotoUrl ?? null}
+            RETURNING id
         `
+        if (!updated.length) {
+            await removePhoto(photoUrl)
+            return NextResponse.json({ error: 'Photo changed. Refresh and try again.' }, { status: 409 })
+        }
+        await removePhoto(existingPhotoUrl ?? null)
 
         // Audit log
         audit({
@@ -202,18 +184,17 @@ export async function DELETE(req: NextRequest) {
             return NextResponse.json({ error: 'Student not found or access denied' }, { status: 403 })
         }
 
-        // Remove from Vercel Blob if applicable
-        const blobToken = process.env.BLOB_READ_WRITE_TOKEN
-        if (blobToken && existingPhotoUrl && existingPhotoUrl.includes('public.blob.vercel-storage.com')) {
-            del(existingPhotoUrl, { token: blobToken }).catch(() => {})
-        }
-
-        // Clear in database
-        await sql`
+        const updated = await sql`
             UPDATE students
             SET photo_url = NULL
             WHERE id = ${studentId}
+              AND photo_url IS NOT DISTINCT FROM ${existingPhotoUrl ?? null}
+            RETURNING id
         `
+        if (!updated.length) {
+            return NextResponse.json({ error: 'Photo changed. Refresh and try again.' }, { status: 409 })
+        }
+        await removePhoto(existingPhotoUrl ?? null)
 
         // Audit log
         audit({

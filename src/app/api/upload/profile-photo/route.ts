@@ -6,8 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
-import { put, del } from '@vercel/blob'
-import { devDataUriFallback } from '@/lib/storage/photo-fallback'
+import { uploadPhoto, removePhoto } from '@/lib/storage/photo-storage'
 import { getCurrentSession } from '@/lib/auth/session'
 import sql from '@/lib/db'
 
@@ -54,36 +53,20 @@ export async function POST(req: NextRequest) {
         `
         const existingAvatar = existing[0]?.avatar_url
 
-        let avatarUrl: string
-        const blobToken = process.env.BLOB_READ_WRITE_TOKEN
-
-        if (blobToken) {
-            const ext = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg'
-            const filename = `avatars/${user.id}-${Date.now()}.${ext}`
-
-            const blob = await put(filename, file, {
-                access: 'public',
-                contentType: file.type,
-                token: blobToken,
-            })
-            avatarUrl = blob.url
-
-            // Delete old blob if hosted on Vercel
-            if (existingAvatar && existingAvatar.includes('public.blob.vercel-storage.com')) {
-                del(existingAvatar, { token: blobToken }).catch(() => {})
-            }
-        } else {
-            // Local dev only; throws in production (never store data: URIs there)
-            avatarUrl = await devDataUriFallback(file)
-        }
-
-        // Save into users table
-        await sql`
+        const avatarUrl = await uploadPhoto(file, 'avatars')
+        const updated = await sql`
             UPDATE users
             SET avatar_url = ${avatarUrl},
                 updated_at = NOW()
             WHERE id = ${user.id}
+              AND avatar_url IS NOT DISTINCT FROM ${existingAvatar ?? null}
+            RETURNING id
         `
+        if (!updated.length) {
+            await removePhoto(avatarUrl)
+            return NextResponse.json({ error: 'Photo changed. Refresh and try again.' }, { status: 409 })
+        }
+        await removePhoto(existingAvatar ?? null)
 
         revalidatePath('/dashboard', 'layout')
 

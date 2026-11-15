@@ -10,9 +10,9 @@ import { Turnstile } from '@marsidev/react-turnstile'
 import { Loader2, Mail } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 
-export function EmailCodeSignIn({ callbackUrl }: { callbackUrl?: string }) {
+export function EmailCodeSignIn({ callbackUrl, defaultOpen = false }: { callbackUrl?: string; defaultOpen?: boolean }) {
     const router = useRouter()
-    const [open, setOpen] = useState(false)
+    const [open, setOpen] = useState(defaultOpen)
     const [step, setStep] = useState<'email' | 'code'>('email')
     const [email, setEmail] = useState('')
     const [code, setCode] = useState('')

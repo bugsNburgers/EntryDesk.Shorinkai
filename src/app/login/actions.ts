@@ -8,6 +8,7 @@ import { verifyPassword } from '@/lib/auth/password'
 import { createSession, destroySession } from '@/lib/auth/session'
 import { verifyGoogleIdToken } from '@/lib/auth/google'
 import { checkRateLimit, resetRateLimit } from '@/lib/auth/rate-limit'
+import { clearLastLogin, rememberLastLogin } from '@/lib/auth/last-login'
 
 /**
  * Standard logout server action. Destroys session and redirects to /login.
@@ -16,6 +17,14 @@ export async function logout() {
     await destroySession()
     revalidatePath('/', 'layout')
     redirect('/login')
+}
+
+/**
+ * "Not you?" on the login page: forget the remembered sign-in method/email for this browser.
+ * Only removes the cosmetic hint cookie; it never touches a session.
+ */
+export async function forgetLastLogin() {
+    await clearLastLogin()
 }
 
 /**
@@ -98,6 +107,7 @@ export async function login(formData: FormData) {
         // Login successful: reset rate limit & issue session
         resetRateLimit(rateLimitKey)
         await createSession(user.id, user.role as import('@/types/database').UserRole)
+        await rememberLastLogin('password', user.email)
     } catch (err) {
         console.error('[AUTH_ERROR] Login exception:', err)
         return redirect('/login?error=auth_failed')
@@ -145,6 +155,7 @@ export async function verifyGoogleLogin(idToken: string): Promise<{ success: boo
 
         resetRateLimit(`google:${clientIp}`)
         await createSession(result.user.id, result.user.role)
+        await rememberLastLogin('google', result.user.email)
         return { success: true }
     } catch (err) {
         console.error('[AUTH_ERROR] Google verification exception:', err)

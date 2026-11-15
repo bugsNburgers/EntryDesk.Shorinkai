@@ -18,7 +18,7 @@ After the local database has been initialized, `npm run db:migrate:local` starts
 ## 2. Dev server against it (does not touch `.env`)
 Use `127.0.0.1` (not `localhost`, which can resolve to IPv6 and get ECONNREFUSED).
 ```bash
-DATABASE_URL="postgresql://postgres:test@127.0.0.1:55432/entrydesk" NEXT_PUBLIC_BASE_URL="http://localhost:3100" BLOB_READ_WRITE_TOKEN="" npx next dev -p 3100
+DATABASE_URL="postgresql://postgres:test@127.0.0.1:55432/entrydesk" NEXT_PUBLIC_BASE_URL="http://localhost:3100" R2_ACCOUNT_ID="" R2_ACCESS_KEY_ID="" R2_SECRET_ACCESS_KEY="" R2_BUCKET_NAME="" R2_PUBLIC_BASE_URL="" npx next dev -p 3100
 ```
 If Turbopack panics, delete `.next/` (it is regenerable build cache, can reach 2 GB).
 

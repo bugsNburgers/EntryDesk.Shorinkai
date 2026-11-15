@@ -11,16 +11,18 @@ import { Turnstile } from '@marsidev/react-turnstile'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import type { LastLogin } from '@/lib/auth/last-login-core'
 
 interface JoinPageClientProps {
     dojoSlug: string
     dojoName: string
     googleClientId: string
+    lastLogin?: LastLogin | null
 }
 
 type AuthStep = 'choose' | 'otp_email' | 'otp_verify'
 
-export function JoinPageClient({ dojoSlug, dojoName, googleClientId }: JoinPageClientProps) {
+export function JoinPageClient({ dojoSlug, dojoName, googleClientId, lastLogin }: JoinPageClientProps) {
     const router = useRouter()
     const [step, setStep] = useState<AuthStep>('choose')
     const [email, setEmail] = useState('')
@@ -30,7 +32,8 @@ export function JoinPageClient({ dojoSlug, dojoName, googleClientId }: JoinPageC
     const [suggestion, setSuggestion] = useState<string | null>(null)
     const [cooldownSeconds, setCooldownSeconds] = useState(0)
     const [googleLoading, setGoogleLoading] = useState(false)
-    const [showEmailFallback, setShowEmailFallback] = useState(false)
+    // Returning parents who used an email code last time get that box already open.
+    const [showEmailFallback, setShowEmailFallback] = useState(lastLogin?.method === 'email_code')
     const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
     const googleBtnRef = useRef<HTMLDivElement>(null)
     const codeInputRef = useRef<HTMLInputElement>(null)

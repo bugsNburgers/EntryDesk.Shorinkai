@@ -1,4 +1,5 @@
 import { getCurrentSession } from '@/lib/auth/session'
+import { readLastLogin } from '@/lib/auth/last-login'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -46,6 +47,7 @@ export default async function LoginPage({
     }
 
     const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID || ''
+    const lastLogin = await readLastLogin()
 
     return (
         <div className="min-h-screen bg-background">
@@ -80,6 +82,7 @@ export default async function LoginPage({
                             initialError={errorMessage}
                             googleClientId={googleClientId}
                             callbackUrl={callbackUrl}
+                            lastLogin={lastLogin}
                         />
                     </section>
                 </div>

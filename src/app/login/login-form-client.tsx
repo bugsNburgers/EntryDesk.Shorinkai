@@ -1,11 +1,15 @@
-// EntryDesk — Sign in for everyone (09/11/2026 redesign).
-// Google first (works for every role), then email code (parents/athletes), and the coach/organiser
+// EntryDesk — Sign in for everyone.
+// First visit: Google first (works for every role), then email code (parents/athletes), and the coach/organiser
 // password form tucked into a "Coach or organiser with a password?" section.
+// Returning visit (remembered method, see src/lib/auth/last-login.ts): ONLY that one thing, like Cloudflare:
+// "Continue as pr***n@gmail.com" + "Not you?". "Not you?" forgets the hint and shows everything above.
 'use client'
 
 import { useState } from 'react'
 import { GoogleSignInButton } from '@/components/auth/google-sign-in-button'
 import { EmailCodeSignIn } from '@/components/auth/email-code-sign-in'
+import { NotYouButton } from '@/components/auth/last-used'
+import type { LastLogin } from '@/lib/auth/last-login-core'
 import { login } from './actions'
 import { PendingButton } from '@/components/ui/pending-button'
 import { Input } from '@/components/ui/input'
@@ -17,11 +21,32 @@ interface LoginFormClientProps {
     initialError?: string | null
     googleClientId: string
     callbackUrl?: string
+    lastLogin?: LastLogin | null
 }
 
-export function LoginFormClient({ initialError, googleClientId, callbackUrl }: LoginFormClientProps) {
+export function LoginFormClient({ initialError, googleClientId, callbackUrl, lastLogin }: LoginFormClientProps) {
     const [customError, setCustomError] = useState<string | null>(null)
     const activeError = customError || initialError
+    // After an error we always show every option, so nobody is stuck on one method.
+    const focused = lastLogin && !initialError ? lastLogin : null
+
+    const passwordForm = (
+        <form action={login} className="grid gap-4">
+            <NavigationOnPending title="Signing in" />
+            {callbackUrl && callbackUrl.startsWith('/') && <input type="hidden" name="callbackUrl" value={callbackUrl} />}
+            <div className="space-y-2">
+                <Label htmlFor="login-email" className="text-base font-semibold">Email</Label>
+                <Input id="login-email" name="email" type="email" autoComplete="email" required className="h-12 text-base" />
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="login-password" className="text-base font-semibold">Password</Label>
+                <Input id="login-password" name="password" type="password" autoComplete="current-password" required className="h-12 text-base" />
+            </div>
+            <PendingButton type="submit" className="min-h-12 w-full text-base" pendingText="Signing in…">
+                Sign in
+            </PendingButton>
+        </form>
+    )
 
     return (
         <div>
@@ -32,39 +57,56 @@ export function LoginFormClient({ initialError, googleClientId, callbackUrl }: L
                 </div>
             )}
 
-            <div className="mb-6">
-                <h1 className="text-3xl font-bold tracking-tight">Sign in</h1>
-                <p className="mt-1 text-base text-muted-foreground">For parents, athletes, coaches and organisers.</p>
-            </div>
-
-            <div className="space-y-3">
-                <GoogleSignInButton clientId={googleClientId} onError={(err) => setCustomError(err)} />
-                <EmailCodeSignIn callbackUrl={callbackUrl} />
-                <p className="text-[15px] text-muted-foreground">
-                    Parents: the first time, use the link your coach sent you. After that, sign in here.
-                </p>
-            </div>
-
-            <details className="mt-6 border-t border-border pt-3" open={Boolean(initialError)}>
-                <summary className="flex min-h-11 cursor-pointer items-center text-base font-semibold">
-                    Coach or organiser with a password?
-                </summary>
-                <form action={login} className="mt-3 grid gap-4">
-                    <NavigationOnPending title="Signing in" />
-                    {callbackUrl && callbackUrl.startsWith('/') && <input type="hidden" name="callbackUrl" value={callbackUrl} />}
-                    <div className="space-y-2">
-                        <Label htmlFor="login-email" className="text-base font-semibold">Email</Label>
-                        <Input id="login-email" name="email" type="email" autoComplete="email" required className="h-12 text-base" />
+            {focused ? (
+                <div>
+                    <div className="mb-6">
+                        <h1 className="text-3xl font-bold tracking-tight">Welcome back</h1>
+                        <p className="mt-1 text-base text-muted-foreground">
+                            {focused.method === 'google' && 'Continue to EntryDesk.'}
+                            {focused.method === 'email_code' && `We'll email you a code, like last time (${focused.maskedEmail}).`}
+                            {focused.method === 'password' && `Sign in with your password, like last time (${focused.maskedEmail}).`}
+                        </p>
                     </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="login-password" className="text-base font-semibold">Password</Label>
-                        <Input id="login-password" name="password" type="password" autoComplete="current-password" required className="h-12 text-base" />
+
+                    {focused.method === 'google' && (
+                        <div className="flex justify-center">
+                            <GoogleSignInButton
+                                clientId={googleClientId}
+                                onError={(err) => setCustomError(err)}
+                                continueAs={focused.maskedEmail}
+                            />
+                        </div>
+                    )}
+                    {focused.method === 'email_code' && <EmailCodeSignIn callbackUrl={callbackUrl} defaultOpen />}
+                    {focused.method === 'password' && passwordForm}
+
+                    <div className="mt-4 border-t border-border pt-2">
+                        <NotYouButton />
                     </div>
-                    <PendingButton type="submit" className="min-h-12 w-full text-base" pendingText="Signing in…">
-                        Sign in
-                    </PendingButton>
-                </form>
-            </details>
+                </div>
+            ) : (
+                <>
+                    <div className="mb-6">
+                        <h1 className="text-3xl font-bold tracking-tight">Sign in</h1>
+                        <p className="mt-1 text-base text-muted-foreground">For parents, athletes, coaches and organisers.</p>
+                    </div>
+
+                    <div className="space-y-3">
+                        <GoogleSignInButton clientId={googleClientId} onError={(err) => setCustomError(err)} />
+                        <EmailCodeSignIn callbackUrl={callbackUrl} />
+                        <p className="text-[15px] text-muted-foreground">
+                            Parents: the first time, use the link your coach sent you. After that, sign in here.
+                        </p>
+                    </div>
+
+                    <details className="mt-6 border-t border-border pt-3" open={Boolean(initialError)}>
+                        <summary className="flex min-h-11 cursor-pointer items-center text-base font-semibold">
+                            Coach or organiser with a password?
+                        </summary>
+                        <div className="mt-3">{passwordForm}</div>
+                    </details>
+                </>
+            )}
         </div>
     )
 }
