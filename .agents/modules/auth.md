@@ -23,6 +23,16 @@ Redirect target: `/athlete` (+ `?joinedDojo=<slug>`), cookie `parent_dojo_slug` 
 Production **needs `RESEND_API_KEY`** — without it `sendOtpEmail` fails (500) and OTP login does not work.
 In dev without a key the code is printed to the server log and returned as `devCode`.
 
+## "Last used" sign-in hint
+Cookie `entrydesk_last_login` = `<method>|<masked email>` (e.g. `google|p***@gmail.com`), HttpOnly, SameSite=Lax, 365 d. It is a
+cosmetic hint, **not a session**: nothing trusts it. Written (never on failure) right after `createSession` in `login()` (password),
+`verifyGoogleLogin()`, `/api/auth/google-join`, `/api/auth/otp/verify`. Logout does NOT clear it (that is the point: it outlives the
+7/90-day session). The full email is never stored; only first letter + domain. `/login` and `/join/<slug>` render it server-side
+(`readLastLogin()`): a "Last used" badge on that method, a "Last time you signed in with … Not you?" line, and the password / email-code
+box pre-opened when that was the method. "Not you?" calls `forgetLastLogin()` (deletes only this cookie).
+Files: `src/lib/auth/last-login-core.ts` (pure, unit-tested), `last-login.ts` (cookies), `src/components/auth/last-used.tsx`.
+No DB change / no migration.
+
 ## Don'ts
 - Don't let any code path call `createSession` for a user that wasn't explicitly authenticated as *that* user.
 - Don't `UPDATE users SET is_active = TRUE` from a public endpoint (that is the admin approval switch).

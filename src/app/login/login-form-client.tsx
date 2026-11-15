@@ -6,6 +6,8 @@
 import { useState } from 'react'
 import { GoogleSignInButton } from '@/components/auth/google-sign-in-button'
 import { EmailCodeSignIn } from '@/components/auth/email-code-sign-in'
+import { LastLoginNotice, LastUsedBadge } from '@/components/auth/last-used'
+import type { LastLogin } from '@/lib/auth/last-login-core'
 import { login } from './actions'
 import { PendingButton } from '@/components/ui/pending-button'
 import { Input } from '@/components/ui/input'
@@ -17,9 +19,10 @@ interface LoginFormClientProps {
     initialError?: string | null
     googleClientId: string
     callbackUrl?: string
+    lastLogin?: LastLogin | null
 }
 
-export function LoginFormClient({ initialError, googleClientId, callbackUrl }: LoginFormClientProps) {
+export function LoginFormClient({ initialError, googleClientId, callbackUrl, lastLogin }: LoginFormClientProps) {
     const [customError, setCustomError] = useState<string | null>(null)
     const activeError = customError || initialError
 
@@ -35,19 +38,26 @@ export function LoginFormClient({ initialError, googleClientId, callbackUrl }: L
             <div className="mb-6">
                 <h1 className="text-3xl font-bold tracking-tight">Sign in</h1>
                 <p className="mt-1 text-base text-muted-foreground">For parents, athletes, coaches and organisers.</p>
+                {lastLogin && <LastLoginNotice lastLogin={lastLogin} className="mt-3" />}
             </div>
 
             <div className="space-y-3">
-                <GoogleSignInButton clientId={googleClientId} onError={(err) => setCustomError(err)} />
-                <EmailCodeSignIn callbackUrl={callbackUrl} />
+                <div>
+                    {lastLogin?.method === 'google' && (
+                        <div className="mb-1.5 flex justify-end"><LastUsedBadge /></div>
+                    )}
+                    <GoogleSignInButton clientId={googleClientId} onError={(err) => setCustomError(err)} />
+                </div>
+                <EmailCodeSignIn callbackUrl={callbackUrl} lastUsed={lastLogin?.method === 'email_code'} />
                 <p className="text-[15px] text-muted-foreground">
                     Parents: the first time, use the link your coach sent you. After that, sign in here.
                 </p>
             </div>
 
-            <details className="mt-6 border-t border-border pt-3" open={Boolean(initialError)}>
-                <summary className="flex min-h-11 cursor-pointer items-center text-base font-semibold">
+            <details className="mt-6 border-t border-border pt-3" open={Boolean(initialError) || lastLogin?.method === 'password'}>
+                <summary className="flex min-h-11 cursor-pointer items-center justify-between gap-2 text-base font-semibold">
                     Coach or organiser with a password?
+                    {lastLogin?.method === 'password' && <LastUsedBadge />}
                 </summary>
                 <form action={login} className="mt-3 grid gap-4">
                     <NavigationOnPending title="Signing in" />

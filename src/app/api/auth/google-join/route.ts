@@ -8,6 +8,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { verifyGoogleIdToken } from '@/lib/auth/google'
 import { createSession } from '@/lib/auth/session'
+import { rememberLastLogin } from '@/lib/auth/last-login'
 import { checkRateLimit } from '@/lib/auth/rate-limit'
 import sql from '@/lib/db'
 
@@ -63,6 +64,7 @@ export async function POST(request: NextRequest) {
 
         const redirectTo = `/athlete?joinedDojo=${encodeURIComponent(dojoSlug)}`
         await createSession(user.id, user.role)
+        await rememberLastLogin('google', user.email)
 
         const response = NextResponse.json({ success: true, redirectTo })
         if (dojoSlug) {

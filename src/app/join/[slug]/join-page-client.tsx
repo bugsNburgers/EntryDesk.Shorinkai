@@ -11,16 +11,19 @@ import { Turnstile } from '@marsidev/react-turnstile'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { LastLoginNotice, LastUsedBadge } from '@/components/auth/last-used'
+import type { LastLogin } from '@/lib/auth/last-login-core'
 
 interface JoinPageClientProps {
     dojoSlug: string
     dojoName: string
     googleClientId: string
+    lastLogin?: LastLogin | null
 }
 
 type AuthStep = 'choose' | 'otp_email' | 'otp_verify'
 
-export function JoinPageClient({ dojoSlug, dojoName, googleClientId }: JoinPageClientProps) {
+export function JoinPageClient({ dojoSlug, dojoName, googleClientId, lastLogin }: JoinPageClientProps) {
     const router = useRouter()
     const [step, setStep] = useState<AuthStep>('choose')
     const [email, setEmail] = useState('')
@@ -30,7 +33,8 @@ export function JoinPageClient({ dojoSlug, dojoName, googleClientId }: JoinPageC
     const [suggestion, setSuggestion] = useState<string | null>(null)
     const [cooldownSeconds, setCooldownSeconds] = useState(0)
     const [googleLoading, setGoogleLoading] = useState(false)
-    const [showEmailFallback, setShowEmailFallback] = useState(false)
+    // Returning parents who used an email code last time get that box already open.
+    const [showEmailFallback, setShowEmailFallback] = useState(lastLogin?.method === 'email_code')
     const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
     const googleBtnRef = useRef<HTMLDivElement>(null)
     const codeInputRef = useRef<HTMLInputElement>(null)
@@ -196,6 +200,8 @@ export function JoinPageClient({ dojoSlug, dojoName, googleClientId }: JoinPageC
                         Sign in to get started. Takes less than 2 minutes.
                     </p>
 
+                    {lastLogin && <LastLoginNotice lastLogin={lastLogin} className="mb-4" />}
+
                     {error && (
                         <div className="mb-4 rounded-xl bg-destructive/10 border border-destructive/20 px-4 py-3 text-sm text-destructive">
                             {error}
@@ -205,6 +211,9 @@ export function JoinPageClient({ dojoSlug, dojoName, googleClientId }: JoinPageC
                     {/* Google Button (Native pill, no overflow clipping) */}
                     {googleClientId ? (
                         <div className="mb-2">
+                            {lastLogin?.method === 'google' && (
+                                <div className="mb-1.5 flex justify-end"><LastUsedBadge /></div>
+                            )}
                             <div className="w-full flex justify-center py-1">
                                 <div
                                     ref={googleBtnRef}
