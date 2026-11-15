@@ -28,17 +28,19 @@ function safe(value: string, max: number): string {
     return value.replace(/[^A-Za-z0-9._+\-@*]/g, '').slice(0, max)
 }
 
-/** "pratik.y@gmail.com" -> "p***@gmail.com". Returns '' when the input is not an email. */
+/**
+ * Hides only the middle of the name, keeps the domain: "pratikyagon@gmail.com" -> "pr***n@gmail.com",
+ * "ab@x.com" -> "a***@x.com". Returns '' when the input is not an email.
+ */
 export function maskEmail(email: string): string {
-    const at = email.trim().lastIndexOf('@')
-    if (at < 1 || at === email.trim().length - 1) return ''
     const trimmed = email.trim()
-    const local = trimmed.slice(0, at)
-    const domain = trimmed.slice(at + 1)
-    const first = safe(local.charAt(0), 1)
-    const safeDomain = safe(domain, 120).replace(/@/g, '')
-    if (!first || !safeDomain) return ''
-    return `${first}***@${safeDomain}`
+    const at = trimmed.lastIndexOf('@')
+    if (at < 1 || at === trimmed.length - 1) return ''
+    const local = safe(trimmed.slice(0, at), 64).replace(/[@*]/g, '')
+    const domain = safe(trimmed.slice(at + 1), 120).replace(/[@*]/g, '')
+    if (!local || !domain) return ''
+    const masked = local.length <= 3 ? `${local.charAt(0)}***` : `${local.slice(0, 2)}***${local.slice(-1)}`
+    return `${masked}@${domain}`
 }
 
 export function serializeLastLogin(method: LastLoginMethod, email: string): string | null {
@@ -55,6 +57,6 @@ export function parseLastLogin(raw: string | undefined | null): LastLogin | null
     const method = raw.slice(0, sep) as LastLoginMethod
     if (!METHODS.includes(method)) return null
     const maskedEmail = raw.slice(sep + 1)
-    if (!/^[A-Za-z0-9._+\-]\*\*\*@[A-Za-z0-9.\-]{1,120}$/.test(maskedEmail)) return null
+    if (!/^[A-Za-z0-9._+\-]{1,2}\*\*\*[A-Za-z0-9._+\-]?@[A-Za-z0-9.\-]{1,120}$/.test(maskedEmail)) return null
     return { method, maskedEmail }
 }

@@ -8,6 +8,19 @@ import { useRouter } from 'next/navigation'
 interface GoogleSignInButtonProps {
     clientId: string
     onError?: (errorMsg: string) => void
+    /** Returning user: shows "Continue as <masked email>" (Cloudflare-style). Google's own button is overlaid invisibly so the click is still a real Google sign-in. */
+    continueAs?: string
+}
+
+function GoogleLogo() {
+    return (
+        <svg width="20" height="20" viewBox="0 0 18 18" aria-hidden="true">
+            <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.616z"/>
+            <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/>
+            <path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.039l3.007-2.332z"/>
+            <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z"/>
+        </svg>
+    )
 }
 
 declare global {
@@ -39,10 +52,11 @@ declare global {
     }
 }
 
-export function GoogleSignInButton({ clientId, onError }: GoogleSignInButtonProps) {
+export function GoogleSignInButton({ clientId, onError, continueAs }: GoogleSignInButtonProps) {
     const router = useRouter()
     const buttonRef = useRef<HTMLDivElement>(null)
     const [isLoading, setIsLoading] = useState(false)
+    const [overlayLive, setOverlayLive] = useState(false)
     const effectiveClientId = clientId || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ''
 
     // Detect if Google script is already loaded on window (e.g. from previous navigation)
@@ -100,7 +114,7 @@ export function GoogleSignInButton({ clientId, onError }: GoogleSignInButtonProp
 
             buttonRef.current.innerHTML = ''
             const parentWidth = buttonRef.current.parentElement?.clientWidth || 380
-            const buttonWidth = Math.min(380, Math.max(260, parentWidth))
+            const buttonWidth = Math.min(continueAs ? 400 : 380, Math.max(260, parentWidth))
 
             window.google.accounts.id.renderButton(buttonRef.current, {
                 theme: 'outline',
@@ -109,10 +123,20 @@ export function GoogleSignInButton({ clientId, onError }: GoogleSignInButtonProp
                 shape: 'rectangular',
                 width: buttonWidth,
             })
+
+            // continueAs mode: only let Google's invisible button take clicks once it really has a size.
+            if (continueAs) {
+                const check = () => {
+                    const frame = buttonRef.current?.querySelector('iframe')
+                    if (frame && frame.offsetHeight > 0) setOverlayLive(true)
+                }
+                const timers = [800, 2000, 4000].map((ms) => setTimeout(check, ms))
+                return () => timers.forEach(clearTimeout)
+            }
         } catch (err) {
             console.error('Google button initialization failed', err)
         }
-    }, [scriptLoaded, effectiveClientId, onError, router])
+    }, [scriptLoaded, effectiveClientId, onError, router, continueAs])
 
     const handleFallbackClick = () => {
         if (window.google?.accounts?.id && effectiveClientId) {
@@ -138,6 +162,30 @@ export function GoogleSignInButton({ clientId, onError }: GoogleSignInButtonProp
                     Verifying Google authorization...
                 </div>
             )}
+            {continueAs ? (
+                <div className="relative h-[56px] w-full max-w-[400px]">
+                    {/* What the user sees. A real button, so it still works (Google prompt) if Google's own button never renders. */}
+                    <button
+                        type="button"
+                        onClick={handleFallbackClick}
+                        className="flex h-full w-full items-center gap-3 rounded-xl border-[1.5px] border-border bg-card px-4 text-left transition-colors hover:bg-muted"
+                    >
+                        <GoogleLogo />
+                        <span className="min-w-0 flex-1">
+                            <span className="block text-xs font-medium leading-tight text-muted-foreground">Continue with Google</span>
+                            <span className="block truncate text-base font-semibold leading-tight text-foreground">{continueAs}</span>
+                        </span>
+                    </button>
+                    {/* Google's real button, invisible and stretched over it, so the click is a genuine Google sign-in.
+                        It only takes clicks once Google has actually rendered it (overlayLive). */}
+                    <div
+                        ref={buttonRef}
+                        aria-hidden="true"
+                        className={`absolute left-0 top-0 h-[40px] w-full origin-top-left overflow-hidden opacity-[0.01] [&_iframe]:!m-0 [&_iframe]:!block ${overlayLive ? '' : 'pointer-events-none'}`}
+                        style={{ transform: 'scaleY(1.4)' }}
+                    />
+                </div>
+            ) : (
             <div ref={buttonRef} className="w-full flex justify-center min-h-[44px]">
                 {/* Instant visual fallback button while Google's iframe initializes */}
                 <button
@@ -145,15 +193,11 @@ export function GoogleSignInButton({ clientId, onError }: GoogleSignInButtonProp
                     onClick={handleFallbackClick}
                     className="w-full max-w-[380px] h-[44px] rounded-md border border-border dark:border-white/[0.15] bg-card hover:bg-[#f8f6f0] dark:hover:bg-muted flex items-center justify-center gap-3 px-4 text-[14px] font-medium text-[#3c4043] dark:text-foreground shadow-2xs transition-colors"
                 >
-                    <svg width="18" height="18" viewBox="0 0 18 18">
-                        <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.616z"/>
-                        <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/>
-                        <path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.039l3.007-2.332z"/>
-                        <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z"/>
-                    </svg>
+                    <GoogleLogo />
                     <span>Continue with Google</span>
                 </button>
             </div>
+            )}
             {!effectiveClientId && (
                 <p className="text-xs text-muted-foreground mt-2 text-center">
                     (Google Sign-In ready. Add NEXT_PUBLIC_GOOGLE_CLIENT_ID to .env)

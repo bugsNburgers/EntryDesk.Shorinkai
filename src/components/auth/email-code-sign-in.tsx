@@ -9,11 +9,10 @@ import { useRouter } from 'next/navigation'
 import { Turnstile } from '@marsidev/react-turnstile'
 import { Loader2, Mail } from 'lucide-react'
 import { Input } from '@/components/ui/input'
-import { LastUsedBadge } from '@/components/auth/last-used'
 
-export function EmailCodeSignIn({ callbackUrl, lastUsed = false }: { callbackUrl?: string; lastUsed?: boolean }) {
+export function EmailCodeSignIn({ callbackUrl, defaultOpen = false }: { callbackUrl?: string; defaultOpen?: boolean }) {
     const router = useRouter()
-    const [open, setOpen] = useState(false)
+    const [open, setOpen] = useState(defaultOpen)
     const [step, setStep] = useState<'email' | 'code'>('email')
     const [email, setEmail] = useState('')
     const [code, setCode] = useState('')
@@ -74,19 +73,14 @@ export function EmailCodeSignIn({ callbackUrl, lastUsed = false }: { callbackUrl
 
     if (!open) {
         return (
-            <div>
-                {lastUsed && (
-                    <div className="mb-1.5 flex justify-end"><LastUsedBadge /></div>
-                )}
-                <button
-                    type="button"
-                    onClick={() => setOpen(true)}
-                    className="flex min-h-[52px] w-full items-center justify-center gap-2.5 rounded-xl border-[1.5px] border-border bg-card px-4 text-base font-semibold text-foreground transition-colors hover:bg-muted"
-                >
-                    <Mail className="h-5 w-5" aria-hidden="true" />
-                    Get a code on my email
-                </button>
-            </div>
+            <button
+                type="button"
+                onClick={() => setOpen(true)}
+                className="flex min-h-[52px] w-full items-center justify-center gap-2.5 rounded-xl border-[1.5px] border-border bg-card px-4 text-base font-semibold text-foreground transition-colors hover:bg-muted"
+            >
+                <Mail className="h-5 w-5" aria-hidden="true" />
+                Get a code on my email
+            </button>
         )
     }
 

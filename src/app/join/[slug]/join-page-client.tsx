@@ -11,7 +11,6 @@ import { Turnstile } from '@marsidev/react-turnstile'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { LastLoginNotice, LastUsedBadge } from '@/components/auth/last-used'
 import type { LastLogin } from '@/lib/auth/last-login-core'
 
 interface JoinPageClientProps {
@@ -200,8 +199,6 @@ export function JoinPageClient({ dojoSlug, dojoName, googleClientId, lastLogin }
                         Sign in to get started. Takes less than 2 minutes.
                     </p>
 
-                    {lastLogin && <LastLoginNotice lastLogin={lastLogin} className="mb-4" />}
-
                     {error && (
                         <div className="mb-4 rounded-xl bg-destructive/10 border border-destructive/20 px-4 py-3 text-sm text-destructive">
                             {error}
@@ -211,9 +208,6 @@ export function JoinPageClient({ dojoSlug, dojoName, googleClientId, lastLogin }
                     {/* Google Button (Native pill, no overflow clipping) */}
                     {googleClientId ? (
                         <div className="mb-2">
-                            {lastLogin?.method === 'google' && (
-                                <div className="mb-1.5 flex justify-end"><LastUsedBadge /></div>
-                            )}
                             <div className="w-full flex justify-center py-1">
                                 <div
                                     ref={googleBtnRef}

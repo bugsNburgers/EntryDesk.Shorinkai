@@ -23,15 +23,18 @@ Redirect target: `/athlete` (+ `?joinedDojo=<slug>`), cookie `parent_dojo_slug` 
 Production **needs `RESEND_API_KEY`** — without it `sendOtpEmail` fails (500) and OTP login does not work.
 In dev without a key the code is printed to the server log and returned as `devCode`.
 
-## "Last used" sign-in hint
-Cookie `entrydesk_last_login` = `<method>|<masked email>` (e.g. `google|p***@gmail.com`), HttpOnly, SameSite=Lax, 365 d. It is a
+## "Last used" sign-in hint (Cloudflare-style)
+Cookie `entrydesk_last_login` = `<method>|<masked email>` (e.g. `google|pr***n@gmail.com`), HttpOnly, SameSite=Lax, 365 d. It is a
 cosmetic hint, **not a session**: nothing trusts it. Written (never on failure) right after `createSession` in `login()` (password),
-`verifyGoogleLogin()`, `/api/auth/google-join`, `/api/auth/otp/verify`. Logout does NOT clear it (that is the point: it outlives the
-7/90-day session). The full email is never stored; only first letter + domain. `/login` and `/join/<slug>` render it server-side
-(`readLastLogin()`): a "Last used" badge on that method, a "Last time you signed in with … Not you?" line, and the password / email-code
-box pre-opened when that was the method. "Not you?" calls `forgetLastLogin()` (deletes only this cookie).
-Files: `src/lib/auth/last-login-core.ts` (pure, unit-tested), `last-login.ts` (cookies), `src/components/auth/last-used.tsx`.
-No DB change / no migration.
+`verifyGoogleLogin()`, `/api/auth/google-join`, `/api/auth/otp/verify`. Logout does NOT clear it (it outlives the 7/90-day session).
+Only the middle of the name is hidden (`maskEmail`); the full email is never stored in it.
+`/login` renders it server-side (`readLastLogin()`): a returning visitor sees ONLY "Welcome back" + one button for the remembered method
+(Google: "Continue with Google / pr***n@gmail.com"; email code: the code box; password: the form) + "Not you? Use a different account".
+"Not you?" calls `forgetLastLogin()` (deletes only this cookie) and the full screen appears. Any login error also shows the full screen.
+Google "continue as" button = our own visual button + Google's real GIS button overlaid invisibly (only clickable once it has rendered;
+otherwise the visual button falls back to `google.accounts.id.prompt()`). `/join/<slug>` only uses the hint to pre-open the email-code box.
+Files: `src/lib/auth/last-login-core.ts` (pure, unit-tested), `last-login.ts` (cookies), `src/components/auth/last-used.tsx` (NotYouButton),
+`google-sign-in-button.tsx` (`continueAs`). No DB change / no migration.
 
 ## Don'ts
 - Don't let any code path call `createSession` for a user that wasn't explicitly authenticated as *that* user.
