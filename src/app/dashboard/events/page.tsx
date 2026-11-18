@@ -24,10 +24,11 @@ import { CoachEventsBrowser } from '@/components/events/coach-events-browser'
 export default async function EventsPage({
     searchParams,
 }: {
-    searchParams?: Promise<{ page?: string }>
+    searchParams?: Promise<{ page?: string; new?: string; create?: string }>
 }) {
     const { user, role } = await requireRole(['coach', 'organizer', 'admin'], { redirectTo: '/dashboard' })
     const sp = await searchParams
+    const shouldAutoOpen = Boolean(sp?.new || sp?.create)
 
     const canCreateEvents = role === 'admin' || (role === 'organizer' && Boolean((await sql`
         SELECT 1 FROM users WHERE id = ${user.id} AND is_active AND can_create_events
@@ -79,7 +80,7 @@ export default async function EventsPage({
             <DashboardPageHeader
                 title="Events"
                 description={canCreateEvents ? "Create, publish, and manage your events." : "Manage existing events. Contact your admin to enable event creation."}
-                actions={canCreateEvents ? <CreateEventDialog /> : undefined}
+                actions={canCreateEvents ? <CreateEventDialog defaultOpen={shouldAutoOpen} /> : undefined}
             />
 
             {/* ─── Active Events ─── */}
@@ -169,7 +170,7 @@ export default async function EventsPage({
                             icon={<Calendar />}
                             title="No active events"
                             description="Create your first event to get started. Coaches will be able to find and apply to join."
-                            actions={canCreateEvents ? <CreateEventDialog /> : undefined}
+                            actions={canCreateEvents ? <CreateEventDialog defaultOpen={shouldAutoOpen} /> : undefined}
                         />
                     )}
                 </div>

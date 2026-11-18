@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
     Dialog,
@@ -25,8 +27,23 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { EVENT_LEVEL_OPTIONS } from '@/lib/events/level'
 import { isEventTypeRequiringLevel } from '@/lib/events/type'
 
-export function CreateEventDialog() {
-    const [open, setOpen] = useState(false)
+interface CreateEventDialogProps {
+    triggerText?: string
+    triggerIcon?: React.ReactNode
+    className?: string
+    variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link'
+    defaultOpen?: boolean
+}
+
+export function CreateEventDialog({
+    triggerText = 'Create Event',
+    triggerIcon,
+    className,
+    variant = 'default',
+    defaultOpen = false,
+}: CreateEventDialogProps = {}) {
+    const router = useRouter()
+    const [open, setOpen] = useState(defaultOpen)
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [eventType, setEventType] = useState<string>('')
     const [eventLevel, setEventLevel] = useState<string>('')
@@ -44,20 +61,27 @@ export function CreateEventDialog() {
             return
         }
 
-        // Manually add dates if using a range picker
-        // Simple implementation: two separate date inputs for now to be safe with standard form data
-        // But let's use the formData directly if we use hidden inputs
         try {
             submitLockRef.current = true
             setIsSubmitting(true)
             const result = await createEvent(formData)
             if (!result?.success) {
-                alert('Failed to create event')
+                toast.error('Failed to create event')
                 return
             }
+            if (result.duplicatePrevented) {
+                toast.info('An identical event already exists. Opening existing event.')
+            } else {
+                toast.success('Event created successfully!')
+            }
             setOpen(false)
-        } catch {
-            alert('Failed to create event')
+            if (result.eventId) {
+                router.push(`/dashboard/events/${result.eventId}`)
+            } else {
+                router.refresh()
+            }
+        } catch (err) {
+            toast.error(err instanceof Error ? err.message : 'Failed to create event')
         } finally {
             submitLockRef.current = false
             setIsSubmitting(false)
@@ -67,7 +91,10 @@ export function CreateEventDialog() {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button>Create Event</Button>
+                <Button variant={variant} className={className}>
+                    {triggerIcon}
+                    {triggerText}
+                </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[600px]">
                 <DialogHeader>

@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { ArrowRight, Calendar, ChevronRight, Clock, Plus } from 'lucide-react'
 import { ParentLinkBanner } from '@/components/dashboard/parent-link-banner'
 import { StageFilterTiles } from '@/components/ui/stage-filter-tiles'
+import { CreateEventDialog } from '@/components/events/create-event-dialog'
 import sql from '@/lib/db'
 
 // ============================================================================
@@ -110,6 +111,9 @@ export default async function DashboardPage() {
         ])
         const pendingApprovalsCount = pendingCountRes[0]?.count ?? 0
         const toReview = activeEvents.reduce((n, e) => n + e.to_review, 0)
+        const canCreateEvents = role === 'admin' || (role === 'organizer' && Boolean((await sql`
+            SELECT 1 FROM users WHERE id = ${user.id} AND is_active AND can_create_events
+        `)[0]))
 
         return (
             <div className="space-y-6">
@@ -117,12 +121,13 @@ export default async function DashboardPage() {
                 <DashboardPageHeader
                     title={`Hello, ${firstName}`}
                     actions={
-                        <Button asChild className="min-h-11 gap-2 text-base">
-                            <Link href="/dashboard/events">
-                                <Plus className="h-5 w-5" aria-hidden="true" />
-                                New event
-                            </Link>
-                        </Button>
+                        canCreateEvents ? (
+                            <CreateEventDialog
+                                triggerText="New event"
+                                triggerIcon={<Plus className="h-5 w-5" aria-hidden="true" />}
+                                className="min-h-11 gap-2 text-base"
+                            />
+                        ) : undefined
                     }
                 />
 
@@ -165,9 +170,12 @@ export default async function DashboardPage() {
                         <div className="rounded-2xl border border-border bg-card px-5 py-10 text-center">
                             <Calendar className="mx-auto mb-3 h-8 w-8 text-muted-foreground" aria-hidden="true" />
                             <p className="text-base font-medium">No upcoming events</p>
-                            <Button asChild className="mt-4 min-h-11 text-base">
-                                <Link href="/dashboard/events">Create an event</Link>
-                            </Button>
+                            {canCreateEvents ? (
+                                <CreateEventDialog
+                                    triggerText="Create an event"
+                                    className="mt-4 min-h-11 text-base"
+                                />
+                            ) : null}
                         </div>
                     ) : (
                         <div className="grid gap-3 md:grid-cols-2">
